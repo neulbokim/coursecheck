@@ -10,8 +10,13 @@
 
 ## 🛠 설치 방법
 * python 3.13 버전에서 실행해야 패키지 버전 오류가 안 납니다.
-* 
+
 ```bash
+# 먼저 원하는 프로젝트의 작업 디렉토리로 이동해주세요. 
+# 예시
+cd Users/hyeonseokim_macbookpro/Desktop/서강대학교/2025/2025-summer/
+
+# git 레포지토리 복제
 git clone https://github.com/neulbokim/coursecheck.git
 cd coursecheck
 
