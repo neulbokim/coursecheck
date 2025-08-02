@@ -9,16 +9,18 @@
 특히 전공 코드를 기반으로 강의를 색상 구분하여 한눈에 파악할 수 있도록 지원합니다.<br>
 
 ## 🛠 설치 방법
+* python 3.13 버전에서 실행해야 패키지 버전 오류가 안 납니다.
+* 
 ```bash
 git clone https://github.com/neulbokim/coursecheck.git
 cd coursecheck
 
 #가상환경 생성
-python3 -m venv .venv
+python -m venv .venv
 
 #가상환경 활성화
 source .venv/bin/activate ## Mac / Linux 환경인 경우
-.venv\Scripts\Activate ##Windows인 경우
+source .venv/Scripts/activate ##Windows인 경우
 
 #필요한 패키지 설치
 pip install -r requirements.txt
