@@ -14,8 +14,8 @@ export const linkedMajors: readonly LinkedMajor[] = [
     key: "BDS",
     label: "빅데이터사이언스 연계전공",
     shortLabel: "빅데이터",
-    color: "#8b1e3f",
-    softColor: "#f8e9ee",
+    color: "#861f1c",
+    softColor: "#f7eceb",
     sourceUrl: "https://bds.sogang.ac.kr/bds/bds02_1.html",
     verifiedAt: "2026-08-04",
     codes: [
@@ -33,8 +33,8 @@ export const linkedMajors: readonly LinkedMajor[] = [
     key: "PUB",
     label: "공공인재 연계전공",
     shortLabel: "공공인재",
-    color: "#1f6b5c",
-    softColor: "#e7f3ef",
+    color: "#6f9453",
+    softColor: "#eef3e9",
     sourceUrl: "https://www.sogang.ac.kr/ko/academic-support/college-bulletin",
     verifiedAt: "2026-08-04",
     codes: [
@@ -51,8 +51,8 @@ export const linkedMajors: readonly LinkedMajor[] = [
     key: "EDU",
     label: "교육문화 연계전공",
     shortLabel: "교육문화",
-    color: "#345995",
-    softColor: "#e9eef8",
+    color: "#004f8e",
+    softColor: "#e6edf4",
     sourceUrl: "https://www.sogang.ac.kr/ko/academic-support/college-bulletin",
     verifiedAt: "2026-08-04",
     codes: [
@@ -66,8 +66,8 @@ export const linkedMajors: readonly LinkedMajor[] = [
     key: "SPM",
     label: "스포츠미디어 연계전공",
     shortLabel: "스포츠미디어",
-    color: "#c26532",
-    softColor: "#faeee5",
+    color: "#e3540b",
+    softColor: "#fceee6",
     sourceUrl: "https://www.sogang.ac.kr/ko/academic-support/college-bulletin",
     verifiedAt: "2026-08-04",
     codes: [

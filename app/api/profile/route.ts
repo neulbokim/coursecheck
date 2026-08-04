@@ -2,16 +2,19 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { userProfiles } from "../../../db/schema";
 import { majorOptions } from "../../data/major-options";
+import { colleges } from "../../data/core-curriculum.mjs";
 
 const COOKIE_NAME = "coursecheck_visitor";
 const VISITOR_ID_PATTERN = /^[0-9a-f-]{36}$/i;
 const ALLOWED_MAJORS = new Set(majorOptions);
+const ALLOWED_COLLEGES = new Set<string>(colleges.map((college: { key: string }) => college.key));
 const MIN_COHORT_YEAR = 2012;
 const MAX_COHORT_YEAR = 2026;
 
 type ProfileInput = {
   cohortYear?: unknown;
   completedSemesters?: unknown;
+  college?: unknown;
   major1?: unknown;
   major2?: unknown;
   major3?: unknown;
@@ -39,6 +42,7 @@ export async function GET(request: Request) {
       .select({
         cohortYear: userProfiles.cohortYear,
         completedSemesters: userProfiles.completedSemesters,
+        college: userProfiles.college,
         major1: userProfiles.major1,
         major2: userProfiles.major2,
         major3: userProfiles.major3,
@@ -62,6 +66,7 @@ export async function POST(request: Request) {
     const majors = [payload.major1, payload.major2, payload.major3].map((value) =>
       typeof value === "string" ? value.trim() : "",
     );
+    const college = typeof payload.college === "string" && payload.college.trim() ? payload.college.trim() : null;
 
     if (!Number.isInteger(cohortYear) || cohortYear < MIN_COHORT_YEAR || cohortYear > MAX_COHORT_YEAR) {
       return Response.json({ error: "학번을 다시 선택해 주세요." }, { status: 400, headers: responseHeaders() });
@@ -72,6 +77,9 @@ export async function POST(request: Request) {
     if (!majors[0] || majors.some((major) => major && !ALLOWED_MAJORS.has(major))) {
       return Response.json({ error: "검색 결과에서 전공을 선택해 주세요." }, { status: 400, headers: responseHeaders() });
     }
+    if (college && !ALLOWED_COLLEGES.has(college)) {
+      return Response.json({ error: "소속 대학을 다시 선택해 주세요." }, { status: 400, headers: responseHeaders() });
+    }
     if (new Set(majors.filter(Boolean)).size !== majors.filter(Boolean).length) {
       return Response.json({ error: "같은 전공을 중복해서 선택할 수 없어요." }, { status: 400, headers: responseHeaders() });
     }
@@ -81,6 +89,7 @@ export async function POST(request: Request) {
       visitorId,
       cohortYear,
       completedSemesters,
+      college,
       major1: majors[0],
       major2: majors[1] || null,
       major3: majors[2] || null,
@@ -94,6 +103,7 @@ export async function POST(request: Request) {
         set: {
           cohortYear: values.cohortYear,
           completedSemesters: values.completedSemesters,
+          college: values.college,
           major1: values.major1,
           major2: values.major2,
           major3: values.major3,
@@ -107,7 +117,7 @@ export async function POST(request: Request) {
       `${COOKIE_NAME}=${visitorId}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`,
     );
     return Response.json(
-      { profile: { cohortYear, completedSemesters, major1: majors[0], major2: majors[1] || null, major3: majors[2] || null } },
+      { profile: { cohortYear, completedSemesters, college, major1: majors[0], major2: majors[1] || null, major3: majors[2] || null } },
       { headers },
     );
   } catch {

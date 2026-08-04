@@ -41,3 +41,6 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# 요람 PDF 등 참고용 원본 (배포에 포함하지 않음)
+/tmp/

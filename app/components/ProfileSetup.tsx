@@ -2,10 +2,12 @@
 
 import { FormEvent, KeyboardEvent, useId, useMemo, useState } from "react";
 import { majorOptions, normalizeMajorSearch } from "../data/major-options";
+import { collegesFor } from "../data/core-curriculum.mjs";
 
 export type UserProfile = {
   cohortYear: number;
   completedSemesters: number;
+  college: string | null;
   major1: string;
   major2: string | null;
   major3: string | null;
@@ -115,6 +117,7 @@ function MajorCombobox({
 export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props) {
   const [cohortYear, setCohortYear] = useState(initialProfile?.cohortYear ?? 2026);
   const [completedSemesters, setCompletedSemesters] = useState(initialProfile?.completedSemesters ?? 0);
+  const [college, setCollege] = useState(initialProfile?.college ?? "");
   const [major1, setMajor1] = useState(initialProfile?.major1 ?? "");
   const [major2, setMajor2] = useState(initialProfile?.major2 ?? "");
   const [major3, setMajor3] = useState(initialProfile?.major3 ?? "");
@@ -135,7 +138,7 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
       const response = await fetch("/api/profile", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ cohortYear, completedSemesters, major1, major2: major2 || null, major3: major3 || null }),
+        body: JSON.stringify({ cohortYear, completedSemesters, college: college || null, major1, major2: major2 || null, major3: major3 || null }),
       });
       const data = (await response.json()) as { profile?: UserProfile; error?: string };
       if (!response.ok || !data.profile) throw new Error(data.error || "저장하지 못했어요.");
@@ -148,6 +151,8 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
 
   const cohortYears = Array.from({ length: 15 }, (_, index) => 2026 - index);
   const semesterCounts = Array.from({ length: 17 }, (_, index) => index);
+  const collegeOptions: Array<{ key: string; label: string }> = collegesFor(cohortYear);
+  const collegeMissing = Boolean(college) && !collegeOptions.some((option) => option.key === college);
 
   return (
     <div className="profile-backdrop">
@@ -165,6 +170,7 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
               <select id="cohort-year" value={cohortYear} onChange={(event) => setCohortYear(Number(event.target.value))}>
                 {cohortYears.map((year) => <option key={year} value={year}>{String(year).slice(2)}학번</option>)}
               </select>
+              {collegeMissing && <small className="profile-hint">이 학번에는 없는 소속이라 다시 선택해 주세요.</small>}
             </div>
             <div className="profile-field">
               <label htmlFor="completed-semesters">이수학기 수<span>필수</span></label>
@@ -173,12 +179,20 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
               </select>
             </div>
           </div>
+          <div className="profile-field">
+            <label htmlFor="college">소속 대학<small>선택</small></label>
+            <select id="college" value={collegeMissing ? "" : college} onChange={(event) => setCollege(event.target.value)}>
+              <option value="">선택하지 않음 (계열 판정 없이 진행)</option>
+              {collegeOptions.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
+            </select>
+            <small className="profile-hint">글쓰기 계열과 요람의 영역별 필수선택(미적분학Ⅰ 등)을 자동으로 골라줍니다.</small>
+          </div>
           <MajorCombobox label="1전공" required value={major1} onChange={setMajor1} />
           <MajorCombobox label="2전공" value={major2} onChange={setMajor2} />
           <MajorCombobox label="3전공" value={major3} onChange={setMajor3} />
           <div className="profile-data-note">
             <strong>어떤 정보가 저장되나요?</strong>
-            <p>입학 연도, 이수학기 수, 선택 전공과 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>
+            <p>입학 연도, 이수학기 수, 소속 대학, 선택 전공과 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>
             <p>사용자 수는 브라우저 기준이라 실제 인원과 조금 다를 수 있습니다.</p>
           </div>
           {!initialProfile && (
