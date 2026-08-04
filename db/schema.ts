@@ -9,3 +9,13 @@ export const analyticsEvents = sqliteTable("analytics_events", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const userProfiles = sqliteTable("user_profiles", {
+  visitorId: text("visitor_id").primaryKey(),
+  cohortYear: integer("cohort_year").notNull(),
+  completedSemesters: integer("completed_semesters").notNull(),
+  major1: text("major_1").notNull(),
+  major2: text("major_2"),
+  major3: text("major_3"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});

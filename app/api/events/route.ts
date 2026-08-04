@@ -7,6 +7,7 @@ const ALLOWED_EVENTS = new Set([
   "department_filter",
   "everytime_import",
   "everytime_import_error",
+  "profile_saved",
 ]);
 const ALLOWED_MAJORS = new Set(["BDS", "PUB", "EDU", "SPM"]);
 const ALLOWED_BUCKETS = new Set(["0", "1-5", "6+"]);
@@ -29,4 +30,3 @@ export async function POST(request: Request) {
     return Response.json({ error: "통계를 기록할 수 없습니다." }, { status: 503, headers: { "cache-control": "no-store" } });
   }
 }
-

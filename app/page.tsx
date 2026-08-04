@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import coursesJson from "./data/courses.generated.json";
 import { linkedMajors, officialSources } from "./data/majors";
+import { departmentOptions } from "./data/major-options";
+import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 
 type Course = (typeof coursesJson)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
@@ -56,6 +58,14 @@ function postEvent(event: string, majorKey?: string, resultBucket?: string) {
   }).catch(() => undefined);
 }
 
+function profileSelections(savedProfile: UserProfile) {
+  const majors = [savedProfile.major1, savedProfile.major2, savedProfile.major3].filter(Boolean) as string[];
+  return {
+    linked: linkedMajors.filter((major) => majors.includes(major.label)).map((major) => major.key),
+    departments: majors.filter((major) => departmentOptions.includes(major)),
+  };
+}
+
 export default function Home() {
   const [selectedLinked, setSelectedLinked] = useState<string[]>(["BDS"]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -69,6 +79,10 @@ export default function Home() {
   const [importState, setImportState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [importMessage, setImportMessage] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [userCount, setUserCount] = useState<number | null>(null);
   const viewed = useRef(false);
 
   useEffect(() => {
@@ -78,10 +92,35 @@ export default function Home() {
     }
   }, []);
 
-  const departments = useMemo(
-    () => [...new Set(coursesJson.map((course) => course.department))].sort((a, b) => a.localeCompare(b, "ko")),
-    [],
-  );
+  useEffect(() => {
+    void Promise.all([
+      fetch("/api/profile", { cache: "no-store" }).then((response) => response.json()),
+      fetch("/api/stats").then((response) => response.ok ? response.json() : null),
+    ]).then(([profileData, statsData]) => {
+      const savedProfile = profileData.profile as UserProfile | null;
+      setProfile(savedProfile);
+      setProfileOpen(!savedProfile);
+      if (savedProfile) {
+        const selections = profileSelections(savedProfile);
+        setSelectedLinked(selections.linked);
+        setSelectedDepartments(selections.departments);
+      }
+      if (typeof statsData?.users?.total === "number") setUserCount(statsData.users.total);
+    }).catch(() => setProfileOpen(true)).finally(() => setProfileLoading(false));
+  }, []);
+
+  const departments = departmentOptions;
+
+  function profileSaved(savedProfile: UserProfile) {
+    const isNew = !profile;
+    setProfile(savedProfile);
+    const selections = profileSelections(savedProfile);
+    setSelectedLinked(selections.linked);
+    setSelectedDepartments(selections.departments);
+    setProfileOpen(false);
+    if (isNew) setUserCount((current) => current === null ? null : current + 1);
+    postEvent("profile_saved");
+  }
 
   const importedNames = useMemo(
     () => new Set(importedCourses.map((course) => normalizeCourseName(course.name))),
@@ -192,9 +231,16 @@ export default function Home() {
             <small>SOGANG</small>
           </span>
         </a>
-        <div className="header-meta">
-          <span className="live-dot" />
-          2026-2 개설과목 · 7월 27일 기준
+        <div className="header-actions">
+          {profile && (
+            <button className="profile-edit" type="button" onClick={() => setProfileOpen(true)}>
+              {String(profile.cohortYear).slice(2)}학번 · {profile.completedSemesters}학기 <span>수정</span>
+            </button>
+          )}
+          <div className="header-meta">
+            <span className="live-dot" />
+            2026-2 개설과목 · 7월 27일 기준
+          </div>
         </div>
       </header>
 
@@ -294,7 +340,7 @@ export default function Home() {
                 </label>
               </div>
             )}
-            <p className="privacy-note"><span>잠금</span> 앱 DB에 이름·학번·링크·IP를 저장하지 않습니다.</p>
+            <p className="privacy-note"><span>잠금</span> 이름·전체 학번·링크·IP를 저장하지 않습니다.</p>
           </section>
 
           <section className="source-card">
@@ -377,15 +423,23 @@ export default function Home() {
       </div>
 
       <section className="security-strip">
-        <div><span>01</span><strong>최소 수집</strong><p>운영 로그는 화면 조회·전공 선택·성공 여부만 익명 집계합니다.</p></div>
+        <div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·전공과 익명 브라우저 ID만 저장합니다.</p></div>
         <div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div>
         <div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div>
       </section>
 
       <footer>
         <span>CourseCheck · 서강대 전공 시간표 도우미</span>
-        <span>학교 공식 서비스가 아니며, 수강신청 전 공식 정보를 다시 확인하세요.</span>
+        <span>{userCount === null ? "브라우저 기준 익명 사용자 집계" : `${userCount.toLocaleString("ko-KR")}명이 설정을 완료했어요`} · 학교 공식 서비스가 아닙니다.</span>
       </footer>
+
+      {profileLoading && (
+        <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>
+      )}
+
+      {!profileLoading && profileOpen && (
+        <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />
+      )}
 
       {selectedCourse && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}>
