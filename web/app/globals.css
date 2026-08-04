@@ -225,7 +225,7 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .helpful-actions button:not(.primary-button):hover { border-color: #d8bcba; color: var(--wine); }
 
 .consent-row b { color: var(--wine); font-weight: 800; }
-.consent-row small { display: block; margin-top: 6px; color: #8a8888; font-size: 10px; line-height: 1.65; word-break: keep-all; }
+.consent-row small { display: block; margin-top: 10px; color: #8a8888; font-size: 10px; line-height: 1.65; word-break: keep-all; }
 
 .doc-page { max-width: 760px; margin: 0 auto; padding: 0 24px 72px; }
 .doc-page > header { padding: 26px 0; border-bottom: 1px solid var(--line); }
@@ -281,6 +281,7 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .major-options button span { font-size: 11px; font-weight: 700; }
 .major-options button small { color: #959595; font-size: 8px; }
 .major-options p { margin: 0; padding: 12px 10px; color: #868686; font-size: 11px; }
+.data-note-link { display: inline-block; margin-top: 10px; color: var(--wine); font-size: 10px; font-weight: 800; }
 .profile-data-note { padding: 12px 14px; border: 1px solid #dfead7; border-radius: 11px; background: #f4f8f0; }
 .profile-data-note strong { color: #496236; font-size: 10px; }
 .profile-data-note p { margin: 5px 0 0; color: #6e6d6d; font-size: 9px; line-height: 1.55; word-break: keep-all; }

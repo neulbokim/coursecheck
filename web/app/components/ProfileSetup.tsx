@@ -41,12 +41,12 @@ function MajorCombobox({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // 아무것도 치지 않았으면 목록을 띄우지 않는다 — 전공이 320개라 첫 7개를 보여줘야 도움이 안 된다
+  const normalizedQuery = normalizeMajorSearch(query);
   const matches = useMemo(() => {
     const normalized = normalizeMajorSearch(query);
-    const source = normalized
-      ? majorOptions.filter((major) => normalizeMajorSearch(major).includes(normalized))
-      : majorOptions;
-    return source.slice(0, 7);
+    if (!normalized) return [];
+    return majorOptions.filter((major) => normalizeMajorSearch(major).includes(normalized)).slice(0, 7);
   }, [query]);
 
   function choose(major: string) {
@@ -96,7 +96,7 @@ function MajorCombobox({
         }}
         required={required}
       />
-      {open && (
+      {open && normalizedQuery && (
         <div className="major-options" id={listId} role="listbox">
           {matches.length ? matches.map((major, index) => (
             <button
@@ -231,21 +231,22 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
             <strong>어떤 정보가 저장되나요?</strong>
             <p>
               입학 연도, 이수학기 수, 소속 대학, 선택 전공, 재학 여부와 익명 브라우저 ID만 저장합니다.
-              이름·전체 학번·IP는 저장하지 않아요. <Link href="/privacy" target="_blank" rel="noreferrer">자세히 보기 ↗</Link>
+              이름·전체 학번·IP는 저장하지 않아요.
             </p>
+            <Link className="data-note-link" href="/privacy" target="_blank" rel="noreferrer">
+              개인정보 처리방침 자세히 알아보기 ↗
+            </Link>
           </div>
-          {!initialProfile && (
-            <label className="consent-row">
-              <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required />
-              <span>
-                <strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만들고,
-                <b>어떤 전공·학기수·학번이 얼마나 쓰는지 집계</b>하는 데 동의합니다.
-                <small>
-                  집계는 사람 수만 세고 따로 쌓아두지 않아요. 마지막으로 설정을 고친 지 1년이 지나면 파기합니다.
-                </small>
-              </span>
-            </label>
-          )}
+          <label className="consent-row">
+            <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required />
+            <span>
+              <strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만들고,
+              <b>어떤 전공·학기수·학번이 얼마나 쓰는지 집계</b>하는 데 동의합니다.
+              <small>
+                집계는 사람 수만 세고 따로 쌓아두지 않아요. 마지막으로 설정을 고친 지 1년이 지나면 파기합니다.
+              </small>
+            </span>
+          </label>
           <label className="consent-row">
             <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
             <span>
