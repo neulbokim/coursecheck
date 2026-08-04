@@ -46,6 +46,50 @@ test("groups timetable entries by start time so one period is one row", () => {
   assert.ok(slots[0].start < slots[1].start, "시작 시각 순으로 정렬된다");
 });
 
+test("lays picked courses on a time-proportional calendar with lanes", async () => {
+  const { assignLanes, layoutCalendar, hourMarks, SLOT_MINUTES } = await import("../app/lib/calendar-layout.mjs");
+  const at = (day, start, end, id) => ({ id, meeting: { day, start, end } });
+
+  assert.equal(SLOT_MINUTES, 10, "시작 시각은 15분 배수, 종료는 11:50·18:50뿐이라 10분 격자에 다 맞는다");
+
+  // 겹치지 않으면 한 레인을 재사용한다
+  const serial = assignLanes([at("월", 540, 615, "a"), at("월", 630, 705, "b")]);
+  assert.equal(serial.lanes, 1);
+  assert.deepEqual(serial.blocks.map((b) => b.lane), [0, 0]);
+  assert.ok(serial.blocks.every((b) => !b.conflict));
+
+  // 겹치면 레인을 나누고 양쪽 다 충돌로 표시한다
+  const clash = assignLanes([at("월", 810, 885, "a"), at("월", 810, 975, "b"), at("월", 900, 975, "c")]);
+  assert.equal(clash.lanes, 2);
+  const laneOf = (id) => clash.blocks.find((b) => b.entry.id === id).lane;
+  assert.notEqual(laneOf("a"), laneOf("b"));
+  assert.equal(laneOf("c"), laneOf("a"), "a가 끝난 뒤라 a의 레인을 물려받는다");
+  assert.equal(clash.blocks.find((b) => b.entry.id === "a").conflict, true);
+  assert.equal(clash.blocks.find((b) => b.entry.id === "c").conflict, true, "b와 겹치므로 충돌");
+
+  // 시간에 비례한 행 위치·길이
+  const layout = layoutCalendar([at("화", 810, 885, "a"), at("수", 840, 890, "b")], ["월", "화", "수"]);
+  assert.equal(layout.startMin, 9 * 60, "기본 범위는 09:00부터");
+  const a = layout.byDay["화"].blocks[0];
+  assert.equal(a.rowStart, (810 - 540) / 10 + 1, "13:30은 09:00에서 27칸 뒤");
+  assert.equal(a.rowSpan, 8, "75분은 10분 격자에서 8칸");
+  const b = layout.byDay["수"].blocks[0];
+  assert.equal(b.rowStart, (840 - 540) / 10 + 1, "14:00은 13:30보다 3칸 아래 — 같은 높이가 아니다");
+  assert.ok(b.rowStart > a.rowStart);
+  assert.equal(layout.byDay["월"].blocks.length, 0);
+  assert.equal(layout.byDay["월"].lanes, 1, "빈 요일도 열이 하나는 있다");
+
+  // 늦게 끝나는 수업이 있으면 범위가 늘어난다
+  const late = layoutCalendar([at("금", 1140, 1250, "a")], ["금"]);
+  assert.equal(late.endMin, 1250, "20:50까지 격자에 정확히 맞는다");
+  assert.equal(late.rows, (1250 - 540) / 10);
+
+  assert.equal(layoutCalendar([at("월", 810, 885, "a"), at("월", 810, 885, "b")], ["월"]).conflictCount, 2);
+  assert.deepEqual(hourMarks(540, 660).map((m) => m.time), [540, 600], "격자 밖 정시는 암시적 행을 만들므로 뺀다");
+  assert.equal(hourMarks(540, 660)[1].row, 7, "10:00은 09:00에서 6칸 뒤");
+  assert.ok(hourMarks(540, 1250).every((m) => m.row <= (1250 - 540) / 10));
+});
+
 test("excludes every course the bulletin groups as choose-one", async () => {
   const { expandEquivalents, equivalentGroups, equivalentLabel } = await import("../app/data/equivalents.mjs");
   const { normalizeCourseName } = await import("../app/lib/course-name.mjs");
@@ -111,6 +155,10 @@ test("defines the CourseCheck product page and social metadata", async () => {
   assert.match(page, /2026학년도 2학기/);
   assert.match(page, /전공 단위로 한 번에 제외/, "전공별 일괄 제외");
   assert.match(page, /GE_MODES/, "교양 표시 전환");
+  assert.match(page, /내 시간표/, "담은 과목 캘린더 뷰");
+  assert.match(page, /layoutCalendar/);
+  assert.match(page, /PICKED_STORAGE_KEY/, "담은 과목은 브라우저에만 저장");
+  assert.doesNotMatch(page, /picked.*fetch\(|fetch\([^)]*picked/i, "담은 과목을 서버로 보내지 않는다");
   assert.match(page, /이전 학기 시간표까지 모두/);
   assert.match(page, /추가로 제외할 과목/);
   assert.match(page, /필수 교양 이수 확인/);
