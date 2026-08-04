@@ -1,0 +1,1 @@
+ALTER TABLE "analytics_events" DROP COLUMN "major_key";

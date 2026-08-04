@@ -17,6 +17,7 @@ type ProfileInput = {
   college?: unknown;
   major2Approved?: unknown;
   major3Approved?: unknown;
+  enrolled?: unknown;
   major1?: unknown;
   major2?: unknown;
   major3?: unknown;
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
         major3: userProfiles.major3,
         major2Approved: userProfiles.major2Approved,
         major3Approved: userProfiles.major3Approved,
+        enrolled: userProfiles.enrolled,
       })
       .from(userProfiles)
       .where(eq(userProfiles.visitorId, visitorId))
@@ -74,6 +76,8 @@ export async function POST(request: Request) {
     // 명시하지 않으면 신청 완료로 본다 — 잘못 감추지 않기 위해
     const major2Approved = payload.major2Approved !== false;
     const major3Approved = payload.major3Approved !== false;
+    // 명시하지 않으면 재학생으로 본다 — 화면 동작은 같고 집계에서만 갈라진다
+    const enrolled = payload.enrolled !== false;
 
     if (!Number.isInteger(cohortYear) || cohortYear < MIN_COHORT_YEAR || cohortYear > MAX_COHORT_YEAR) {
       return Response.json({ error: "학번을 다시 선택해 주세요." }, { status: 400, headers: responseHeaders() });
@@ -102,6 +106,7 @@ export async function POST(request: Request) {
       major3: majors[2] || null,
       major2Approved,
       major3Approved,
+      enrolled,
       updatedAt: new Date(),
     };
     await getDb()
@@ -118,6 +123,7 @@ export async function POST(request: Request) {
           major3: values.major3,
           major2Approved: values.major2Approved,
           major3Approved: values.major3Approved,
+          enrolled: values.enrolled,
           updatedAt: values.updatedAt,
         },
       });
@@ -132,7 +138,7 @@ export async function POST(request: Request) {
         profile: {
           cohortYear, completedSemesters, college,
           major1: majors[0], major2: majors[1] || null, major3: majors[2] || null,
-          major2Approved, major3Approved,
+          major2Approved, major3Approved, enrolled,
         },
       },
       { headers },

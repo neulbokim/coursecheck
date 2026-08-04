@@ -589,3 +589,39 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
   assert.match(database, /process\.env\.DATABASE_URL/);
   assert.doesNotMatch(database, /cloudflare:workers|drizzle-orm\/d1/);
 });
+
+test("records every event the page actually sends", async () => {
+  const [events, page, admin] = await Promise.all([
+    readFile(new URL("../app/api/events/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  const listOf = (source, name) => {
+    const block = source.match(new RegExp(`${name} = new Set\\(\\[([\\s\\S]*?)\\]\\)`));
+    assert.ok(block, `${name}을 찾지 못했다`);
+    return new Set([...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]));
+  };
+  const allowedEvents = listOf(events, "ALLOWED_EVENTS");
+  const allowedBuckets = listOf(events, "ALLOWED_BUCKETS");
+
+  // 화이트리스트에 없는 이름으로 쏘면 400으로 조용히 버려진다 — 양쪽이 어긋나면 집계에 구멍이 난다
+  const sent = [...page.matchAll(/postEvent\("([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(sent.length > 0, "화면이 이벤트를 하나도 쏘지 않는다");
+  for (const event of sent) {
+    assert.ok(allowedEvents.has(event), `${event}를 쏘는데 ALLOWED_EVENTS에 없다`);
+    assert.match(admin, new RegExp(`\\["${event}",`), `${event}에 붙일 한글 이름이 /admin에 없다`);
+  }
+  for (const event of allowedEvents) {
+    assert.ok(sent.includes(event), `${event}는 아무도 쏘지 않는다 — 목록에서 빼자`);
+  }
+
+  // 묶음 값도 마찬가지로 통과하지 못하면 null로 저장된다
+  for (const bucket of ["0", "1-5", "6+", "1-25", "26+", "yes", "no"]) {
+    assert.ok(allowedBuckets.has(bucket), `${bucket} 묶음이 ALLOWED_BUCKETS에 없다`);
+  }
+
+  // 이벤트에는 소속까지만 붙인다 — 학과·학번을 함께 남기면 개인이 드러난다
+  assert.match(events, /ALLOWED_COLLEGES/);
+  assert.doesNotMatch(events, /majorKey|cohortYear/);
+});

@@ -13,6 +13,7 @@ export type UserProfile = {
   major3: string | null;
   major2Approved: boolean;
   major3Approved: boolean;
+  enrolled: boolean;
 };
 
 type Props = {
@@ -125,6 +126,7 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
   const [major3, setMajor3] = useState(initialProfile?.major3 ?? "");
   const [major2Approved, setMajor2Approved] = useState(initialProfile?.major2Approved ?? true);
   const [major3Approved, setMajor3Approved] = useState(initialProfile?.major3Approved ?? true);
+  const [enrolled, setEnrolled] = useState(initialProfile?.enrolled ?? true);
   const [consent, setConsent] = useState(Boolean(initialProfile));
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -145,7 +147,7 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
         body: JSON.stringify({
           cohortYear, completedSemesters, college: college || null,
           major1, major2: major2 || null, major3: major3 || null,
-          major2Approved, major3Approved,
+          major2Approved, major3Approved, enrolled,
         }),
       });
       const data = (await response.json()) as { profile?: UserProfile; error?: string };
@@ -214,9 +216,16 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
               <span><strong>3전공 복수전공 신청을 마쳤어요</strong><small>신청 전이면 체크를 풀어주세요.</small></span>
             </label>
           )}
+          <label className="approval-row">
+            <input type="checkbox" checked={!enrolled} onChange={(event) => setEnrolled(!event.target.checked)} />
+            <span>
+              <strong>지금 수강신청할 재학생은 아니에요</strong>
+              <small>졸업했거나 프로젝트가 궁금해서 둘러보는 경우예요. 화면은 똑같이 쓸 수 있고, 사용 집계에서만 따로 셉니다.</small>
+            </span>
+          </label>
           <div className="profile-data-note">
             <strong>어떤 정보가 저장되나요?</strong>
-            <p>입학 연도, 이수학기 수, 소속 대학, 선택 전공과 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>
+            <p>입학 연도, 이수학기 수, 소속 대학, 선택 전공, 재학 여부와 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>
           </div>
           {!initialProfile && (
             <label className="consent-row">

@@ -17,10 +17,15 @@ type Message = {
 type Dataset = { id: number; semester: string; courseCount: number; uploadedAt: string };
 
 type Overview = {
-  users: { total: number; last24h: number };
+  users: { total: number; last24h: number; visiting: number };
   events: Array<{ event: string; total: number; last24h: number }>;
+  profiles: {
+    byCollege: Array<{ college: string | null; total: number }>;
+    byCohort: Array<{ cohortYear: number; total: number }>;
+  };
+  eventsByCollege: Array<{ college: string | null; event: string; total: number }>;
   feedback: Array<{ status: string; total: number }>;
-  recent: Array<{ id: number; event: string; majorKey: string | null; resultBucket: string | null; createdAt: string }>;
+  recent: Array<{ id: number; event: string; college: string | null; resultBucket: string | null; createdAt: string }>;
 };
 
 /** 이벤트 이름을 사람이 읽을 말로 */
@@ -33,6 +38,16 @@ const EVENT_LABEL = new Map<string, string>([
   ["course_pick", "과목 담기"],
   ["ge_mode", "교양 표시 전환"],
   ["feedback_open", "건의 창 열기"],
+  ["helpful_vote", "도움이 됐나요 응답"],
+]);
+
+/** 묶음 값은 이벤트마다 뜻이 달라서 그대로 두면 읽기 어렵다 */
+const BUCKET_LABEL = new Map<string, string>([
+  ["yes", "도움 됐어요"],
+  ["no", "아쉬웠어요"],
+  ["all", "교양 전체"],
+  ["core", "필수 교양만"],
+  ["none", "교양 숨김"],
 ]);
 
 const CATEGORY_LABEL = new Map<string, string>(feedbackCategories.map((item) => [item.key, item.label]));
@@ -55,6 +70,7 @@ export default function AdminPage() {
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [purgeMessage, setPurgeMessage] = useState("");
 
   const fetchAll = useCallback(async () => {
     const [feedbackResponse, overviewResponse, coursesResponse] = await Promise.all([
@@ -165,6 +181,26 @@ export default function AdminPage() {
     }
   }
 
+  async function purgeEvents(scope: "old" | "all") {
+    const question = scope === "all"
+      ? "기록된 익명 이벤트를 전부 지웁니다. 되돌릴 수 없어요. 계속할까요?"
+      : "30일이 지난 이벤트를 지웁니다. 계속할까요?";
+    if (!window.confirm(question)) return;
+    setBusy(true);
+    setPurgeMessage("");
+    try {
+      const response = await fetch(`/api/admin/overview?scope=${scope}`, { method: "DELETE" });
+      const data = (await response.json()) as { removed?: number; error?: string };
+      if (!response.ok) throw new Error(data.error || "지우지 못했어요.");
+      setPurgeMessage(`${(data.removed ?? 0).toLocaleString("ko-KR")}건을 지웠어요.`);
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "지우지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function setStatus(id: number, status: string) {
     setMessages((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
     const response = await fetch("/api/admin/feedback", {
@@ -184,6 +220,21 @@ export default function AdminPage() {
     return map;
   }, [messages]);
   const shown = filter === "all" ? messages : messages.filter((item) => item.status === filter);
+
+  /** 소속(행) × 이벤트(열) 표. 소속을 고르지 않은 사람과 설정 전에 찍힌 첫 화면 열기는 "미선택"으로 모읍니다. */
+  const collegeMatrix = useMemo(() => {
+    if (!overview) return { columns: [] as string[], rows: [] as Array<{ college: string | null; total: number; byEvent: Map<string, number> }> };
+    const columns = overview.events.map((row) => row.event);
+    const rows = new Map<string, { college: string | null; total: number; byEvent: Map<string, number> }>();
+    for (const row of overview.eventsByCollege) {
+      const key = row.college ?? "";
+      const entry = rows.get(key) ?? { college: row.college, total: 0, byEvent: new Map<string, number>() };
+      entry.total += row.total;
+      entry.byEvent.set(row.event, (entry.byEvent.get(row.event) ?? 0) + row.total);
+      rows.set(key, entry);
+    }
+    return { columns, rows: [...rows.values()].sort((a, b) => b.total - a.total) };
+  }, [overview]);
 
   if (!signedIn) {
     return (
@@ -277,7 +328,13 @@ export default function AdminPage() {
         ) : (
           <>
             <div className="stat-cards">
-              <div className="stat-card"><small>설정 완료 사용자</small><strong>{overview.users.total.toLocaleString("ko-KR")}</strong><em>24시간 +{overview.users.last24h}</em></div>
+              <div className="stat-card">
+                <small>설정 완료 사용자</small>
+                <strong>{(overview.users.total - overview.users.visiting).toLocaleString("ko-KR")}</strong>
+                <em>재학생 · 24시간 +{overview.users.last24h}</em>
+              </div>
+              <div className="stat-card"><small>둘러보기</small><strong>{overview.users.visiting.toLocaleString("ko-KR")}</strong><em>졸업·외부</em></div>
+              <div className="stat-card"><small>지금 떠 있는 배포</small><strong>{process.env.NEXT_PUBLIC_BUILD_REV}</strong><em>v{process.env.NEXT_PUBLIC_APP_VERSION}</em></div>
               {overview.feedback.map((row) => (
                 <div className="stat-card" key={row.status}>
                   <small>{STATUS_FLOW.find((s) => s.key === row.status)?.label ?? row.status}</small>
@@ -304,6 +361,60 @@ export default function AdminPage() {
               </table>
             )}
 
+            <h2 className="admin-subhead">누가 쓰고 있나<small>소속·학번 분포 (설정을 저장한 사람 기준)</small></h2>
+            <div className="admin-split">
+              <table className="admin-table">
+                <thead><tr><th>소속 대학</th><th>사람</th></tr></thead>
+                <tbody>
+                  {overview.profiles.byCollege.map((row) => (
+                    <tr key={row.college ?? "none"}>
+                      <td><strong>{row.college ? COLLEGE_LABEL.get(row.college) ?? row.college : "선택하지 않음"}</strong></td>
+                      <td className="num">{row.total.toLocaleString("ko-KR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <table className="admin-table">
+                <thead><tr><th>학번</th><th>사람</th></tr></thead>
+                <tbody>
+                  {overview.profiles.byCohort.map((row) => (
+                    <tr key={row.cohortYear}>
+                      <td><strong>{String(row.cohortYear).slice(2)}학번</strong></td>
+                      <td className="num">{row.total.toLocaleString("ko-KR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <h2 className="admin-subhead">소속별 이벤트<small>학과·학번 단위로는 내려가지 않습니다</small></h2>
+            {collegeMatrix.rows.length === 0 ? (
+              <p className="admin-empty">아직 기록된 이벤트가 없어요.</p>
+            ) : (
+              <div className="admin-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>소속 대학</th>
+                      {collegeMatrix.columns.map((event) => <th key={event}>{EVENT_LABEL.get(event) ?? event}</th>)}
+                      <th>합계</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {collegeMatrix.rows.map((row) => (
+                      <tr key={row.college ?? "none"}>
+                        <td><strong>{row.college ? COLLEGE_LABEL.get(row.college) ?? row.college : "미선택"}</strong></td>
+                        {collegeMatrix.columns.map((event) => (
+                          <td className="num" key={event}>{row.byEvent.get(event)?.toLocaleString("ko-KR") ?? "–"}</td>
+                        ))}
+                        <td className="num"><strong>{row.total.toLocaleString("ko-KR")}</strong></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <h2 className="admin-subhead">최근 로그<small>익명 이벤트 {overview.recent.length}건</small></h2>
             {overview.recent.length === 0 ? (
               <p className="admin-empty">기록이 없어요.</p>
@@ -313,12 +424,24 @@ export default function AdminPage() {
                   <li key={row.id}>
                     <time>{new Date(row.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</time>
                     <strong>{EVENT_LABEL.get(row.event) ?? row.event}</strong>
-                    {row.resultBucket && <em>{row.resultBucket}</em>}
-                    {row.majorKey && <em>{row.majorKey}</em>}
+                    {row.resultBucket && <em>{BUCKET_LABEL.get(row.resultBucket) ?? row.resultBucket}</em>}
+                    {row.college && <em>{COLLEGE_LABEL.get(row.college) ?? row.college}</em>}
                   </li>
                 ))}
               </ul>
             )}
+
+            <div className="admin-danger">
+              <div>
+                <strong>로그 정리</strong>
+                <small>전체 초기화는 되돌릴 수 없어요. 공개 전 시험 기록을 비울 때만 쓰세요. 사용자 설정(user_profiles)과 건의는 지우지 않습니다.</small>
+                {purgeMessage && <small className="admin-purge-done" role="status">{purgeMessage}</small>}
+              </div>
+              <div className="admin-danger-actions">
+                <button type="button" onClick={() => void purgeEvents("old")} disabled={busy}>30일 지난 것만</button>
+                <button type="button" className="danger" onClick={() => void purgeEvents("all")} disabled={busy}>전체 초기화</button>
+              </div>
+            </div>
 
             <p className="admin-note">
               서버 예외와 요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다 — <code>vercel logs</code> 또는 Vercel 대시보드 Logs 탭에서 보세요.

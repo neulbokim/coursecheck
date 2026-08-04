@@ -1,12 +1,21 @@
-import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
-export const analyticsEvents = pgTable("analytics_events", {
-  id: serial("id").primaryKey(),
-  eventName: text("event_name").notNull(),
-  majorKey: text("major_key"),
-  resultBucket: text("result_bucket"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const analyticsEvents = pgTable(
+  "analytics_events",
+  {
+    id: serial("id").primaryKey(),
+    eventName: text("event_name").notNull(),
+    /**
+     * 소속(대학)까지만 남깁니다. 학과·학번까지 붙이면 인원이 적은 조합에서 개인이 드러나고,
+     * 그 셋을 합치면 사실상 식별자가 됩니다. 학과 단위가 필요하면 이벤트가 아니라
+     * user_profiles 분포(관리자 전용)를 보세요.
+     */
+    college: text("college"),
+    resultBucket: text("result_bucket"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("analytics_events_created_at_idx").on(table.createdAt)],
+);
 
 /**
  * 관리 화면에서 올린 개설과목 데이터. 가장 최근 것을 씁니다.
@@ -53,6 +62,9 @@ export const userProfiles = pgTable("user_profiles", {
   // 기존 행은 신청 완료로 보아 과목을 감추지 않는다.
   major2Approved: boolean("major_2_approved").notNull().default(true),
   major3Approved: boolean("major_3_approved").notNull().default(true),
+  // 졸업생·외부인이 구경하려고 넣은 설정인지. 집계에서 재학생과 섞이면 사용 지표가 부풀려집니다.
+  // 기존 행은 재학생으로 봅니다.
+  enrolled: boolean("enrolled").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

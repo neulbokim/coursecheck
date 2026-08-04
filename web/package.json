@@ -11,6 +11,8 @@
     "start": "next start",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "deploy:check": "node scripts/deploy-check.mjs",
+    "deploy": "npm run deploy:check && vercel --prod",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "data:import": "node scripts/import-sis.mjs"

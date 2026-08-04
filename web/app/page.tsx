@@ -31,6 +31,10 @@ type CoreTrack = ReturnType<typeof coreTracksFor>[number];
 const DAY_LIST = ["월", "화", "수", "목", "금"] as const;
 /** 담은 과목은 브라우저에만 둡니다 (서버로 보내지 않음) */
 const PICKED_STORAGE_KEY = "coursecheck_picked";
+/** 도움이 됐는지 한 번 답하면 다시 묻지 않는다 */
+const HELPFUL_STORAGE_KEY = "coursecheck_helpful";
+/** 빌드 시각은 ISO 문자열 그대로 둔다 — 서버와 브라우저의 표시 형식이 달라지면 하이드레이션이 어긋난다 */
+const buildStampTitle = `빌드 ${process.env.NEXT_PUBLIC_BUILD_TIME ?? "시각 미상"}`;
 /** 과목을 무엇으로 듣는지에 따른 색. 서강대 UI 메인·서브 컬러에서 골랐습니다. */
 const CATEGORIES = [
   { key: "major1", label: "1전공", color: "#861f1c" },
@@ -85,11 +89,17 @@ function parseMeetings(schedule: string): Meeting[] {
   return meetings;
 }
 
-function postEvent(event: string, majorKey?: string, resultBucket?: string) {
+/**
+ * 이벤트에 붙일 소속(대학). 설정을 불러오거나 저장할 때 갱신한다.
+ * 학과·학번은 붙이지 않는다 — 셋을 합치면 사실상 개인 식별자가 된다.
+ */
+let eventCollege: string | null = null;
+
+function postEvent(event: string, resultBucket?: string) {
   void fetch("/api/events", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ event, majorKey, resultBucket }),
+    body: JSON.stringify({ event, college: eventCollege, resultBucket }),
     keepalive: true,
   }).catch(() => undefined);
 }
@@ -133,6 +143,7 @@ export default function Home() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [helpfulVote, setHelpfulVote] = useState<"yes" | "no" | null>(null);
   const viewed = useRef(false);
   const pickedRestored = useRef(false);
   const resultsRef = useRef<HTMLElement>(null);
@@ -142,6 +153,21 @@ export default function Home() {
       viewed.current = true;
       postEvent("page_view");
     }
+  }, []);
+
+  // 이미 답한 사람에게 다시 묻지 않는다 (브라우저 전용)
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      try {
+        const saved = window.localStorage.getItem(HELPFUL_STORAGE_KEY);
+        if (saved === "yes" || saved === "no") setHelpfulVote(saved);
+      } catch {
+        // 저장 공간이 막혀 있어도 화면 동작은 유지한다
+      }
+    });
+    return () => { cancelled = true; };
   }, []);
 
   // 담은 과목 복원·저장 (브라우저 전용).
@@ -187,6 +213,7 @@ export default function Home() {
       .then((response) => response.json())
       .then((profileData) => {
         const savedProfile = profileData.profile as UserProfile | null;
+        eventCollege = savedProfile?.college ?? null;
         setProfile(savedProfile);
         setProfileOpen(!savedProfile);
       })
@@ -195,6 +222,7 @@ export default function Home() {
   }, []);
 
   function profileSaved(savedProfile: UserProfile) {
+    eventCollege = savedProfile.college;
     setProfile(savedProfile);
     setProfileOpen(false);
     setShowResults(false);
@@ -408,7 +436,7 @@ export default function Home() {
 
   function changeGeMode(mode: GeMode) {
     setGeMode(mode);
-    postEvent("ge_mode", undefined, mode);
+    postEvent("ge_mode", mode);
   }
 
   function toggleTrack(trackKey: string, completed: boolean) {
@@ -448,7 +476,7 @@ export default function Home() {
       setImportState("done");
       const importedCourseCount = importedTermsFromLink.reduce((sum, term) => sum + term.courses.length, 0);
       setImportMessage(`${importedTermsFromLink.length}개 학기에서 ${importedCourseCount}개 수강 과목을 가져왔어요.`);
-      postEvent("everytime_import", undefined, importedCourseCount === 0 ? "0" : importedCourseCount <= 5 ? "1-5" : "6+");
+      postEvent("everytime_import", importedCourseCount === 0 ? "0" : importedCourseCount <= 5 ? "1-5" : "6+");
     } catch (error) {
       setImportState("error");
       setImportMessage(error instanceof Error ? error.message : "시간표를 가져오지 못했어요.");
@@ -473,9 +501,21 @@ export default function Home() {
     setShowResults(false);
   }
 
+  function voteHelpful(vote: "yes" | "no") {
+    setHelpfulVote(vote);
+    try {
+      window.localStorage.setItem(HELPFUL_STORAGE_KEY, vote);
+    } catch {
+      // 저장 공간이 막혀 있어도 화면 동작은 유지한다
+    }
+    postEvent("helpful_vote", vote);
+    // 아쉬웠다면 무엇이 아쉬웠는지 바로 받을 수 있게 건의 창을 연다
+    if (vote === "no") setFeedbackOpen(true);
+  }
+
   function revealResults() {
     setShowResults(true);
-    postEvent("results_view", undefined, filteredCourses.length === 0 ? "0" : filteredCourses.length <= 25 ? "1-25" : "26+");
+    postEvent("results_view", filteredCourses.length === 0 ? "0" : filteredCourses.length <= 25 ? "1-25" : "26+");
     window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }
 
@@ -714,8 +754,31 @@ export default function Home() {
         </section>
       </div>
 
+      {showResults && (
+        <section className="helpful-card" aria-label="도움이 됐는지 알려주기">
+          {helpfulVote === null ? (
+            <>
+              <p><strong>이 시간표가 도움이 됐나요?</strong><small>한 번만 여쭤보고 다시 묻지 않을게요.</small></p>
+              <div className="helpful-actions">
+                <button type="button" className="primary-button" onClick={() => voteHelpful("yes")}>도움이 됐어요</button>
+                <button type="button" onClick={() => voteHelpful("no")}>아쉬웠어요</button>
+              </div>
+            </>
+          ) : (
+            <p role="status">
+              <strong>{helpfulVote === "yes" ? "고맙습니다. 남은 수강신청도 잘 마치시길!" : "알려주셔서 고맙습니다."}</strong>
+              <small>{helpfulVote === "yes" ? "더 필요한 게 생기면 오른쪽 아래 건의하기로 알려주세요." : "어떤 점이 아쉬웠는지 적어주시면 다음 학기에 반영할게요."}</small>
+            </p>
+          )}
+        </section>
+      )}
+
       <section className="security-strip"><div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·소속 대학·전공과 익명 브라우저 ID만 저장합니다.</p></div><div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div><div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div></section>
-      <footer><span>CourseCheck · 서강대 전공 시간표 도우미</span><span>학교 공식 서비스가 아닙니다.</span></footer>
+      <footer>
+        <span>CourseCheck · 서강대 전공 시간표 도우미</span>
+        <span className="build-stamp" title={buildStampTitle}>v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_BUILD_REV}</span>
+        <span>학교 공식 서비스가 아닙니다.</span>
+      </footer>
 
       <button
         className="feedback-launcher"

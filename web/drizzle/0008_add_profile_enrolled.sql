@@ -1,0 +1,1 @@
+ALTER TABLE "user_profiles" ADD COLUMN "enrolled" boolean DEFAULT true NOT NULL;
