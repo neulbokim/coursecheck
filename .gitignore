@@ -5,9 +5,13 @@ venv/
 __pycache__
 
 # 비밀값 (절대 커밋하지 않음)
+.env
 .env*
 !.env.example
 .ipynb_checkpoints/
+
+# 요람 PDF 원본 (336MB · 참고용, 배포·저장소에 포함하지 않음)
+data/bulletins/
 
 # 노트북이 생성하는 산출물
 *-timetable.html
@@ -20,6 +24,5 @@ web/.vercel/
 web/dist/
 web/.vinext/
 web/.wrangler/
-web/tmp/
 web/.env*
 !web/.env.example

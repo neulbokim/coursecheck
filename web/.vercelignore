@@ -1,0 +1,10 @@
+# 배포에 필요 없는 것 (Vercel 업로드 100MB 제한 보호)
+node_modules
+.next
+.git
+dist
+.vinext
+.wrangler
+tmp
+*.pdf
+*.xls
