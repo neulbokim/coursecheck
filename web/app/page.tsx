@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import coursesJson from "./data/courses.generated.json";
 import { linkedMajors, officialSources } from "./data/majors";
-import { departmentOptions } from "./data/major-options";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 import FeedbackChat from "./components/FeedbackChat";
 import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
@@ -40,6 +39,13 @@ const CATEGORY_COLOR = new Map(CATEGORIES.map((item) => [item.key, item.color]))
 const CATEGORY_LABEL = new Map(CATEGORIES.map((item) => [item.key, item.label]));
 /** 교양을 개설하는 기관 — 필수 트랙에 없으면 자유교양으로 본다 */
 const GENERAL_EDUCATION_DEPARTMENTS = ["전인교육원", "융합교육원"];
+/** 교양을 얼마나 보여줄지 */
+const GE_MODES = [
+  { key: "all", label: "전체", hint: "필수교양 + 자유교양" },
+  { key: "core", label: "필수만", hint: "남은 필수 교양 영역만" },
+  { key: "none", label: "숨기기", hint: "전공 과목만" },
+] as const;
+type GeMode = (typeof GE_MODES)[number]["key"];
 
 function compactSemester(value: string) {
   const match = value.match(/(\d{4}).*?(1|2|여름|겨울)\s*학기/);
@@ -84,14 +90,6 @@ function postEvent(event: string, majorKey?: string, resultBucket?: string) {
   }).catch(() => undefined);
 }
 
-function profileSelections(savedProfile: UserProfile) {
-  const majors = [savedProfile.major1, savedProfile.major2, savedProfile.major3].filter(Boolean) as string[];
-  return {
-    linked: linkedMajors.filter((major) => majors.includes(major.label)).map((major) => major.key),
-    departments: majors.filter((major) => departmentOptions.includes(major)),
-  };
-}
-
 /** 전공 순번(1·2·3전공)별로 과목 코드와 학과를 찾을 표를 만든다 */
 function majorRankIndex(majors: string[]) {
   const byCode = new Map<string, number>();
@@ -109,8 +107,6 @@ function majorRankIndex(majors: string[]) {
 }
 
 export default function Home() {
-  const [selectedLinked, setSelectedLinked] = useState<string[]>(["BDS"]);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"timetable" | "list">("timetable");
   const [everytimeUrl, setEverytimeUrl] = useState("");
@@ -118,6 +114,8 @@ export default function Home() {
   const [activeImportedTerm, setActiveImportedTerm] = useState("");
   const [includedTakenNames, setIncludedTakenNames] = useState<string[]>([]);
   const [manualTrackState, setManualTrackState] = useState<Record<string, boolean>>({});
+  const [excludedMajorRanks, setExcludedMajorRanks] = useState<number[]>([]);
+  const [geMode, setGeMode] = useState<GeMode>("core");
   const [manualExcludeInput, setManualExcludeInput] = useState("");
   const [manualExcludedCourses, setManualExcludedCourses] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -147,11 +145,6 @@ export default function Home() {
       const savedProfile = profileData.profile as UserProfile | null;
       setProfile(savedProfile);
       setProfileOpen(!savedProfile);
-      if (savedProfile) {
-        const selections = profileSelections(savedProfile);
-        setSelectedLinked(selections.linked);
-        setSelectedDepartments(selections.departments);
-      }
       if (typeof statsData?.users?.total === "number") setUserCount(statsData.users.total);
     }).catch(() => setProfileOpen(true)).finally(() => setProfileLoading(false));
   }, []);
@@ -159,11 +152,9 @@ export default function Home() {
   function profileSaved(savedProfile: UserProfile) {
     const isNew = !profile;
     setProfile(savedProfile);
-    const selections = profileSelections(savedProfile);
-    setSelectedLinked(selections.linked);
-    setSelectedDepartments(selections.departments);
     setProfileOpen(false);
     setShowResults(false);
+    setExcludedMajorRanks([]);
     if (isNew) setUserCount((current) => current === null ? null : current + 1);
     postEvent("profile_saved");
   }
@@ -233,19 +224,29 @@ export default function Home() {
   const remainingTrackCount = coreTracks.length - completedTrackKeys.size;
 
   const filteredCourses = useMemo(() => {
-    const selectedCodeSets = linkedMajors
-      .filter((major) => selectedLinked.includes(major.key))
-      .map((major) => new Set(major.codes));
+    const ranks = majorRankIndex(profileMajors);
     const normalizedQuery = query.trim().toLowerCase();
 
     return coursesJson.filter((course) => {
       const trackKey = trackByCode.get(course.code);
       if (trackKey && completedTrackKeys.has(trackKey)) return false;
-      const majorMatch = selectedCodeSets.some((codes) => codes.has(course.code)) || selectedDepartments.includes(course.department);
-      const searchMatch = !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
-      return (majorMatch || Boolean(trackKey)) && searchMatch && !excludedNames.has(normalizeCourseName(course.name));
+      if (excludedNames.has(normalizeCourseName(course.name))) return false;
+
+      // 전공으로 듣는 과목이면 그 순번을, 아니면 교양 구분을 본다
+      const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
+      if (rank) {
+        if (excludedMajorRanks.includes(rank)) return false;
+      } else if (trackKey) {
+        if (geMode === "none") return false;
+      } else if (GENERAL_EDUCATION_DEPARTMENTS.includes(course.department)) {
+        if (geMode !== "all") return false;
+      } else {
+        return false;
+      }
+
+      return !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [selectedLinked, selectedDepartments, query, excludedNames, trackByCode, completedTrackKeys]);
+  }, [profileMajors, query, excludedNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode]);
 
   const timetableSlots = useMemo(() => groupTimetableEntries(
     filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
@@ -273,6 +274,15 @@ export default function Home() {
   }, [filteredCourses, profileMajors, trackByCode]);
 
   const majorRanks = useMemo(() => majorRankIndex(profileMajors), [profileMajors]);
+  /** 전공 순번별로 이번 학기 개설 과목이 몇 개인지 (제외 체크박스에 표시) */
+  const majorCourseCounts = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const course of coursesJson) {
+      const rank = majorRanks.byCode.get(course.code) ?? majorRanks.byDepartment.get(course.department);
+      if (rank) counts.set(rank, (counts.get(rank) ?? 0) + 1);
+    }
+    return counts;
+  }, [majorRanks]);
 
   /** 이 과목을 무엇으로 듣는지 — 1·2·3전공 > 필수교양 > 자유교양 순으로 판정 */
   function categoryOf(course: Course) {
@@ -293,6 +303,18 @@ export default function Home() {
 
   function trackLabelFor(course: Course) {
     return trackByKey.get(trackByCode.get(course.code) ?? "")?.label ?? "";
+  }
+
+  function toggleMajorRank(rank: number, excluded: boolean) {
+    setExcludedMajorRanks((current) =>
+      excluded ? [...new Set([...current, rank])] : current.filter((item) => item !== rank),
+    );
+    setShowResults(false);
+  }
+
+  function changeGeMode(mode: GeMode) {
+    setGeMode(mode);
+    postEvent("ge_mode", undefined, mode);
   }
 
   function toggleTrack(trackKey: string, completed: boolean) {
@@ -396,6 +418,33 @@ export default function Home() {
             </form>
             {importMessage && <p className={`import-message ${importState}`} role="status">{importMessage}</p>}
 
+            {profileMajors.length > 0 && (
+              <div className="major-exclusion">
+                <p className="major-exclusion-label">전공 단위로 한 번에 제외<small>이미 그 전공을 다 이수했다면 체크하세요</small></p>
+                <div className="major-exclusion-list">
+                  {profileMajors.map((major, index) => {
+                    const rank = index + 1;
+                    const excluded = excludedMajorRanks.includes(rank);
+                    const count = majorCourseCounts.get(rank) ?? 0;
+                    return (
+                      <label key={`${major}-${rank}`} className={excluded ? "major-exclusion-item excluded" : "major-exclusion-item"}>
+                        <input
+                          type="checkbox"
+                          checked={excluded}
+                          onChange={(event) => toggleMajorRank(rank, event.target.checked)}
+                        />
+                        <span>
+                          <strong style={{ color: excluded ? undefined : CATEGORY_COLOR.get(`major${rank}` as never) }}>{rank}전공 과목 제외</strong>
+                          <small>{major} · 이번 학기 {count}과목</small>
+                        </span>
+                        <em>{excluded ? "제외" : "포함"}</em>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {importedTerms.length > 0 && (
               <div className="semester-history">
                 <div className="semester-tabs" role="tablist" aria-label="가져온 학기">
@@ -468,7 +517,7 @@ export default function Home() {
         <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
           <div className="result-toolbar">
             <div><p className="semester-label">3 · 2026학년도 2학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && <small>{[hiddenTakenCount > 0 ? `${hiddenTakenCount}개 수강·추가 과목 제외됨` : "", remainingTrackCount > 0 ? `남은 필수 교양 ${remainingTrackCount}개 영역 포함` : "필수 교양 모두 이수"].filter(Boolean).join(" · ")}</small>}</div>
-            {showResults && <div className="toolbar-actions"><div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button></div></div>}
+            {showResults && <div className="toolbar-actions"><div className="ge-switch" role="group" aria-label="교양 표시">{GE_MODES.map((mode) => <button key={mode.key} type="button" title={mode.hint} aria-pressed={geMode === mode.key} className={geMode === mode.key ? "active" : ""} onClick={() => changeGeMode(mode.key)}>{mode.label}</button>)}</div><div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button></div></div>}
           </div>
 
           {!showResults ? (
