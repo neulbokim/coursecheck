@@ -6,7 +6,8 @@ import bundledCourses from "./data/courses.generated.json";
 import bundledMeta from "./data/courses.generated.meta.json";
 import { linkedMajors, officialSources } from "./data/majors";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
-import FeedbackChat from "./components/FeedbackChat";
+import FeedbackLauncher from "./components/FeedbackLauncher";
+import { postEvent } from "./lib/track.mjs";
 import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
 import { groupTimetableEntries } from "./lib/timetable-layout.mjs";
 import { hourMarks, layoutCalendar } from "./lib/calendar-layout.mjs";
@@ -97,20 +98,6 @@ function parseMeetings(schedule: string): Meeting[] {
     }
   }
   return meetings;
-}
-
-/**
- * 누가 쏜 이벤트인지는 서버가 방문자 쿠키로 판단한다.
- * 쿠키가 HttpOnly라 여기서는 읽을 수 없고, 읽을 필요도 없다 —
- * 선택 동의 여부와 소속·전공·학번은 서버가 저장된 설정에서 직접 가져온다.
- */
-function postEvent(event: string, resultBucket?: string) {
-  void fetch("/api/events", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ event, resultBucket }),
-    keepalive: true,
-  }).catch(() => undefined);
 }
 
 /** 전공 순번(1·2·3전공)별로 과목 코드와 학과를 찾을 표를 만든다 */
@@ -786,15 +773,7 @@ export default function Home() {
         <span><Link href="/privacy">개인정보 처리방침</Link> · 학교 공식 서비스가 아닙니다.</span>
       </footer>
 
-      <button
-        className="feedback-launcher"
-        type="button"
-        onClick={() => { setFeedbackOpen(true); postEvent("feedback_open"); }}
-        aria-haspopup="dialog"
-      >
-        <span aria-hidden="true">✉</span>개발자에게 건의하기
-      </button>
-      {feedbackOpen && <FeedbackChat onClose={() => setFeedbackOpen(false)} />}
+      <FeedbackLauncher open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       {profileLoading && <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>}
       {!profileLoading && profileOpen && <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />}

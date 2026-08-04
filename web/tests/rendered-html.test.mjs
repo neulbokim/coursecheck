@@ -278,7 +278,14 @@ test("defines the CourseCheck product page and social metadata", async () => {
   assert.match(page, /추가로 제외할 과목/);
   assert.match(page, /필수 교양 이수 확인/);
   assert.match(page, /개설 시간표 확인하기/);
-  assert.match(page, /개발자에게 건의하기/);
+  // 건의하기 단추는 시간표 화면과 약관 화면이 함께 쓰는 컴포넌트에 있다
+  assert.match(page, /<FeedbackLauncher/);
+  const [launcherFile, privacyPage] = await Promise.all([
+    readFile(new URL("../app/components/FeedbackLauncher.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/privacy/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(launcherFile, /개발자에게 건의하기/);
+  assert.match(privacyPage, /<FeedbackLauncher/, "약관 화면에서도 건의할 수 있어야 한다");
   assert.doesNotMatch(page, /className="major-chip"/);
   assert.doesNotMatch(page, /전공 선택 확인|profile-summary/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton|Your site is taking shape/);
@@ -599,12 +606,16 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
 });
 
 test("records every event the page actually sends", async () => {
-  const [events, page, admin, profileSetup] = await Promise.all([
+  const [events, page, admin, profileSetup, launcher, track] = await Promise.all([
     readFile(new URL("../app/api/events/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/ProfileSetup.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/FeedbackLauncher.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/lib/track.mjs", import.meta.url), "utf8"),
   ]);
+  // 이벤트를 쏘는 곳이 화면 하나가 아니므로 모두 모아서 본다
+  const callers = [page, launcher].join("\n");
 
   const listOf = (source, name) => {
     const block = source.match(new RegExp(`${name} = new Set\\(\\[([\\s\\S]*?)\\]\\)`));
@@ -615,7 +626,7 @@ test("records every event the page actually sends", async () => {
   const allowedBuckets = listOf(events, "ALLOWED_BUCKETS");
 
   // 화이트리스트에 없는 이름으로 쏘면 400으로 조용히 버려진다 — 양쪽이 어긋나면 집계에 구멍이 난다
-  const sent = [...page.matchAll(/postEvent\("([^"]+)"/g)].map((match) => match[1]);
+  const sent = [...callers.matchAll(/postEvent\("([^"]+)"/g)].map((match) => match[1]);
   assert.ok(sent.length > 0, "화면이 이벤트를 하나도 쏘지 않는다");
   for (const event of sent) {
     assert.ok(allowedEvents.has(event), `${event}를 쏘는데 ALLOWED_EVENTS에 없다`);
@@ -633,9 +644,10 @@ test("records every event the page actually sends", async () => {
   // 누구인지는 브라우저 말이 아니라 서버가 정한다 — 화면은 이름과 묶음 값만 보낸다
   assert.match(events, /analytics_consent/, "동의 여부를 서버에서 확인해야 한다");
   assert.match(events, /HttpOnly 쿠키|coursecheck_visitor/);
-  const eventBody = page.match(/body: JSON\.stringify\(\{ event[^}]*\}\)/)?.[0] ?? "";
+  const eventBody = track.match(/body: JSON\.stringify\(\{ event[^}]*\}\)/)?.[0] ?? "";
   assert.ok(eventBody, "postEvent가 보내는 본문을 찾지 못했다");
   assert.doesNotMatch(eventBody, /college|major|cohort|consent/, "화면이 사용자 속성을 실어 보내면 안 된다");
+  assert.doesNotMatch(callers, /fetch\("\/api\/events"/, "이벤트는 track.mjs 한 곳으로만 보낸다");
   assert.match(profileSetup, /analyticsConsent/);
   assert.match(profileSetup, /\(필수\)/, "설정 저장 동의는 필수로 받는다");
   assert.match(profileSetup, /\(선택\)/, "선택 동의는 필수 동의와 구분해 보여준다");

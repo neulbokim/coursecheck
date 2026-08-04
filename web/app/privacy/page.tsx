@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import FeedbackLauncher from "../components/FeedbackLauncher";
 
 export const metadata: Metadata = {
   title: "개인정보 처리방침 | CourseCheck",
@@ -97,6 +98,8 @@ export default function PrivacyPage() {
 
         <p className="doc-foot"><Link href="/">← 시간표로 돌아가기</Link></p>
       </article>
+
+      <FeedbackLauncher />
     </main>
   );
 }
