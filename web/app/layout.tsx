@@ -4,7 +4,7 @@ import "pretendard/dist/web/variable/pretendardvariable.css";
 import "./globals.css";
 
 const title = "CourseCheck | 서강대 전공 시간표";
-const description = "서강대학교 개설과목과 대학요람을 전공별 시간표로 확인하고, 에브리타임 수강 과목을 제외해 보세요.";
+const description = "내가 수강한 과목을 제외하고, 내 전공 조합에 맞게 어떤 수업이 열렸는지 시간표로 확인해 보세요.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();

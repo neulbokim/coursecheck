@@ -63,7 +63,7 @@ test("defines the CourseCheck product page and social metadata", async () => {
   assert.match(layout, /<html lang="ko">/);
   assert.match(layout, /CourseCheck \| 서강대 전공 시간표/);
   assert.match(layout, /new URL\("\/og\.png", baseUrl\)/);
-  assert.match(page, /내 전공으로 이번 학기/);
+  assert.match(page, /시간표를 다시 그리세요/, "히어로 문구는 바뀔 수 있으니 고정된 부분만 확인한다");
   assert.match(page, /2026학년도 2학기/);
   assert.match(page, /useState<string\[\]>\(\["BDS"\]\)/);
   assert.match(page, /이전 학기 시간표까지 모두/);

@@ -292,6 +292,8 @@ footer { max-width: 1404px; margin: 0 auto; padding: 24px 0 34px; display: flex;
 }
 
 @media (max-width: 680px) {
+  /* 좁은 화면에서는 의도한 줄바꿈이 외톨이 줄을 만들어 해제합니다 */
+  .wide-break { display: none; }
   .site-header { height: 66px; padding: 0 18px; }
   .header-meta { display: none; }
   .header-actions { gap: 6px; }

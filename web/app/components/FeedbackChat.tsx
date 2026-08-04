@@ -8,7 +8,7 @@ type Bubble = { from: "bot" | "me"; text: string };
 
 const CATEGORIES: Category[] = feedbackCategories;
 const OPENING: Bubble[] = [
-  { from: "bot", text: "안녕하세요, CourseCheck 만든 사람이에요. 남겨주신 의견은 제가 직접 읽습니다." },
+  { from: "bot", text: "안녕하세요, 남겨주신 의견은 제가 직접 읽습니다." },
   { from: "bot", text: "어떤 이야기를 남기고 싶으세요?" },
 ];
 
@@ -64,7 +64,7 @@ export default function FeedbackChat({ onClose }: { onClose: () => void }) {
       setBubbles((current) => [
         ...current,
         { from: "me", text: message },
-        { from: "bot", text: "잘 받았어요. 읽고 반영할 수 있는 건 반영하겠습니다. 고맙습니다!" },
+        { from: "bot", text: "잘 받았어요. 읽고 반영할 수 있는 건 반영하겠습니다. 감사합니다!" },
       ]);
       setDraft("");
       setState("sent");

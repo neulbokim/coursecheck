@@ -319,7 +319,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>내 전공으로 이번 학기<br />시간표를 다시 그리세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다. 들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
+        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>이번 학기, 나에게 남은 과목들로{" "}<br className="wide-break" />시간표를 다시 그리세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.{" "}<br className="wide-break" />들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
         <div className="trust-card"><span className="shield" aria-hidden="true">✓</span><div><strong>시간표 링크는 저장하지 않아요</strong><p>과목명만 비교하고 원문과 링크 토큰은 즉시 버립니다.</p></div></div>
       </section>
 
