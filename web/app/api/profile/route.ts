@@ -2,14 +2,14 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { userProfiles } from "../../../db/schema";
 import { majorOptions } from "../../data/major-options";
-import { colleges } from "../../data/core-curriculum.mjs";
+import { LAST_BULLETIN_YEAR, colleges } from "../../data/core-curriculum.mjs";
 
 const COOKIE_NAME = "coursecheck_visitor";
 const VISITOR_ID_PATTERN = /^[0-9a-f-]{36}$/i;
 const ALLOWED_MAJORS = new Set(majorOptions);
 const ALLOWED_COLLEGES = new Set<string>(colleges.map((college: { key: string }) => college.key));
 const MIN_COHORT_YEAR = 2012;
-const MAX_COHORT_YEAR = 2026;
+const MAX_COHORT_YEAR = LAST_BULLETIN_YEAR;
 
 type ProfileInput = {
   cohortYear?: unknown;

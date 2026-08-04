@@ -276,7 +276,7 @@ test("accepts developer feedback one way and keeps it manageable", async () => {
   assert.match(schema, /status: text\("status"\)/);
 
   // 관리: 서명한 세션 쿠키가 있어야 읽기·상태 변경이 가능하다
-  assert.match(adminFeedback, /hasAdminSession/);
+  assert.match(adminFeedback, /verifyAdminSession/);
   assert.match(adminFeedback, /status: 401/);
   assert.match(adminFeedback, /export async function PATCH/);
   assert.match(adminSession, /safeEqual\(given, token\)/, "관리자 키는 상수 시간으로 비교한다");
@@ -284,6 +284,52 @@ test("accepts developer feedback one way and keeps it manageable", async () => {
   assert.match(adminLib, /crypto\.subtle\.sign/, "쿠키에는 키가 아니라 서명값만 담는다");
   assert.doesNotMatch(adminSession, /searchParams|\?token=/, "키를 URL에 담지 않는다");
   assert.doesNotMatch(adminLib, /process\.env\.ADMIN_TOKEN/, "토큰은 호출부에서만 읽는다");
+  assert.match(adminSession, /LOGIN_MAX_ATTEMPTS/, "로그인 시도 횟수를 제한한다");
+  assert.match(adminSession, /status: 429/);
+  assert.match(adminSession, /retry-after/);
+  assert.doesNotMatch(adminLib, /x-forwarded-for[\s\S]{0,400}insert|원본 IP를 저장/, "원본 IP는 저장하지 않는다");
+});
+
+test("expires the admin session so a copied cookie stops working", async () => {
+  const { createAdminSession, verifyAdminSession, loginBucket, SESSION_TTL_SECONDS } = await import(
+    "../app/lib/admin-session.mjs"
+  );
+
+  const token = "test-admin-token-0123456789";
+  const now = 1_800_000_000_000;
+  const value = await createAdminSession(token, now);
+  const asRequest = (cookie) => new Request("https://example.test/", { headers: { cookie } });
+  const cookie = `coursecheck_admin=${value}`;
+
+  assert.ok(await verifyAdminSession(asRequest(cookie), token, now), "발급 직후에는 유효하다");
+  assert.ok(
+    await verifyAdminSession(asRequest(cookie), token, now + SESSION_TTL_SECONDS * 1000 - 1000),
+    "만료 직전에는 유효하다",
+  );
+  assert.equal(
+    await verifyAdminSession(asRequest(cookie), token, now + SESSION_TTL_SECONDS * 1000 + 1),
+    false,
+    "만료 후 같은 쿠키 값은 통하지 않는다",
+  );
+
+  // 만료 시각만 미래로 바꿔치기하면 서명이 깨진다
+  const [, signature] = value.split(".");
+  const forged = `coursecheck_admin=${now + 10 ** 12}.${signature}`;
+  assert.equal(await verifyAdminSession(asRequest(forged), token, now), false, "만료 시각 위조는 막힌다");
+
+  assert.equal(await verifyAdminSession(asRequest(cookie), "other-admin-token-9876543", now), false);
+  assert.equal(await verifyAdminSession(asRequest("coursecheck_admin=garbage"), token, now), false);
+  assert.equal(await verifyAdminSession(asRequest(""), token, now), false);
+  assert.equal(await verifyAdminSession(asRequest(cookie), undefined, now), false);
+
+  // 세션 값에는 만료 시각과 서명만 들어가고 토큰은 들어가지 않는다
+  assert.match(value, /^\d+\.[0-9a-f]{64}$/);
+  assert.ok(!value.includes(token));
+
+  // 시도 묶음 키는 IP를 그대로 담지 않는다
+  const bucket = await loginBucket(new Request("https://example.test/", { headers: { "x-forwarded-for": "203.0.113.7" } }), token);
+  assert.match(bucket, /^[0-9a-f]{32}$/);
+  assert.ok(!bucket.includes("203"));
 });
 
 test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allowlisted", async () => {
@@ -303,7 +349,9 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
   assert.match(everytime, /extractSemesterReferences/);
   assert.match(everytime, /\{ terms, courses:/);
   assert.match(everytime, /extractEverytimeUrl/);
-  assert.doesNotMatch(schema, /ip|userAgent|token|url|courseName/i);
+  // 주석을 걷어낸 실제 컬럼 정의에 민감 항목이 없어야 한다
+  const columns = schema.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*/g, "");
+  assert.doesNotMatch(columns, /"(?:[^"]*_)?(?:ip|user_agent|token|url|course_name)"/i);
   assert.doesNotMatch(events, /request\.headers\.get\("user-agent"\)|cf-connecting-ip/i);
   assert.match(profile, /HttpOnly; Secure; SameSite=Lax/);
   assert.match(profile, /ALLOWED_MAJORS/);

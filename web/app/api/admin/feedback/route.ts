@@ -1,7 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { feedbackMessages, userProfiles } from "../../../../db/schema";
-import { hasAdminSession } from "../../../lib/admin-session.mjs";
+import { verifyAdminSession } from "../../../lib/admin-session.mjs";
 import { feedbackStatuses } from "../../../lib/feedback.mjs";
 
 const PAGE_SIZE = 200;
@@ -13,8 +13,8 @@ function responseHeaders() {
 async function guard(request: Request) {
   const token = process.env.ADMIN_TOKEN;
   if (!token) return Response.json({ error: "ADMIN_TOKEN이 설정되지 않았어요." }, { status: 503, headers: responseHeaders() });
-  if (!(await hasAdminSession(request, token))) {
-    return Response.json({ error: "관리자 로그인이 필요해요." }, { status: 401, headers: responseHeaders() });
+  if (!(await verifyAdminSession(request, token))) {
+    return Response.json({ error: "관리자 로그인이 필요해요. 세션이 만료되었을 수 있어요." }, { status: 401, headers: responseHeaders() });
   }
   return null;
 }

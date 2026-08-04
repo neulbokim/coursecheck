@@ -2,7 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useId, useMemo, useState } from "react";
 import { majorOptions, normalizeMajorSearch } from "../data/major-options";
-import { collegesFor } from "../data/core-curriculum.mjs";
+import { FIRST_BULLETIN_YEAR, LAST_BULLETIN_YEAR, collegesFor } from "../data/core-curriculum.mjs";
 
 export type UserProfile = {
   cohortYear: number;
@@ -115,7 +115,7 @@ function MajorCombobox({
 }
 
 export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props) {
-  const [cohortYear, setCohortYear] = useState(initialProfile?.cohortYear ?? 2026);
+  const [cohortYear, setCohortYear] = useState(initialProfile?.cohortYear ?? LAST_BULLETIN_YEAR);
   const [completedSemesters, setCompletedSemesters] = useState(initialProfile?.completedSemesters ?? 0);
   const [college, setCollege] = useState(initialProfile?.college ?? "");
   const [major1, setMajor1] = useState(initialProfile?.major1 ?? "");
@@ -149,7 +149,11 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
     }
   }
 
-  const cohortYears = Array.from({ length: 15 }, (_, index) => 2026 - index);
+  // 설정 전 기본값은 가장 최근 요람(26학번)이고, 보유한 요람보다 이전 학번도 고를 수 있게 4년 더 둡니다.
+  const cohortYears = Array.from(
+    { length: LAST_BULLETIN_YEAR - FIRST_BULLETIN_YEAR + 5 },
+    (_, index) => LAST_BULLETIN_YEAR - index,
+  );
   const semesterCounts = Array.from({ length: 17 }, (_, index) => index);
   const collegeOptions: Array<{ key: string; label: string }> = collegesFor(cohortYear);
   const collegeMissing = Boolean(college) && !collegeOptions.some((option) => option.key === college);

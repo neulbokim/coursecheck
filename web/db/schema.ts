@@ -8,6 +8,17 @@ export const analyticsEvents = pgTable("analytics_events", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * 관리자 로그인 시도 제한. 원본 IP는 저장하지 않고 ADMIN_TOKEN으로 서명해
+ * 잘라낸 해시만 묶음 키로 씁니다. 로그인에 성공하면 행을 지웁니다.
+ */
+export const adminLoginAttempts = pgTable("admin_login_attempts", {
+  clientHash: text("client_hash").primaryKey(),
+  attempts: integer("attempts").notNull().default(0),
+  windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull().defaultNow(),
+  lockedUntil: timestamp("locked_until", { withTimezone: true }),
+});
+
 /** 개발자에게 건의하기: 사용자가 직접 쓴 의견만 단방향으로 받습니다. 답장 수단은 저장하지 않습니다. */
 export const feedbackMessages = pgTable("feedback_messages", {
   id: serial("id").primaryKey(),
