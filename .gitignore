@@ -2,3 +2,16 @@
 .DS_Store
 *.pyc
 __pycache__
+venv/
+node_modules/
+
+# web 앱 (Next.js)
+web/node_modules/
+web/.next/
+web/.vercel/
+web/dist/
+web/.vinext/
+web/.wrangler/
+web/tmp/
+web/.env*
+!web/.env.example
