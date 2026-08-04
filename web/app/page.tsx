@@ -171,12 +171,12 @@ export default function Home() {
   useEffect(() => {
     void Promise.all([
       fetch("/api/profile", { cache: "no-store" }).then((response) => response.json()),
-      fetch("/api/stats").then((response) => response.ok ? response.json() : null),
-    ]).then(([profileData, statsData]) => {
+      fetch("/api/user-count").then((response) => response.ok ? response.json() : null),
+    ]).then(([profileData, countData]) => {
       const savedProfile = profileData.profile as UserProfile | null;
       setProfile(savedProfile);
       setProfileOpen(!savedProfile);
-      if (typeof statsData?.users?.total === "number") setUserCount(statsData.users.total);
+      if (typeof countData?.total === "number") setUserCount(countData.total);
     }).catch(() => setProfileOpen(true)).finally(() => setProfileLoading(false));
   }, []);
 

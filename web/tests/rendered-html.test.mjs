@@ -435,7 +435,7 @@ test("expires the admin session so a copied cookie stops working", async () => {
 });
 
 test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allowlisted", async () => {
-  const [events, everytime, schema, profile, profileSetup, stats, database] = await Promise.all([
+  const [events, everytime, schema, profile, profileSetup, stats, database, page] = await Promise.all([
     readFile(new URL("../app/api/events/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/everytime/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
@@ -443,6 +443,7 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
     readFile(new URL("../app/components/ProfileSetup.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/stats/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../db/index.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(everytime, /\["everytime\.kr", "www\.everytime\.kr"\]/);
   assert.match(everytime, /TOKEN_PATTERN/);
@@ -463,7 +464,14 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
   assert.match(profileSetup, /소속 대학/);
   assert.match(profile, /ALLOWED_COLLEGES/);
   assert.match(schema, /college: text\("college"\)/);
-  assert.match(stats, /userProfiles/);
+  // 운영 통계는 관리자 전용이고, 공개되는 건 푸터용 숫자 하나뿐
+  assert.match(stats, /verifyAdminSession/, "이벤트 합계는 관리자만 본다");
+  assert.match(stats, /status: 401/);
+  const userCount = await readFile(new URL("../app/api/user-count/route.ts", import.meta.url), "utf8");
+  assert.match(userCount, /userProfiles/);
+  assert.doesNotMatch(userCount, /analyticsEvents|eventName/, "공개 엔드포인트는 이벤트를 노출하지 않는다");
+  assert.match(page, /api\/user-count/, "푸터는 공개 숫자만 가져온다");
+  assert.doesNotMatch(page, /fetch\("\/api\/stats"\)/, "본문에서 관리자 통계를 부르지 않는다");
   assert.match(database, /@neondatabase\/serverless/);
   assert.match(database, /process\.env\.DATABASE_URL/);
   assert.doesNotMatch(database, /cloudflare:workers|drizzle-orm\/d1/);
