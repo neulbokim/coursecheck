@@ -456,3 +456,19 @@ footer { max-width: 1404px; margin: 0 auto; padding: 24px 0 34px; display: flex;
   .feedback-panel { width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; }
   .admin-page { padding: 28px 16px 48px; }
 }
+
+/* 과목 구분 색 범례 */
+.category-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; }
+.category-legend span { display: inline-flex; align-items: center; gap: 4px; color: #706f6f; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.category-legend i { width: 8px; height: 8px; border-radius: 3px; }
+
+/* 시간표 칸의 종료 시각 */
+.course-line-time { display: block; margin-top: 3px; color: #8c8c8c; font-size: 8px; font-weight: 700; }
+
+/* 요람 택1 묶음 안내 */
+.equivalent-note { margin: 12px 0 0; padding: 10px 11px; border-radius: 9px; background: #f6eae9; color: #7a4a45; font-size: 10px; line-height: 1.55; word-break: keep-all; }
+.equivalent-note strong { display: block; margin-bottom: 3px; color: var(--cardinal); font-size: 10px; }
+
+@media (max-width: 680px) {
+  .category-legend { order: 2; width: 100%; }
+}

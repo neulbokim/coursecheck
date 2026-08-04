@@ -29,18 +29,62 @@ test("extracts an Everytime timetable URL from the copied share message", () => 
   );
 });
 
-test("groups timetable entries into fixed weekday columns by time slot", () => {
+test("groups timetable entries by start time so one period is one row", () => {
   const entries = [
-    { id: "a", meeting: { day: "월", start: 540, end: 630 } },
-    { id: "b", meeting: { day: "월", start: 540, end: 630 } },
-    { id: "c", meeting: { day: "화", start: 540, end: 630 } },
-    { id: "d", meeting: { day: "월", start: 630, end: 720 } },
+    { id: "a", meeting: { day: "월", start: 810, end: 885 } },   // 13:30~14:45
+    { id: "b", meeting: { day: "월", start: 810, end: 975 } },   // 13:30~16:15 — 종료가 달라도 같은 행
+    { id: "c", meeting: { day: "화", start: 810, end: 885 } },
+    { id: "d", meeting: { day: "월", start: 900, end: 990 } },   // 15:00~16:30
   ];
   const slots = groupTimetableEntries(entries, ["월", "화"]);
-  assert.equal(slots.length, 2);
+  assert.equal(slots.length, 2, "시작 시각이 같으면 종료가 달라도 한 행이다");
+  assert.equal(slots[0].start, 810);
+  assert.equal(slots[0].end, 975, "행의 end는 그 행에서 가장 늦게 끝나는 시각");
   assert.deepEqual(slots[0].byDay["월"].map((entry) => entry.id), ["a", "b"]);
   assert.deepEqual(slots[0].byDay["화"].map((entry) => entry.id), ["c"]);
   assert.deepEqual(slots[1].byDay["월"].map((entry) => entry.id), ["d"]);
+  assert.ok(slots[0].start < slots[1].start, "시작 시각 순으로 정렬된다");
+});
+
+test("excludes every course the bulletin groups as choose-one", async () => {
+  const { expandEquivalents, equivalentGroups, equivalentLabel } = await import("../app/data/equivalents.mjs");
+  const { normalizeCourseName } = await import("../app/lib/course-name.mjs");
+
+  // 모든 묶음에 근거가 적혀 있어야 한다
+  for (const group of equivalentGroups) {
+    assert.ok(group.source.length > 20, `${group.key}에 근거가 없습니다`);
+    assert.ok(group.codes.length >= 2, `${group.key}는 두 과목 이상이어야 합니다`);
+  }
+
+  const offerings = [
+    { code: "MAT3020", name: "통계학입문" },
+    { code: "MGT2002", name: "경영통계학" },
+    { code: "ECO2004", name: "경제통계학" },
+    { code: "SOC2004", name: "사회통계학(캡스톤디자인)" },
+    { code: "CSE3080", name: "자료구조" },
+  ];
+
+  // 경영통계학만 들었어도 통계학 묶음 전체가 제외된다
+  const byName = expandEquivalents([{ name: "경영통계학" }], offerings);
+  assert.ok(byName.groups.has("statistics"));
+  assert.ok(byName.names.has(normalizeCourseName("통계학입문")));
+  assert.ok(byName.names.has(normalizeCourseName("경제통계학")));
+  assert.ok(byName.names.has(normalizeCourseName("사회통계학(캡스톤디자인)")), "개설과목명 변형도 함께 잡는다");
+  assert.ok(!byName.names.has(normalizeCourseName("자료구조")));
+  assert.equal(equivalentLabel("statistics"), "통계학");
+
+  // 코드로도 묶인다
+  assert.ok(expandEquivalents([{ name: "아무이름", code: "ECO2004" }], offerings).groups.has("statistics"));
+
+  // 미적분학Ⅰ을 들었으면 경제수리기초·대학수학까지
+  const math = expandEquivalents([{ name: "미적분학I" }], offerings);
+  assert.ok(math.names.has(normalizeCourseName("경제수리기초")));
+  assert.ok(math.names.has(normalizeCourseName("대학수학")));
+
+  // 묶음에 없는 과목만 들었으면 아무것도 넓히지 않는다
+  const none = expandEquivalents([{ name: "자료구조" }], offerings);
+  assert.equal(none.groups.size, 0);
+  assert.equal(none.names.size, 0);
 });
 
 test("keeps the timetable within the viewport and lists courses by time slot", async () => {

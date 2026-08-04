@@ -9,6 +9,7 @@ import FeedbackChat from "./components/FeedbackChat";
 import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
 import { groupTimetableEntries } from "./lib/timetable-layout.mjs";
 import { normalizeCourseName } from "./lib/course-name.mjs";
+import { expandEquivalents, equivalentLabel } from "./data/equivalents.mjs";
 import {
   LAST_BULLETIN_YEAR,
   bulletinYearFor,
@@ -27,7 +28,18 @@ type Meeting = { day: string; start: number; end: number };
 type CoreTrack = ReturnType<typeof coreTracksFor>[number];
 
 const DAY_LIST = ["월", "화", "수", "목", "금"] as const;
-const PALETTE = ["#861f1c", "#005783", "#6f9453", "#e3540b", "#5c2976"];
+/** 과목을 무엇으로 듣는지에 따른 색. 서강대 UI 메인·서브 컬러에서 골랐습니다. */
+const CATEGORIES = [
+  { key: "major1", label: "1전공", color: "#861f1c" },
+  { key: "major2", label: "2전공", color: "#004f8e" },
+  { key: "major3", label: "3전공", color: "#6f9453" },
+  { key: "coreGE", label: "필수교양", color: "#e3540b" },
+  { key: "freeGE", label: "자유교양", color: "#5c2976" },
+] as const;
+const CATEGORY_COLOR = new Map(CATEGORIES.map((item) => [item.key, item.color]));
+const CATEGORY_LABEL = new Map(CATEGORIES.map((item) => [item.key, item.label]));
+/** 교양을 개설하는 기관 — 필수 트랙에 없으면 자유교양으로 본다 */
+const GENERAL_EDUCATION_DEPARTMENTS = ["전인교육원", "융합교육원"];
 
 function compactSemester(value: string) {
   const match = value.match(/(\d{4}).*?(1|2|여름|겨울)\s*학기/);
@@ -63,11 +75,6 @@ function parseMeetings(schedule: string): Meeting[] {
   return meetings;
 }
 
-function hashColor(value: string) {
-  const hash = [...value].reduce((total, char) => total + char.charCodeAt(0), 0);
-  return PALETTE[hash % PALETTE.length];
-}
-
 function postEvent(event: string, majorKey?: string, resultBucket?: string) {
   void fetch("/api/events", {
     method: "POST",
@@ -83,6 +90,22 @@ function profileSelections(savedProfile: UserProfile) {
     linked: linkedMajors.filter((major) => majors.includes(major.label)).map((major) => major.key),
     departments: majors.filter((major) => departmentOptions.includes(major)),
   };
+}
+
+/** 전공 순번(1·2·3전공)별로 과목 코드와 학과를 찾을 표를 만든다 */
+function majorRankIndex(majors: string[]) {
+  const byCode = new Map<string, number>();
+  const byDepartment = new Map<string, number>();
+  majors.forEach((major, index) => {
+    const rank = index + 1;
+    const linked = linkedMajors.find((item) => item.label === major);
+    if (linked) {
+      for (const code of linked.codes) if (!byCode.has(code)) byCode.set(code, rank);
+    } else if (!byDepartment.has(major)) {
+      byDepartment.set(major, rank);
+    }
+  });
+  return { byCode, byDepartment };
 }
 
 export default function Home() {
@@ -152,15 +175,23 @@ export default function Home() {
   const activeTerm = importedTerms.find((term) => term.semester === activeImportedTerm) ?? importedTerms[0];
   const includedTakenSet = useMemo(() => new Set(includedTakenNames), [includedTakenNames]);
   const allImportedCourses = useMemo(() => importedTerms.flatMap((term) => term.courses), [importedTerms]);
-  const excludedNames = useMemo(() => {
-    const names = new Set(
-      allImportedCourses
-        .map((course) => normalizeCourseName(course.name))
-        .filter((name) => !includedTakenSet.has(name)),
+  // 이수로 볼 과목: 가져온 수강 내역에서 사용자가 되살리지 않은 것 + 직접 추가한 것
+  const takenForExclusion = useMemo(() => {
+    const fromImport = allImportedCourses.filter(
+      (course) => !includedTakenSet.has(normalizeCourseName(course.name)),
     );
-    manualExcludedCourses.forEach((name) => names.add(normalizeCourseName(name)));
-    return names;
+    return [...fromImport, ...manualExcludedCourses.map((name) => ({ name }))];
   }, [allImportedCourses, includedTakenSet, manualExcludedCourses]);
+  // 요람이 「택1」로 묶은 과목은 하나만 들었어도 나머지까지 함께 제외한다
+  const equivalents = useMemo(
+    () => expandEquivalents(takenForExclusion, coursesJson),
+    [takenForExclusion],
+  );
+  const excludedNames = useMemo(() => {
+    const names = new Set(takenForExclusion.map((course) => normalizeCourseName(course.name)));
+    equivalents.names.forEach((name: string) => names.add(name));
+    return names;
+  }, [takenForExclusion, equivalents]);
   const courseNameOptions = useMemo(
     () => [...new Set(coursesJson.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "ko")),
     [],
@@ -228,12 +259,36 @@ export default function Home() {
     () => coursesJson.filter((course) => excludedNames.has(normalizeCourseName(course.name))).length,
     [excludedNames],
   );
+  // 범례에는 실제로 결과에 있는 구분만 보여준다
+  const shownCategories = useMemo(() => {
+    const ranks = majorRankIndex(profileMajors);
+    const keys = new Set<string>();
+    for (const course of filteredCourses) {
+      const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
+      if (rank) keys.add(`major${rank}`);
+      else if (trackByCode.has(course.code)) keys.add("coreGE");
+      else if (GENERAL_EDUCATION_DEPARTMENTS.includes(course.department)) keys.add("freeGE");
+    }
+    return keys;
+  }, [filteredCourses, profileMajors, trackByCode]);
+
+  const majorRanks = useMemo(() => majorRankIndex(profileMajors), [profileMajors]);
+
+  /** 이 과목을 무엇으로 듣는지 — 1·2·3전공 > 필수교양 > 자유교양 순으로 판정 */
+  function categoryOf(course: Course) {
+    const rank = majorRanks.byCode.get(course.code) ?? majorRanks.byDepartment.get(course.department);
+    if (rank) return `major${rank}`;
+    if (trackByCode.has(course.code)) return "coreGE";
+    if (GENERAL_EDUCATION_DEPARTMENTS.includes(course.department)) return "freeGE";
+    return "";
+  }
 
   function colorFor(course: Course) {
-    const linked = linkedMajors.find((major) => selectedLinked.includes(major.key) && major.codes.includes(course.code));
-    if (linked) return linked.color;
-    const track = trackByKey.get(trackByCode.get(course.code) ?? "");
-    return track?.color ?? hashColor(course.department);
+    return CATEGORY_COLOR.get(categoryOf(course) as never) ?? "#7d7d7d";
+  }
+
+  function categoryLabelFor(course: Course) {
+    return CATEGORY_LABEL.get(categoryOf(course) as never) ?? "";
   }
 
   function trackLabelFor(course: Course) {
@@ -379,7 +434,7 @@ export default function Home() {
                       <label key={track.key} className={completed ? "core-track completed" : "core-track"}>
                         <input type="checkbox" checked={completed} onChange={(event) => toggleTrack(track.key, event.target.checked)} />
                         <span>
-                          <strong style={{ color: completed ? undefined : track.color }}>{track.label}</strong>
+                          <strong style={{ color: completed ? undefined : CATEGORY_COLOR.get("coreGE") }}>{track.label}</strong>
                           <small>{track.credits} · {track.rule} · {offered > 0 ? `이번 학기 ${offered}과목` : "이번 학기 미개설"}</small>
                           {track.pinnedNote && <small className="core-pinned">{track.courses[0].name} — {track.pinnedNote}</small>}
                         </span>
@@ -397,6 +452,12 @@ export default function Home() {
               {bulletinYear < 2019 && " 2018학번 이전 중핵필수선택은 모집단위별로 필수 영역이 달라, 어떤 영역을 이수해야 하는지는 요람을 확인해 주세요."}
               {" 편입·국제·장애학생 예외는 판정하지 않습니다."}
             </p>
+            {equivalents.groups.size > 0 && (
+              <p className="equivalent-note">
+                <strong>요람 택1 묶음 반영</strong>
+                {[...equivalents.groups].map((key: string) => equivalentLabel(key)).join(" · ")} 묶음은 하나만 들어도 나머지까지 함께 제외했어요.
+              </p>
+            )}
             <p className="privacy-note"><span>잠금</span> 이름·전체 학번·링크·IP는 저장하지 않습니다. 교양 체크 결과도 서버에 보내지 않아요.</p>
             <button className="show-results-button" type="button" onClick={revealResults}>개설 시간표 확인하기 <span>→</span></button>
           </section>
@@ -407,7 +468,7 @@ export default function Home() {
         <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
           <div className="result-toolbar">
             <div><p className="semester-label">3 · 2026학년도 2학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && <small>{[hiddenTakenCount > 0 ? `${hiddenTakenCount}개 수강·추가 과목 제외됨` : "", remainingTrackCount > 0 ? `남은 필수 교양 ${remainingTrackCount}개 영역 포함` : "필수 교양 모두 이수"].filter(Boolean).join(" · ")}</small>}</div>
-            {showResults && <div className="toolbar-actions"><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button></div></div>}
+            {showResults && <div className="toolbar-actions"><div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button></div></div>}
           </div>
 
           {!showResults ? (
@@ -420,11 +481,11 @@ export default function Home() {
                 <div className="matrix-head matrix-time-head" role="columnheader">시간</div>
                 {DAY_LIST.map((day) => <div className="matrix-head" role="columnheader" key={day}>{day}요일</div>)}
                 {timetableSlots.map((slot) => (
-                  <div className="matrix-row" role="row" key={`${slot.start}-${slot.end}`}>
-                    <div className="matrix-time" role="rowheader"><strong>{formatMinutes(slot.start)}</strong><span>{formatMinutes(slot.end)}</span></div>
+                  <div className="matrix-row" role="row" key={slot.start}>
+                    <div className="matrix-time" role="rowheader"><strong>{formatMinutes(slot.start)}</strong><span>시작</span></div>
                     {DAY_LIST.map((day) => (
                       <div className="matrix-cell" role="cell" key={day}>
-                        {slot.byDay[day].map(({ course }, index) => (
+                        {slot.byDay[day].map(({ course, meeting }, index) => (
                           <button
                             className="course-line"
                             type="button"
@@ -433,6 +494,7 @@ export default function Home() {
                             onClick={() => setSelectedCourse(course)}
                           >
                             <strong>{course.name}</strong><small>({course.professor || "미정"})</small>
+                            <span className="course-line-time">~{formatMinutes(meeting.end)}</span>
                           </button>
                         ))}
                       </div>
@@ -442,7 +504,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="course-list">{filteredCourses.map((course) => <button key={course.id} onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}{trackLabelFor(course) && <em className="core-badge">{trackLabelFor(course)}</em>}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button>)}</div>
+            <div className="course-list">{filteredCourses.map((course) => <button key={course.id} onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}{categoryLabelFor(course) && <em className="core-badge" style={{ color: colorFor(course), background: `${colorFor(course)}14` }}>{categoryLabelFor(course)}{trackLabelFor(course) && ` · ${trackLabelFor(course)}`}</em>}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button>)}</div>
           )}
         </section>
       </div>
