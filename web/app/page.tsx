@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import bundledCourses from "./data/courses.generated.json";
+import bundledMeta from "./data/courses.generated.meta.json";
 import { linkedMajors, officialSources } from "./data/majors";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 import FeedbackChat from "./components/FeedbackChat";
@@ -35,6 +36,14 @@ const PICKED_STORAGE_KEY = "coursecheck_picked";
 const HELPFUL_STORAGE_KEY = "coursecheck_helpful";
 /** 빌드 시각은 ISO 문자열 그대로 둔다 — 서버와 브라우저의 표시 형식이 달라지면 하이드레이션이 어긋난다 */
 const buildStampTitle = `빌드 ${process.env.NEXT_PUBLIC_BUILD_TIME ?? "시각 미상"}`;
+/** 자료 기준일. 시간대를 고정해야 서버와 브라우저가 같은 날짜를 찍는다 */
+const dataDateFormat = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric" });
+
+function dataDateLabel(value: string | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : `${dataDateFormat.format(date)} 기준`;
+}
 /** 과목을 무엇으로 듣는지에 따른 색. 서강대 UI 메인·서브 컬러에서 골랐습니다. */
 const CATEGORIES = [
   { key: "major1", label: "1전공", color: "#861f1c" },
@@ -90,16 +99,26 @@ function parseMeetings(schedule: string): Meeting[] {
 }
 
 /**
- * 이벤트에 붙일 소속(대학). 설정을 불러오거나 저장할 때 갱신한다.
- * 학과·학번은 붙이지 않는다 — 셋을 합치면 사실상 개인 식별자가 된다.
+ * 이벤트에 붙일 사용자 속성. 설정을 불러오거나 저장할 때 갱신한다.
+ * 설정 전에 찍히는 첫 화면 열기에는 아무것도 붙지 않는다.
  */
-let eventCollege: string | null = null;
+let eventAudience: { college: string | null; major: string | null; cohortYear: number | null } = {
+  college: null,
+  major: null,
+  cohortYear: null,
+};
+
+function setEventAudience(profile: UserProfile | null) {
+  eventAudience = profile
+    ? { college: profile.college, major: profile.major1, cohortYear: profile.cohortYear }
+    : { college: null, major: null, cohortYear: null };
+}
 
 function postEvent(event: string, resultBucket?: string) {
   void fetch("/api/events", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ event, college: eventCollege, resultBucket }),
+    body: JSON.stringify({ event, ...eventAudience, resultBucket }),
     keepalive: true,
   }).catch(() => undefined);
 }
@@ -125,7 +144,7 @@ export default function Home() {
   const [view, setView] = useState<"timetable" | "list" | "mine">("timetable");
   const [pickedIds, setPickedIds] = useState<string[]>([]);
   /** 관리 화면에서 올린 자료가 있으면 그것을 쓰고, 없으면 빌드에 포함된 기본 자료를 쓴다 */
-  const [uploaded, setUploaded] = useState<{ semester: string; courses: Course[] } | null>(null);
+  const [uploaded, setUploaded] = useState<{ semester: string; courses: Course[]; uploadedAt?: string } | null>(null);
   const [everytimeUrl, setEverytimeUrl] = useState("");
   const [importedTerms, setImportedTerms] = useState<ImportedTerm[]>([]);
   const [activeImportedTerm, setActiveImportedTerm] = useState("");
@@ -202,7 +221,7 @@ export default function Home() {
       .then((response) => (response.status === 204 ? null : response.json()))
       .then((data) => {
         if (cancelled || !data?.courses?.length) return;
-        setUploaded({ semester: data.semester, courses: data.courses as Course[] });
+        setUploaded({ semester: data.semester, courses: data.courses as Course[], uploadedAt: data.uploadedAt });
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
@@ -213,7 +232,7 @@ export default function Home() {
       .then((response) => response.json())
       .then((profileData) => {
         const savedProfile = profileData.profile as UserProfile | null;
-        eventCollege = savedProfile?.college ?? null;
+        setEventAudience(savedProfile);
         setProfile(savedProfile);
         setProfileOpen(!savedProfile);
       })
@@ -222,7 +241,7 @@ export default function Home() {
   }, []);
 
   function profileSaved(savedProfile: UserProfile) {
-    eventCollege = savedProfile.college;
+    setEventAudience(savedProfile);
     setProfile(savedProfile);
     setProfileOpen(false);
     setShowResults(false);
@@ -231,7 +250,8 @@ export default function Home() {
   }
 
   const courses: Course[] = uploaded?.courses ?? bundledCourses;
-  const semesterLabel = uploaded?.semester ?? "2026-2";
+  const semesterLabel = uploaded?.semester ?? bundledMeta.semester;
+  const dataDate = dataDateLabel(uploaded?.uploadedAt ?? bundledMeta.generatedAt);
 
   const profileMajors = useMemo(
     () => profile ? [profile.major1, profile.major2, profile.major3].filter(Boolean) as string[] : [],
@@ -525,13 +545,12 @@ export default function Home() {
         <a className="brand" href="#top" aria-label="CourseCheck 처음으로"><span className="brand-mark">C</span><span><strong>CourseCheck</strong><small>SOGANG</small></span></a>
         <div className="header-actions">
           {profile && <button className="profile-edit" type="button" onClick={() => setProfileOpen(true)}>{String(profile.cohortYear).slice(2)}학번 · {profile.completedSemesters}학기 <span>수정</span></button>}
-          <div className="header-meta"><span className="live-dot" />{semesterLabel} 개설과목 · {courses.length.toLocaleString("ko-KR")}과목</div>
+          <div className="header-meta"><span className="live-dot" />{semesterLabel} 개설과목 {courses.length.toLocaleString("ko-KR")}과목{dataDate && ` · ${dataDate}`}</div>
         </div>
       </header>
 
       <section className="hero" id="top">
         <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>나에게 남은 과목들로{" "}<br className="wide-break" />이번 학기 시간표를 그려보세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.{" "}<br className="wide-break" />들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
-        <div className="trust-card"><span className="shield" aria-hidden="true">✓</span><div><strong>시간표 링크는 저장하지 않아요</strong><p>과목명만 비교하고 원문과 링크 토큰은 즉시 버립니다.</p></div></div>
       </section>
 
       <div className="workspace">
@@ -776,7 +795,7 @@ export default function Home() {
       <section className="security-strip"><div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·소속 대학·전공과 익명 브라우저 ID만 저장합니다.</p></div><div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div><div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div></section>
       <footer>
         <span>CourseCheck · 서강대 전공 시간표 도우미</span>
-        <span className="build-stamp" title={buildStampTitle}>v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_BUILD_REV}</span>
+        <span className="build-stamp" title={buildStampTitle}>v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
         <span>학교 공식 서비스가 아닙니다.</span>
       </footer>
 

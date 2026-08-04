@@ -621,7 +621,10 @@ test("records every event the page actually sends", async () => {
     assert.ok(allowedBuckets.has(bucket), `${bucket} 묶음이 ALLOWED_BUCKETS에 없다`);
   }
 
-  // 이벤트에는 소속까지만 붙인다 — 학과·학번을 함께 남기면 개인이 드러난다
+  // 이벤트에 붙는 값은 전부 허용 목록·범위 검사를 거친다 (임의 문자열이 들어오지 못하게)
   assert.match(events, /ALLOWED_COLLEGES/);
-  assert.doesNotMatch(events, /majorKey|cohortYear/);
+  assert.match(events, /ALLOWED_MAJORS/);
+  assert.match(events, /MIN_COHORT_YEAR/);
+  // 방문자 ID는 이벤트에 붙이지 않는다 — 붙는 순간 각 행이 한 사람으로 되짚어진다
+  assert.doesNotMatch(events, /visitorId|visitor_id/);
 });

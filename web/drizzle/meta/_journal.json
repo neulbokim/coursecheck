@@ -64,6 +64,13 @@
       "when": 1785857711366,
       "tag": "0008_add_profile_enrolled",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785860806267,
+      "tag": "0009_add_event_major_cohort",
+      "breakpoints": true
     }
   ]
 }

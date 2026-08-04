@@ -41,6 +41,8 @@ export async function GET(request: Request) {
           id: analyticsEvents.id,
           event: analyticsEvents.eventName,
           college: analyticsEvents.college,
+          major: analyticsEvents.major,
+          cohortYear: analyticsEvents.cohortYear,
           resultBucket: analyticsEvents.resultBucket,
           createdAt: analyticsEvents.createdAt,
         })
@@ -55,26 +57,49 @@ export async function GET(request: Request) {
 
     const recentByEvent = new Map(recentTotals.map((row) => [row.event, row.total]));
 
-    // 어떤 정보를 고른 사람들이 쓰고 있는지 — 소속·학번 분포와 소속별 이벤트.
-    // 학과 단위로는 내려가지 않습니다(소수 인원이면 개인이 드러남).
-    const [newUsers, byCollege, byCohort, [visiting], eventsByCollege] = await Promise.all([
-      db.select({ total: count() }).from(userProfiles).where(and(gte(userProfiles.createdAt, since))),
-      db
-        .select({ college: userProfiles.college, total: count() })
-        .from(userProfiles)
-        .groupBy(userProfiles.college)
-        .orderBy(desc(count())),
-      db
-        .select({ cohortYear: userProfiles.cohortYear, total: count() })
-        .from(userProfiles)
-        .groupBy(userProfiles.cohortYear)
-        .orderBy(desc(userProfiles.cohortYear)),
-      db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.enrolled, false)),
-      db
-        .select({ college: analyticsEvents.college, event: analyticsEvents.eventName, total: count() })
-        .from(analyticsEvents)
-        .groupBy(analyticsEvents.college, analyticsEvents.eventName),
-    ]);
+    // 어떤 정보를 고른 사람들이 쓰고 있는지 — 소속·전공·학번 분포와 단위별 이벤트.
+    const [newUsers, byCollege, byCohort, byMajor, [visiting], eventsByCollege, eventsByMajor, eventsByCohort] =
+      await Promise.all([
+        db.select({ total: count() }).from(userProfiles).where(and(gte(userProfiles.createdAt, since))),
+        db
+          .select({ college: userProfiles.college, total: count() })
+          .from(userProfiles)
+          .groupBy(userProfiles.college)
+          .orderBy(desc(count())),
+        db
+          .select({ cohortYear: userProfiles.cohortYear, total: count() })
+          .from(userProfiles)
+          .groupBy(userProfiles.cohortYear)
+          .orderBy(desc(userProfiles.cohortYear)),
+        // 1·2·3전공을 한 줄로 펼쳐 전공별로 몇 명이 어느 순번으로 두고 있는지 셉니다
+        db.execute(sql`
+          select major,
+                 count(*) filter (where rank = 1)::int as first,
+                 count(*) filter (where rank = 2)::int as second,
+                 count(*) filter (where rank = 3)::int as third,
+                 count(*)::int as total
+          from (
+            select major_1 as major, 1 as rank from user_profiles
+            union all select major_2, 2 from user_profiles where major_2 is not null
+            union all select major_3, 3 from user_profiles where major_3 is not null
+          ) as spread
+          group by major
+          order by count(*) desc, major
+        `),
+        db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.enrolled, false)),
+        db
+          .select({ key: analyticsEvents.college, event: analyticsEvents.eventName, total: count() })
+          .from(analyticsEvents)
+          .groupBy(analyticsEvents.college, analyticsEvents.eventName),
+        db
+          .select({ key: analyticsEvents.major, event: analyticsEvents.eventName, total: count() })
+          .from(analyticsEvents)
+          .groupBy(analyticsEvents.major, analyticsEvents.eventName),
+        db
+          .select({ key: analyticsEvents.cohortYear, event: analyticsEvents.eventName, total: count() })
+          .from(analyticsEvents)
+          .groupBy(analyticsEvents.cohortYear, analyticsEvents.eventName),
+      ]);
 
     return Response.json(
       {
@@ -85,8 +110,13 @@ export async function GET(request: Request) {
           visiting: visiting.total,
         },
         events: totals.map((row) => ({ ...row, last24h: recentByEvent.get(row.event) ?? 0 })),
-        profiles: { byCollege, byCohort },
-        eventsByCollege,
+        profiles: { byCollege, byCohort, byMajor: byMajor.rows ?? byMajor },
+        // 관리 화면에서 소속·전공·학번으로 단위를 바꿔 봅니다
+        eventsBy: {
+          college: eventsByCollege,
+          major: eventsByMajor,
+          cohort: eventsByCohort.map((row) => ({ ...row, key: row.key === null ? null : String(row.key) })),
+        },
         feedback: feedbackByStatus,
         recent,
         // 서버 예외·요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다.

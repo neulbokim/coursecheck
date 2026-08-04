@@ -178,6 +178,13 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
           <p>입학 연도에 맞는 요람과 전공 과목을 연결하기 위한 기본 설정입니다.</p>
         </div>
         <form className="profile-form" onSubmit={submit}>
+          <label className="approval-row">
+            <input type="checkbox" checked={!enrolled} onChange={(event) => setEnrolled(!event.target.checked)} />
+            <span>
+              <strong>지금 수강신청할 재학생은 아니에요</strong>
+              <small>졸업했거나 프로젝트가 궁금해서 둘러보는 경우예요. 화면은 똑같이 쓸 수 있고, 사용 집계에서만 따로 셉니다.</small>
+            </span>
+          </label>
           <div className="profile-row">
             <div className="profile-field">
               <label htmlFor="cohort-year">학번<span>필수</span></label>
@@ -206,23 +213,16 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
           {major2 && (
             <label className="approval-row">
               <input type="checkbox" checked={major2Approved} onChange={(event) => setMajor2Approved(event.target.checked)} />
-              <span><strong>2전공 복수전공 신청을 마쳤어요</strong><small>신청 전이면 체크를 풀어주세요. 그 대학·학과로만 열린 과목은 아직 신청할 수 없어 시간표에서 빼드려요.</small></span>
+              <span><strong>2전공 복수전공 신청을 마쳤어요</strong><small>복수전공 신청 전이면 체크를 풀어주세요. 아직 수강신청할 수 없는 과목들은 시간표에서 제외해드려요.</small></span>
             </label>
           )}
           <MajorCombobox label="3전공" value={major3} onChange={setMajor3} />
           {major3 && (
             <label className="approval-row">
               <input type="checkbox" checked={major3Approved} onChange={(event) => setMajor3Approved(event.target.checked)} />
-              <span><strong>3전공 복수전공 신청을 마쳤어요</strong><small>신청 전이면 체크를 풀어주세요.</small></span>
+              <span><strong>3전공 복수전공 신청을 마쳤어요</strong><small>복수전공 신청 전이면 체크를 풀어주세요. 아직 수강신청할 수 없는 과목들은 시간표에서 제외해드려요.</small></span>
             </label>
           )}
-          <label className="approval-row">
-            <input type="checkbox" checked={!enrolled} onChange={(event) => setEnrolled(!event.target.checked)} />
-            <span>
-              <strong>지금 수강신청할 재학생은 아니에요</strong>
-              <small>졸업했거나 프로젝트가 궁금해서 둘러보는 경우예요. 화면은 똑같이 쓸 수 있고, 사용 집계에서만 따로 셉니다.</small>
-            </span>
-          </label>
           <div className="profile-data-note">
             <strong>어떤 정보가 저장되나요?</strong>
             <p>입학 연도, 이수학기 수, 소속 대학, 선택 전공, 재학 여부와 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>

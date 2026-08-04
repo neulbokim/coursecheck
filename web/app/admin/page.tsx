@@ -22,11 +22,28 @@ type Overview = {
   profiles: {
     byCollege: Array<{ college: string | null; total: number }>;
     byCohort: Array<{ cohortYear: number; total: number }>;
+    byMajor: Array<{ major: string; first: number; second: number; third: number; total: number }>;
   };
-  eventsByCollege: Array<{ college: string | null; event: string; total: number }>;
+  eventsBy: Record<Unit, Array<{ key: string | null; event: string; total: number }>>;
   feedback: Array<{ status: string; total: number }>;
-  recent: Array<{ id: number; event: string; college: string | null; resultBucket: string | null; createdAt: string }>;
+  recent: Array<{
+    id: number;
+    event: string;
+    college: string | null;
+    major: string | null;
+    cohortYear: number | null;
+    resultBucket: string | null;
+    createdAt: string;
+  }>;
 };
+
+/** 이벤트를 어떤 단위로 묶어 볼지 */
+type Unit = "college" | "major" | "cohort";
+const UNITS: Array<{ key: Unit; label: string; empty: string }> = [
+  { key: "college", label: "소속 대학", empty: "소속 미선택" },
+  { key: "major", label: "1전공", empty: "전공 미상" },
+  { key: "cohort", label: "학번", empty: "학번 미상" },
+];
 
 /** 이벤트 이름을 사람이 읽을 말로 */
 const EVENT_LABEL = new Map<string, string>([
@@ -68,6 +85,7 @@ export default function AdminPage() {
   const [uploadState, setUploadState] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [uploadMessage, setUploadMessage] = useState("");
   const [filter, setFilter] = useState("all");
+  const [unit, setUnit] = useState<Unit>("college");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [purgeMessage, setPurgeMessage] = useState("");
@@ -221,20 +239,31 @@ export default function AdminPage() {
   }, [messages]);
   const shown = filter === "all" ? messages : messages.filter((item) => item.status === filter);
 
-  /** 소속(행) × 이벤트(열) 표. 소속을 고르지 않은 사람과 설정 전에 찍힌 첫 화면 열기는 "미선택"으로 모읍니다. */
-  const collegeMatrix = useMemo(() => {
-    if (!overview) return { columns: [] as string[], rows: [] as Array<{ college: string | null; total: number; byEvent: Map<string, number> }> };
+  /**
+   * 고른 단위(행) × 이벤트(열) 표.
+   * 설정을 저장하기 전에 찍힌 첫 화면 열기는 붙일 값이 없어 "미선택"으로 모입니다.
+   */
+  const matrix = useMemo(() => {
+    const empty = { columns: [] as string[], rows: [] as Array<{ key: string | null; total: number; byEvent: Map<string, number> }> };
+    if (!overview) return empty;
     const columns = overview.events.map((row) => row.event);
-    const rows = new Map<string, { college: string | null; total: number; byEvent: Map<string, number> }>();
-    for (const row of overview.eventsByCollege) {
-      const key = row.college ?? "";
-      const entry = rows.get(key) ?? { college: row.college, total: 0, byEvent: new Map<string, number>() };
+    const rows = new Map<string, { key: string | null; total: number; byEvent: Map<string, number> }>();
+    for (const row of overview.eventsBy[unit] ?? []) {
+      const id = row.key ?? "";
+      const entry = rows.get(id) ?? { key: row.key, total: 0, byEvent: new Map<string, number>() };
       entry.total += row.total;
       entry.byEvent.set(row.event, (entry.byEvent.get(row.event) ?? 0) + row.total);
-      rows.set(key, entry);
+      rows.set(id, entry);
     }
     return { columns, rows: [...rows.values()].sort((a, b) => b.total - a.total) };
-  }, [overview]);
+  }, [overview, unit]);
+
+  function unitLabel(key: string | null) {
+    if (key === null) return UNITS.find((item) => item.key === unit)!.empty;
+    if (unit === "college") return COLLEGE_LABEL.get(key) ?? key;
+    if (unit === "cohort") return `${key.slice(2)}학번`;
+    return key;
+  }
 
   if (!signedIn) {
     return (
@@ -387,24 +416,63 @@ export default function AdminPage() {
               </table>
             </div>
 
-            <h2 className="admin-subhead">소속별 이벤트<small>학과·학번 단위로는 내려가지 않습니다</small></h2>
-            {collegeMatrix.rows.length === 0 ? (
+            <h2 className="admin-subhead">전공 분포<small>1·2·3전공 어디에 뒀는지까지</small></h2>
+            {overview.profiles.byMajor.length === 0 ? (
+              <p className="admin-empty">아직 저장된 전공이 없어요.</p>
+            ) : (
+              <div className="admin-scroll">
+                <table className="admin-table">
+                  <thead><tr><th>전공</th><th>1전공</th><th>2전공</th><th>3전공</th><th>합계</th></tr></thead>
+                  <tbody>
+                    {overview.profiles.byMajor.map((row) => (
+                      <tr key={row.major}>
+                        <td><strong>{row.major}</strong></td>
+                        <td className="num">{row.first || "–"}</td>
+                        <td className="num">{row.second || "–"}</td>
+                        <td className="num">{row.third || "–"}</td>
+                        <td className="num"><strong>{row.total.toLocaleString("ko-KR")}</strong></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <h2 className="admin-subhead">
+              단위별 이벤트
+              <small>인원이 적은 칸은 사실상 개인 기록입니다</small>
+            </h2>
+            <div className="admin-filters" role="tablist" aria-label="이벤트 묶는 단위">
+              {UNITS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={unit === item.key}
+                  className={unit === item.key ? "active" : ""}
+                  onClick={() => setUnit(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            {matrix.rows.length === 0 ? (
               <p className="admin-empty">아직 기록된 이벤트가 없어요.</p>
             ) : (
               <div className="admin-scroll">
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>소속 대학</th>
-                      {collegeMatrix.columns.map((event) => <th key={event}>{EVENT_LABEL.get(event) ?? event}</th>)}
+                      <th>{UNITS.find((item) => item.key === unit)!.label}</th>
+                      {matrix.columns.map((event) => <th key={event}>{EVENT_LABEL.get(event) ?? event}</th>)}
                       <th>합계</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {collegeMatrix.rows.map((row) => (
-                      <tr key={row.college ?? "none"}>
-                        <td><strong>{row.college ? COLLEGE_LABEL.get(row.college) ?? row.college : "미선택"}</strong></td>
-                        {collegeMatrix.columns.map((event) => (
+                    {matrix.rows.map((row) => (
+                      <tr key={row.key ?? "none"}>
+                        <td><strong>{unitLabel(row.key)}</strong></td>
+                        {matrix.columns.map((event) => (
                           <td className="num" key={event}>{row.byEvent.get(event)?.toLocaleString("ko-KR") ?? "–"}</td>
                         ))}
                         <td className="num"><strong>{row.total.toLocaleString("ko-KR")}</strong></td>
@@ -426,6 +494,8 @@ export default function AdminPage() {
                     <strong>{EVENT_LABEL.get(row.event) ?? row.event}</strong>
                     {row.resultBucket && <em>{BUCKET_LABEL.get(row.resultBucket) ?? row.resultBucket}</em>}
                     {row.college && <em>{COLLEGE_LABEL.get(row.college) ?? row.college}</em>}
+                    {row.major && <em>{row.major}</em>}
+                    {row.cohortYear && <em>{String(row.cohortYear).slice(2)}학번</em>}
                   </li>
                 ))}
               </ul>
@@ -445,7 +515,8 @@ export default function AdminPage() {
 
             <p className="admin-note">
               서버 예외와 요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다 — <code>vercel logs</code> 또는 Vercel 대시보드 Logs 탭에서 보세요.
-              여기 있는 건 앱이 직접 남긴 익명 이벤트입니다(개인 식별 정보 없음).
+              여기 있는 건 앱이 직접 남긴 이벤트입니다. 이름·학번 전체·IP는 없지만 소속·1전공·입학연도가 함께 남으므로,
+              인원이 적은 조합은 사실상 한 사람의 기록입니다. 방문자 ID와는 잇지 않아 어느 행이 누구인지는 되짚을 수 없습니다.
             </p>
           </>
         )

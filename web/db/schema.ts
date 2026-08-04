@@ -6,11 +6,13 @@ export const analyticsEvents = pgTable(
     id: serial("id").primaryKey(),
     eventName: text("event_name").notNull(),
     /**
-     * 소속(대학)까지만 남깁니다. 학과·학번까지 붙이면 인원이 적은 조합에서 개인이 드러나고,
-     * 그 셋을 합치면 사실상 식별자가 됩니다. 학과 단위가 필요하면 이벤트가 아니라
-     * user_profiles 분포(관리자 전용)를 보세요.
+     * 이벤트에 붙는 사용자 속성. 소속(대학)·1전공·학번까지 남겨 관리 화면에서 단위를 바꿔 봅니다.
+     * 셋이 함께 있으면 인원이 적은 조합에서는 사실상 개인을 가리키므로, 관리 화면은
+     * 합계만 보여주고 방문자 ID와는 잇지 않습니다(어느 행이 누구인지 되짚을 수 없음).
      */
     college: text("college"),
+    major: text("major"),
+    cohortYear: integer("cohort_year"),
     resultBucket: text("result_bucket"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

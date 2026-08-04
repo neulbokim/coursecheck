@@ -69,20 +69,12 @@ body:has(.profile-backdrop) { overflow: hidden; }
   margin: 0 auto;
   padding: 54px 38px 42px;
   display: grid;
-  grid-template-columns: 1fr auto;
   align-items: end;
   gap: 40px;
 }
 .eyebrow { margin: 0 0 14px; color: var(--wine); font-size: 13px; font-weight: 800; letter-spacing: .06em; }
 .hero h1 { margin: 0; font-size: clamp(36px, 4vw, 62px); font-weight: 800; line-height: 1.08; letter-spacing: -.045em; }
 .hero-copy { max-width: 680px; margin: 20px 0 0; color: var(--muted); font-size: 16px; line-height: 1.72; word-break: keep-all; }
-.trust-card {
-  width: 315px; padding: 18px 20px; border: 1px solid #edd7d5; border-radius: 16px;
-  display: flex; gap: 13px; align-items: flex-start; background: #ffffff; box-shadow: 0 12px 30px rgb(64 39 47 / 6%);
-}
-.shield { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #e9f1e3; color: #465e34; font-weight: 900; }
-.trust-card strong { font-size: 14px; }
-.trust-card p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
 
 .workspace {
   max-width: 1480px;
@@ -291,8 +283,6 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .profile-submit:disabled { opacity: .5; cursor: not-allowed; }
 
 @media (max-width: 980px) {
-  .hero { grid-template-columns: 1fr; }
-  .trust-card { width: 100%; }
   .workspace { grid-template-columns: 1fr; }
   .control-panel { display: grid; grid-template-columns: 1fr 1fr; }
   .panel-profile, .source-card { grid-column: 1 / -1; }
