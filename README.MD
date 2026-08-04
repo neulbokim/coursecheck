@@ -1,33 +1,37 @@
-## 📌 개요
-`semester-course`는 학사 데이터에서 강의 목록과 시간표를 가져와, <br>
-전공별로 학기별로 개설된 과목 목록을 확인하게 해줍니다.<br>
-특히 과목코드가 다양한 연계전공 전공과목을 한눈에 볼 수 있게 해줍니다.
+# CourseCheck
 
-`timetable`은 사용자의 전공에 따라,<br>
-이번 학기 개설 과목 중 어떤 과목이 어떤 시간대에 있는지 <br>
-시각적으로 한눈에 확인할 수 있는 형태로 보여줍니다.  <br>
-특히 전공 코드를 기반으로 강의를 색상 구분하여 한눈에 파악할 수 있도록 지원합니다.<br>
+서강대학교 대학요람의 전공 인정과목과 학기별 개설교과목정보를 합쳐, 내 전공에 해당하는 과목을 시간표 형태로 보여주는 프로젝트입니다.
 
-## 🛠 설치 방법
-* python 3.10 이상 버전에서 실행해야 패키지 버전 오류가 안 납니다.
-* python 3.11, 3.12, 3.13 등 최신 버전에서 실행하기를 권장드립니다.
+## 현재 구성
 
-```bash
-# 먼저 원하는 프로젝트의 작업 디렉토리로 이동해주세요. 
-# 예시
-cd Users/hyeonseokim_macbookpro/Desktop/서강대학교/2025/2025-summer/
+- `web/`: 실제 배포용 웹앱
+- `data/`: 서강대학교 개설교과목정보에서 내려받은 학기별 원본
+- `semester-course.ipynb`, `timetable.ipynb`, `check-semester.ipynb`: 초기 분석 노트북(참고용)
 
-# git 레포지토리 복제
-git clone https://github.com/neulbokim/coursecheck.git
-cd coursecheck
+웹앱에서는 사용자별 전공·수강 과목을 코드에 직접 적지 않습니다.
 
-#가상환경 생성
-python -m venv .venv
+- 일반 전공: 개설과목 데이터의 `학과` 목록에서 자동 생성
+- 연계전공: `web/app/data/majors.ts` 한 곳에서 요람 기준 과목번호 관리
+- 들은 과목: 에브리타임 공개 시간표 링크를 일회성으로 확인하고 브라우저 메모리에서만 비교
+- 운영 로그: 개인 식별정보 없이 화면 조회·필터 선택·가져오기 성공 구간만 집계
 
-#가상환경 활성화
-source .venv/bin/activate ## Mac / Linux 환경인 경우
-source .venv/Scripts/activate ##Windows인 경우
+## 데이터 업데이트
 
-#필요한 패키지 설치
-pip install -r requirements.txt
-```
+1. 개설교과목정보에서 새 학기 `.xls` 파일을 `data/`에 저장합니다.
+2. `web/scripts/import-sis.mjs`의 원본 파일명을 새 학기로 바꿉니다.
+3. `web` 폴더에서 `npm run data:import`를 실행합니다.
+4. 대학요람 또는 전공 홈페이지에서 연계전공 과목표를 확인하고 `web/app/data/majors.ts`를 갱신합니다.
+5. 화면의 학기명과 데이터 기준일을 바꾼 뒤 빌드합니다.
+
+## 공식 출처
+
+- [서강대학교 대학요람](https://www.sogang.ac.kr/ko/academic-support/college-bulletin)
+- [서강대학교 개설교과목정보](https://sis109.sogang.ac.kr/sap/bc/webdynpro/sap/zcmw9016?sap-language=KO#)
+- [빅데이터사이언스 연계전공 교과목안내](https://bds.sogang.ac.kr/bds/bds02_1.html)
+
+학교 공식 서비스가 아니므로 실제 수강신청 전에는 반드시 학교 정보를 다시 확인해야 합니다.
+
+## 보안·개인정보
+
+자세한 내용은 [`web/SECURITY.md`](web/SECURITY.md)를 참고하세요.
+
