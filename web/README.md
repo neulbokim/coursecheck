@@ -13,7 +13,8 @@ npm run dev
 ## 확인
 
 ```bash
-npm run build
+npm test              # 빌드 + 렌더링·파서·수강자격·이벤트 정합성 테스트
+npm run lint
 npm audit --omit=dev
 ```
 
@@ -28,6 +29,8 @@ npm audit --omit=dev
 - `scripts/import-sis.mjs`: 파일을 `courses.generated.json`으로 굽는 CLI
 - `db/schema.ts`: 최소 사용자 설정과 익명 운영 이벤트 스키마
 - `drizzle/`: Neon PostgreSQL에 적용되는 마이그레이션
+- `scripts/deploy-check.mjs`: 배포 전 점검 — 지저분한 작업 트리·미푸시 커밋·빠뜨린 마이그레이션을 막습니다
+- `app/api/health/route.ts`: 지금 떠 있는 배포의 버전과 커밋 해시
 
 ## Vercel + Neon 배포
 
