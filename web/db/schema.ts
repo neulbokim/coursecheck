@@ -6,13 +6,14 @@ export const analyticsEvents = pgTable(
     id: serial("id").primaryKey(),
     eventName: text("event_name").notNull(),
     /**
-     * 이벤트에 붙는 사용자 속성. 소속(대학)·1전공·학번까지 남겨 관리 화면에서 단위를 바꿔 봅니다.
+     * 이벤트에 붙는 사용자 속성. 소속(대학)·1전공·학번·이수학기까지 남겨 관리 화면에서 단위를 바꿔 봅니다.
      * 셋이 함께 있으면 인원이 적은 조합에서는 사실상 개인을 가리키므로, 관리 화면은
      * 합계만 보여주고 방문자 ID와는 잇지 않습니다(어느 행이 누구인지 되짚을 수 없음).
      */
     college: text("college"),
     major: text("major"),
     cohortYear: integer("cohort_year"),
+    completedSemesters: integer("completed_semesters"),
     /**
      * 한 사람의 기록을 이어 흐름을 보기 위한 방문자 ID. 선택 동의를 한 사람에게만 채웁니다.
      * 이 값이 있으면 그 사람의 사용 순서를 따라갈 수 있고 user_profiles와도 이어지므로,
@@ -74,7 +75,7 @@ export const userProfiles = pgTable("user_profiles", {
   // 기존 행은 재학생으로 봅니다.
   enrolled: boolean("enrolled").notNull().default(true),
   /**
-   * 이용 기록에 소속·1전공·입학연도를 함께 남겨도 되는지에 대한 선택 동의.
+   * 이용 기록에 소속·1전공·입학연도·이수학기를 함께 남겨도 되는지에 대한 선택 동의.
    * 동의하지 않으면 이벤트에 이름과 묶음 값만 남습니다.
    * 기존 행은 이 문구로 동의를 받은 적이 없으므로 false에서 시작합니다.
    */

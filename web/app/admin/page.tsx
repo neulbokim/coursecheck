@@ -22,6 +22,7 @@ type Overview = {
   profiles: {
     byCollege: Array<{ college: string | null; total: number }>;
     byCohort: Array<{ cohortYear: number; total: number }>;
+    bySemesters: Array<{ semesters: number; total: number }>;
     byMajor: Array<{ major: string; first: number; second: number; third: number; total: number }>;
   };
   eventsBy: Record<Unit, Array<{ key: string | null; event: string; total: number }>>;
@@ -36,17 +37,19 @@ type Overview = {
     college: string | null;
     major: string | null;
     cohortYear: number | null;
+    completedSemesters: number | null;
     resultBucket: string | null;
     createdAt: string;
   }>;
 };
 
 /** 이벤트를 어떤 단위로 묶어 볼지 */
-type Unit = "college" | "major" | "cohort";
+type Unit = "college" | "major" | "cohort" | "semesters";
 const UNITS: Array<{ key: Unit; label: string; empty: string }> = [
   { key: "college", label: "소속 대학", empty: "소속 미선택" },
   { key: "major", label: "1전공", empty: "전공 미상" },
   { key: "cohort", label: "학번", empty: "학번 미상" },
+  { key: "semesters", label: "이수학기", empty: "학기 미상" },
 ];
 
 /** 이벤트 이름을 사람이 읽을 말로 */
@@ -288,6 +291,7 @@ export default function AdminPage() {
     if (key === null) return UNITS.find((item) => item.key === unit)!.empty;
     if (unit === "college") return COLLEGE_LABEL.get(key) ?? key;
     if (unit === "cohort") return `${key.slice(2)}학번`;
+    if (unit === "semesters") return `${key}학기`;
     return key;
   }
 
@@ -421,7 +425,10 @@ export default function AdminPage() {
               </table>
             )}
 
-            <h2 className="admin-subhead">누가 쓰고 있나<small>소속·학번 분포 (설정을 저장한 사람 기준)</small></h2>
+            <h2 className="admin-subhead">
+              누가 쓰고 있나
+              <small>소속·학번·이수학기 분포 — 설정을 저장한 모든 사람 (동의 여부와 무관한 집계)</small>
+            </h2>
             <div className="admin-split">
               <table className="admin-table">
                 <thead><tr><th>소속 대학</th><th>사람</th></tr></thead>
@@ -440,6 +447,17 @@ export default function AdminPage() {
                   {overview.profiles.byCohort.map((row) => (
                     <tr key={row.cohortYear}>
                       <td><strong>{String(row.cohortYear).slice(2)}학번</strong></td>
+                      <td className="num">{row.total.toLocaleString("ko-KR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <table className="admin-table">
+                <thead><tr><th>이수학기</th><th>사람</th></tr></thead>
+                <tbody>
+                  {overview.profiles.bySemesters.map((row) => (
+                    <tr key={row.semesters}>
+                      <td><strong>{row.semesters}학기</strong></td>
                       <td className="num">{row.total.toLocaleString("ko-KR")}</td>
                     </tr>
                   ))}
@@ -571,6 +589,7 @@ export default function AdminPage() {
                     {row.college && <em>{COLLEGE_LABEL.get(row.college) ?? row.college}</em>}
                     {row.major && <em>{row.major}</em>}
                     {row.cohortYear && <em>{String(row.cohortYear).slice(2)}학번</em>}
+                    {row.completedSemesters !== null && <em>{row.completedSemesters}학기</em>}
                   </li>
                 ))}
               </ul>

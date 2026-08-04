@@ -238,18 +238,21 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
             <label className="consent-row">
               <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required />
               <span>
-                <strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만드는 데 동의합니다.
-                <small>마지막으로 설정을 고친 지 1년이 지나면 파기합니다.</small>
+                <strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만들고,
+                <b>어떤 전공·학기수·학번이 얼마나 쓰는지 집계</b>하는 데 동의합니다.
+                <small>
+                  집계는 사람 수만 세고 따로 쌓아두지 않아요. 마지막으로 설정을 고친 지 1년이 지나면 파기합니다.
+                </small>
               </span>
             </label>
           )}
           <label className="consent-row">
             <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
             <span>
-              <strong>(선택)</strong> 어떤 기능을 썼는지 <b>소속 대학·1전공·입학연도</b>와 함께 남기고
-              순서대로 이어 보는 데 동의합니다.
+              <strong>(선택)</strong> 여기에 더해 <b>내가 어떤 기능을 어떤 순서로 썼는지</b>까지
+              남기는 데 동의합니다.
               <small>
-                <b>나와 소속·전공·학번이 모두 같은 사람이 한두 명뿐이라면</b>, 이 기록은 사실상 내 것으로 좁혀집니다.
+                <b>나와 소속·전공·학번·학기수가 모두 같은 사람이 한두 명뿐이라면</b>, 이 기록은 사실상 내 것으로 좁혀집니다.
                 연계전공이나 인원이 적은 학과일수록 그렇습니다. 기록은 30일 뒤 파기하고,
                 동의하지 않아도 모든 기능을 그대로 쓸 수 있어요. 거두면 지난 기록에서도 지웁니다.
               </small>

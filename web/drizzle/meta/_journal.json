@@ -85,6 +85,13 @@
       "when": 1785862605588,
       "tag": "0011_add_event_visitor_link",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785864502587,
+      "tag": "0012_add_event_semesters",
+      "breakpoints": true
     }
   ]
 }

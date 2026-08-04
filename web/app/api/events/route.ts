@@ -47,18 +47,20 @@ export async function POST(request: Request) {
 
     /**
      * 누구인지는 브라우저 말이 아니라 서버가 정합니다. 방문자 쿠키는 HttpOnly라
-     * 화면 코드가 읽지 못하고, 소속·전공·학번·방문자 ID는 저장된 설정에서 직접 가져옵니다.
+     * 화면 코드가 읽지 못하고, 소속·전공·학번·이수학기·방문자 ID는 저장된 설정에서 직접 가져옵니다.
      * 선택 동의를 하지 않았거나 설정이 없으면 전부 NULL로 들어가 이름과 묶음 값만 남습니다.
      *
      * 설정을 한 번 읽고 넣는 일을 한 문장으로 처리해 왕복을 늘리지 않습니다.
      */
     const visitorId = visitorIdFrom(request);
     await getDb().execute(sql`
-      insert into analytics_events (event_name, result_bucket, college, major, cohort_year, visitor_id)
+      insert into analytics_events
+        (event_name, result_bucket, college, major, cohort_year, completed_semesters, visitor_id)
       select ${payload.event}, ${bucket},
              case when p.analytics_consent then p.college end,
              case when p.analytics_consent then p.major_1 end,
              case when p.analytics_consent then p.cohort_year end,
+             case when p.analytics_consent then p.completed_semesters end,
              case when p.analytics_consent then p.visitor_id end
       from (select 1) as always
       left join user_profiles p on p.visitor_id = ${visitorId}

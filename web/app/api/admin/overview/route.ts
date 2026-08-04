@@ -43,6 +43,7 @@ export async function GET(request: Request) {
           college: analyticsEvents.college,
           major: analyticsEvents.major,
           cohortYear: analyticsEvents.cohortYear,
+          completedSemesters: analyticsEvents.completedSemesters,
           resultBucket: analyticsEvents.resultBucket,
           createdAt: analyticsEvents.createdAt,
         })
@@ -62,12 +63,14 @@ export async function GET(request: Request) {
       newUsers,
       byCollege,
       byCohort,
+      bySemesters,
       byMajor,
       [visiting],
       [consented],
       eventsByCollege,
       eventsByMajor,
       eventsByCohort,
+      eventsBySemesters,
       reachByEvent,
       journeyRows,
     ] =
@@ -83,6 +86,11 @@ export async function GET(request: Request) {
           .from(userProfiles)
           .groupBy(userProfiles.cohortYear)
           .orderBy(desc(userProfiles.cohortYear)),
+        db
+          .select({ semesters: userProfiles.completedSemesters, total: count() })
+          .from(userProfiles)
+          .groupBy(userProfiles.completedSemesters)
+          .orderBy(userProfiles.completedSemesters),
         // 1·2·3전공을 한 줄로 펼쳐 전공별로 몇 명이 어느 순번으로 두고 있는지 셉니다
         db.execute(sql`
           select major,
@@ -112,6 +120,10 @@ export async function GET(request: Request) {
           .select({ key: analyticsEvents.cohortYear, event: analyticsEvents.eventName, total: count() })
           .from(analyticsEvents)
           .groupBy(analyticsEvents.cohortYear, analyticsEvents.eventName),
+        db
+          .select({ key: analyticsEvents.completedSemesters, event: analyticsEvents.eventName, total: count() })
+          .from(analyticsEvents)
+          .groupBy(analyticsEvents.completedSemesters, analyticsEvents.eventName),
         // 이벤트별로 몇 사람이 거기까지 왔는지 (같은 사람이 여러 번 해도 한 번으로)
         db
           .select({ event: analyticsEvents.eventName, people: sql<number>`count(distinct ${analyticsEvents.visitorId})::int` })
@@ -151,12 +163,13 @@ export async function GET(request: Request) {
           consented: consented.total,
         },
         events: totals.map((row) => ({ ...row, last24h: recentByEvent.get(row.event) ?? 0 })),
-        profiles: { byCollege, byCohort, byMajor: byMajor.rows ?? byMajor },
+        profiles: { byCollege, byCohort, bySemesters, byMajor: byMajor.rows ?? byMajor },
         // 관리 화면에서 소속·전공·학번으로 단위를 바꿔 봅니다
         eventsBy: {
           college: eventsByCollege,
           major: eventsByMajor,
           cohort: eventsByCohort.map((row) => ({ ...row, key: row.key === null ? null : String(row.key) })),
+          semesters: eventsBySemesters.map((row) => ({ ...row, key: row.key === null ? null : String(row.key) })),
         },
         // 흐름 — 동의한 사람만 이어집니다
         flow: {
