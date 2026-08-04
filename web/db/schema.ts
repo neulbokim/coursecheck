@@ -67,6 +67,12 @@ export const userProfiles = pgTable("user_profiles", {
   // 졸업생·외부인이 구경하려고 넣은 설정인지. 집계에서 재학생과 섞이면 사용 지표가 부풀려집니다.
   // 기존 행은 재학생으로 봅니다.
   enrolled: boolean("enrolled").notNull().default(true),
+  /**
+   * 이용 기록에 소속·1전공·입학연도를 함께 남겨도 되는지에 대한 선택 동의.
+   * 동의하지 않으면 이벤트에 이름과 묶음 값만 남습니다.
+   * 기존 행은 이 문구로 동의를 받은 적이 없으므로 false에서 시작합니다.
+   */
+  analyticsConsent: boolean("analytics_consent").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

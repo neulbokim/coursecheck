@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     const recentByEvent = new Map(recentTotals.map((row) => [row.event, row.total]));
 
     // 어떤 정보를 고른 사람들이 쓰고 있는지 — 소속·전공·학번 분포와 단위별 이벤트.
-    const [newUsers, byCollege, byCohort, byMajor, [visiting], eventsByCollege, eventsByMajor, eventsByCohort] =
+    const [newUsers, byCollege, byCohort, byMajor, [visiting], [consented], eventsByCollege, eventsByMajor, eventsByCohort] =
       await Promise.all([
         db.select({ total: count() }).from(userProfiles).where(and(gte(userProfiles.createdAt, since))),
         db
@@ -87,6 +87,7 @@ export async function GET(request: Request) {
           order by count(*) desc, major
         `),
         db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.enrolled, false)),
+        db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.analyticsConsent, true)),
         db
           .select({ key: analyticsEvents.college, event: analyticsEvents.eventName, total: count() })
           .from(analyticsEvents)
@@ -108,6 +109,8 @@ export async function GET(request: Request) {
           last24h: newUsers[0].total,
           // 졸업생·외부인이 구경하려고 넣은 설정. 재학생 지표에서 빼고 보세요.
           visiting: visiting.total,
+          // 소속·전공·학번을 이용 기록에 남겨도 된다고 한 사람. 아래 단위별 표는 이 사람들만 담습니다.
+          consented: consented.total,
         },
         events: totals.map((row) => ({ ...row, last24h: recentByEvent.get(row.event) ?? 0 })),
         profiles: { byCollege, byCohort, byMajor: byMajor.rows ?? byMajor },

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, useId, useMemo, useState } from "react";
+import Link from "next/link";
 import { majorOptions, normalizeMajorSearch } from "../data/major-options";
 import { FIRST_BULLETIN_YEAR, LAST_BULLETIN_YEAR, collegesFor } from "../data/core-curriculum.mjs";
 
@@ -14,6 +15,7 @@ export type UserProfile = {
   major2Approved: boolean;
   major3Approved: boolean;
   enrolled: boolean;
+  analyticsConsent: boolean;
 };
 
 type Props = {
@@ -127,6 +129,8 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
   const [major2Approved, setMajor2Approved] = useState(initialProfile?.major2Approved ?? true);
   const [major3Approved, setMajor3Approved] = useState(initialProfile?.major3Approved ?? true);
   const [enrolled, setEnrolled] = useState(initialProfile?.enrolled ?? true);
+  // 선택 동의는 미리 체크해 두지 않습니다 — 눌러 둔 동의는 동의가 아닙니다.
+  const [analyticsConsent, setAnalyticsConsent] = useState(initialProfile?.analyticsConsent ?? false);
   const [consent, setConsent] = useState(Boolean(initialProfile));
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -147,7 +151,7 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
         body: JSON.stringify({
           cohortYear, completedSemesters, college: college || null,
           major1, major2: major2 || null, major3: major3 || null,
-          major2Approved, major3Approved, enrolled,
+          major2Approved, major3Approved, enrolled, analyticsConsent,
         }),
       });
       const data = (await response.json()) as { profile?: UserProfile; error?: string };
@@ -225,14 +229,29 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
           )}
           <div className="profile-data-note">
             <strong>어떤 정보가 저장되나요?</strong>
-            <p>입학 연도, 이수학기 수, 소속 대학, 선택 전공, 재학 여부와 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>
+            <p>
+              입학 연도, 이수학기 수, 소속 대학, 선택 전공, 재학 여부와 익명 브라우저 ID만 저장합니다.
+              이름·전체 학번·IP는 저장하지 않아요. <Link href="/privacy" target="_blank" rel="noreferrer">자세히 보기 ↗</Link>
+            </p>
           </div>
           {!initialProfile && (
             <label className="consent-row">
               <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required />
-              위 정보를 서비스 개선과 익명 사용자 집계 목적으로 저장하는 데 동의합니다.
+              <span><strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만드는 데 동의합니다.</span>
             </label>
           )}
+          <label className="consent-row optional">
+            <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
+            <span>
+              <strong>(선택)</strong> 어떤 기능을 썼는지에 <b>소속 대학·1전공·입학연도</b>를 함께 남겨도 좋습니다.
+              <small>
+                어느 전공·학번이 무엇을 필요로 하는지 보고 다음 학기에 고치는 데만 씁니다.
+                해당하는 사람이 적은 조합에서는 이 기록으로 누구인지 짐작될 수 있습니다.
+                동의하지 않아도 모든 기능을 똑같이 쓸 수 있고, 그때는 어떤 기능이 몇 번 쓰였는지만 남습니다.
+                설정을 다시 열어 언제든 바꿀 수 있어요.
+              </small>
+            </span>
+          </label>
           {message && <p className="profile-error" role="alert">{message}</p>}
           <button className="profile-submit" type="submit" disabled={!consent || state === "saving"}>
             {state === "saving" ? "저장하는 중…" : initialProfile ? "수정 내용 저장" : "내 시간표 시작하기"}

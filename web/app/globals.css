@@ -224,11 +224,22 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .helpful-actions button:not(.primary-button) { height: 42px; padding: 0 18px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff; color: #6a6969; font-size: 13px; font-weight: 700; cursor: pointer; }
 .helpful-actions button:not(.primary-button):hover { border-color: #d8bcba; color: var(--wine); }
 
-.security-strip { max-width: 1404px; margin: 0 auto 52px; padding: 0 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--line); }
-.security-strip > div { position: relative; padding: 28px 30px; background: #f2f2f2; }
-.security-strip span { position: absolute; right: 22px; top: 18px; color: #e6c8c5; font-size: 28px; font-style: italic; font-weight: 300; }
-.security-strip strong { display: block; color: #504c4b; font-size: 13px; }
-.security-strip p { margin: 8px 40px 0 0; color: #797979; font-size: 11px; line-height: 1.6; word-break: keep-all; }
+.consent-row.optional { align-items: flex-start; padding: 13px 15px; border: 1px solid var(--line); border-radius: 12px; background: #fafafa; }
+.consent-row.optional b { color: var(--wine); font-weight: 800; }
+.consent-row.optional small { display: block; margin-top: 6px; color: #8a8888; font-size: 10px; line-height: 1.65; word-break: keep-all; }
+
+.doc-page { max-width: 760px; margin: 0 auto; padding: 0 24px 72px; }
+.doc-page > header { padding: 26px 0; border-bottom: 1px solid var(--line); }
+.doc-page h1 { margin: 44px 0 0; font-size: 32px; font-weight: 800; letter-spacing: -.035em; }
+.doc-lead { margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.75; word-break: keep-all; }
+.doc-page h2 { margin: 38px 0 10px; font-size: 16px; font-weight: 800; }
+.doc-page p { margin: 0 0 12px; color: #4b4746; font-size: 13px; line-height: 1.85; word-break: keep-all; }
+.doc-page ul { margin: 0 0 12px; padding-left: 18px; list-style: disc; color: #4b4746; font-size: 13px; line-height: 1.85; }
+.doc-page li { margin-bottom: 5px; word-break: keep-all; }
+.doc-page a { color: var(--wine); font-weight: 700; }
+.doc-foot { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--line); }
+footer a { color: #8e8f8f; text-decoration: underline; }
+
 footer { max-width: 1404px; margin: 0 auto; padding: 24px 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-top: 1px solid var(--line); color: #8e8f8f; font-size: 10px; }
 footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 

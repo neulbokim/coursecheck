@@ -17,7 +17,7 @@ type Message = {
 type Dataset = { id: number; semester: string; courseCount: number; uploadedAt: string };
 
 type Overview = {
-  users: { total: number; last24h: number; visiting: number };
+  users: { total: number; last24h: number; visiting: number; consented: number };
   events: Array<{ event: string; total: number; last24h: number }>;
   profiles: {
     byCollege: Array<{ college: string | null; total: number }>;
@@ -363,6 +363,11 @@ export default function AdminPage() {
                 <em>재학생 · 24시간 +{overview.users.last24h}</em>
               </div>
               <div className="stat-card"><small>둘러보기</small><strong>{overview.users.visiting.toLocaleString("ko-KR")}</strong><em>졸업·외부</em></div>
+              <div className="stat-card">
+                <small>이용 기록 동의</small>
+                <strong>{overview.users.consented.toLocaleString("ko-KR")}</strong>
+                <em>{overview.users.total > 0 ? `${Math.round((overview.users.consented / overview.users.total) * 100)}%` : "–"}</em>
+              </div>
               <div className="stat-card"><small>지금 떠 있는 배포</small><strong>{process.env.NEXT_PUBLIC_BUILD_REV}</strong><em>v{process.env.NEXT_PUBLIC_APP_VERSION}</em></div>
               {overview.feedback.map((row) => (
                 <div className="stat-card" key={row.status}>
@@ -440,7 +445,7 @@ export default function AdminPage() {
 
             <h2 className="admin-subhead">
               단위별 이벤트
-              <small>인원이 적은 칸은 사실상 개인 기록입니다</small>
+              <small>선택 동의를 한 {overview.users.consented.toLocaleString("ko-KR")}명만 들어갑니다</small>
             </h2>
             <div className="admin-filters" role="tablist" aria-label="이벤트 묶는 단위">
               {UNITS.map((item) => (
@@ -515,8 +520,9 @@ export default function AdminPage() {
 
             <p className="admin-note">
               서버 예외와 요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다 — <code>vercel logs</code> 또는 Vercel 대시보드 Logs 탭에서 보세요.
-              여기 있는 건 앱이 직접 남긴 이벤트입니다. 이름·학번 전체·IP는 없지만 소속·1전공·입학연도가 함께 남으므로,
-              인원이 적은 조합은 사실상 한 사람의 기록입니다. 방문자 ID와는 잇지 않아 어느 행이 누구인지는 되짚을 수 없습니다.
+              여기 있는 건 앱이 직접 남긴 이벤트입니다. 소속·1전공·입학연도는 설정 화면에서 선택 동의를 한 사람에게만 붙고,
+              동의하지 않은 사람은 이벤트 이름과 묶음 값만 남아 위 표의 &ldquo;미선택&rdquo;에 모입니다.
+              방문자 ID는 어느 경우에도 붙이지 않아 기록끼리 이어 한 사람을 따라갈 수 없습니다.
             </p>
           </>
         )

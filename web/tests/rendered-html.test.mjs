@@ -591,10 +591,11 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
 });
 
 test("records every event the page actually sends", async () => {
-  const [events, page, admin] = await Promise.all([
+  const [events, page, admin, profileSetup] = await Promise.all([
     readFile(new URL("../app/api/events/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/ProfileSetup.tsx", import.meta.url), "utf8"),
   ]);
 
   const listOf = (source, name) => {
@@ -621,6 +622,15 @@ test("records every event the page actually sends", async () => {
     assert.ok(allowedBuckets.has(bucket), `${bucket} 묶음이 ALLOWED_BUCKETS에 없다`);
   }
 
+  // 소속·전공·학번은 선택 동의를 한 사람에게만 붙인다
+  assert.match(page, /profile\?\.analyticsConsent/, "동의 없이 이벤트에 속성을 붙이면 안 된다");
+  assert.match(profileSetup, /analyticsConsent/);
+  assert.match(profileSetup, /\(선택\)/, "선택 동의는 필수 동의와 구분해 보여준다");
+  assert.doesNotMatch(
+    profileSetup,
+    /checked=\{analyticsConsent \?\? true\}|useState\(initialProfile\?\.analyticsConsent \?\? true\)/,
+    "선택 동의를 미리 체크해 두면 동의가 아니다",
+  );
   // 이벤트에 붙는 값은 전부 허용 목록·범위 검사를 거친다 (임의 문자열이 들어오지 못하게)
   assert.match(events, /ALLOWED_COLLEGES/);
   assert.match(events, /ALLOWED_MAJORS/);

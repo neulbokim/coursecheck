@@ -1,0 +1,1 @@
+ALTER TABLE "user_profiles" ADD COLUMN "analytics_consent" boolean DEFAULT false NOT NULL;

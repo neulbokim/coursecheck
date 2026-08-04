@@ -18,6 +18,7 @@ type ProfileInput = {
   major2Approved?: unknown;
   major3Approved?: unknown;
   enrolled?: unknown;
+  analyticsConsent?: unknown;
   major1?: unknown;
   major2?: unknown;
   major3?: unknown;
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
         major2Approved: userProfiles.major2Approved,
         major3Approved: userProfiles.major3Approved,
         enrolled: userProfiles.enrolled,
+        analyticsConsent: userProfiles.analyticsConsent,
       })
       .from(userProfiles)
       .where(eq(userProfiles.visitorId, visitorId))
@@ -78,6 +80,8 @@ export async function POST(request: Request) {
     const major3Approved = payload.major3Approved !== false;
     // 명시하지 않으면 재학생으로 본다 — 화면 동작은 같고 집계에서만 갈라진다
     const enrolled = payload.enrolled !== false;
+    // 선택 동의는 명시적으로 true일 때만 인정한다. 빠뜨린 요청을 동의로 읽으면 동의가 아니다.
+    const analyticsConsent = payload.analyticsConsent === true;
 
     if (!Number.isInteger(cohortYear) || cohortYear < MIN_COHORT_YEAR || cohortYear > MAX_COHORT_YEAR) {
       return Response.json({ error: "학번을 다시 선택해 주세요." }, { status: 400, headers: responseHeaders() });
@@ -107,6 +111,7 @@ export async function POST(request: Request) {
       major2Approved,
       major3Approved,
       enrolled,
+      analyticsConsent,
       updatedAt: new Date(),
     };
     await getDb()
@@ -124,6 +129,7 @@ export async function POST(request: Request) {
           major2Approved: values.major2Approved,
           major3Approved: values.major3Approved,
           enrolled: values.enrolled,
+          analyticsConsent: values.analyticsConsent,
           updatedAt: values.updatedAt,
         },
       });
@@ -138,7 +144,7 @@ export async function POST(request: Request) {
         profile: {
           cohortYear, completedSemesters, college,
           major1: majors[0], major2: majors[1] || null, major3: majors[2] || null,
-          major2Approved, major3Approved, enrolled,
+          major2Approved, major3Approved, enrolled, analyticsConsent,
         },
       },
       { headers },

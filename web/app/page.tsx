@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import bundledCourses from "./data/courses.generated.json";
 import bundledMeta from "./data/courses.generated.meta.json";
 import { linkedMajors, officialSources } from "./data/majors";
@@ -99,19 +100,17 @@ function parseMeetings(schedule: string): Meeting[] {
 }
 
 /**
- * 이벤트에 붙일 사용자 속성. 설정을 불러오거나 저장할 때 갱신한다.
- * 설정 전에 찍히는 첫 화면 열기에는 아무것도 붙지 않는다.
+ * 이벤트에 붙일 사용자 속성. 선택 동의를 한 사람에게만 채운다.
+ * 동의하지 않았거나 아직 설정을 저장하기 전이면 비어 있고, 그때는 이벤트에
+ * 이름과 묶음 값만 남는다.
  */
-let eventAudience: { college: string | null; major: string | null; cohortYear: number | null } = {
-  college: null,
-  major: null,
-  cohortYear: null,
-};
+const NO_AUDIENCE = { college: null, major: null, cohortYear: null };
+let eventAudience: { college: string | null; major: string | null; cohortYear: number | null } = NO_AUDIENCE;
 
 function setEventAudience(profile: UserProfile | null) {
-  eventAudience = profile
+  eventAudience = profile?.analyticsConsent
     ? { college: profile.college, major: profile.major1, cohortYear: profile.cohortYear }
-    : { college: null, major: null, cohortYear: null };
+    : NO_AUDIENCE;
 }
 
 function postEvent(event: string, resultBucket?: string) {
@@ -792,11 +791,10 @@ export default function Home() {
         </section>
       )}
 
-      <section className="security-strip"><div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·소속 대학·전공과 익명 브라우저 ID만 저장합니다.</p></div><div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div><div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div></section>
       <footer>
         <span>CourseCheck · 서강대 전공 시간표 도우미</span>
         <span className="build-stamp" title={buildStampTitle}>v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
-        <span>학교 공식 서비스가 아닙니다.</span>
+        <span><Link href="/privacy">개인정보 처리방침</Link> · 학교 공식 서비스가 아닙니다.</span>
       </footer>
 
       <button

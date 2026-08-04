@@ -71,6 +71,13 @@
       "when": 1785860806267,
       "tag": "0009_add_event_major_cohort",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785861664417,
+      "tag": "0010_add_analytics_consent",
+      "breakpoints": true
     }
   ]
 }
