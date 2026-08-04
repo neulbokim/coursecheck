@@ -10,6 +10,7 @@ import { groupTimetableEntries } from "./lib/timetable-layout.mjs";
 import { hourMarks, layoutCalendar } from "./lib/calendar-layout.mjs";
 import { normalizeCourseName } from "./lib/course-name.mjs";
 import { expandEquivalents, equivalentLabel } from "./data/equivalents.mjs";
+import { affiliationsOf, checkEligibility } from "./data/affiliations.mjs";
 import {
   LAST_BULLETIN_YEAR,
   bulletinYearFor,
@@ -129,7 +130,6 @@ export default function Home() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [userCount, setUserCount] = useState<number | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const viewed = useRef(false);
   const pickedRestored = useRef(false);
@@ -169,24 +169,22 @@ export default function Home() {
   }, [pickedIds]);
 
   useEffect(() => {
-    void Promise.all([
-      fetch("/api/profile", { cache: "no-store" }).then((response) => response.json()),
-      fetch("/api/user-count").then((response) => response.ok ? response.json() : null),
-    ]).then(([profileData, countData]) => {
-      const savedProfile = profileData.profile as UserProfile | null;
-      setProfile(savedProfile);
-      setProfileOpen(!savedProfile);
-      if (typeof countData?.total === "number") setUserCount(countData.total);
-    }).catch(() => setProfileOpen(true)).finally(() => setProfileLoading(false));
+    void fetch("/api/profile", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((profileData) => {
+        const savedProfile = profileData.profile as UserProfile | null;
+        setProfile(savedProfile);
+        setProfileOpen(!savedProfile);
+      })
+      .catch(() => setProfileOpen(true))
+      .finally(() => setProfileLoading(false));
   }, []);
 
   function profileSaved(savedProfile: UserProfile) {
-    const isNew = !profile;
     setProfile(savedProfile);
     setProfileOpen(false);
     setShowResults(false);
     setExcludedMajorRanks([]);
-    if (isNew) setUserCount((current) => current === null ? null : current + 1);
     postEvent("profile_saved");
   }
 
@@ -254,6 +252,16 @@ export default function Home() {
   }, [trackByCode]);
   const remainingTrackCount = coreTracks.length - completedTrackKeys.size;
 
+  /** 복전 신청을 마친 전공만 소속으로 인정한다 (1전공은 항상 인정) */
+  const affiliations = useMemo(() => affiliationsOf({
+    cohortYear: profile?.cohortYear,
+    majors: profileMajors.map((name, index) => ({
+      name,
+      rank: index + 1,
+      approved: index === 0 || (index === 1 ? profile?.major2Approved !== false : profile?.major3Approved !== false),
+    })),
+  }, college?.label ?? null) as { any: Set<string>; firstMajor: Set<string> }, [profile, profileMajors, college]);
+
   const filteredCourses = useMemo(() => {
     const ranks = majorRankIndex(profileMajors);
     const normalizedQuery = query.trim().toLowerCase();
@@ -262,6 +270,8 @@ export default function Home() {
       const trackKey = trackByCode.get(course.code);
       if (trackKey && completedTrackKeys.has(trackKey)) return false;
       if (excludedNames.has(normalizeCourseName(course.name))) return false;
+      // 소속 제한으로 신청할 수 없는 과목은 뺀다 (판정할 수 없으면 남긴다)
+      if (!checkEligibility(course.note ?? "", affiliations).eligible) return false;
 
       // 전공으로 듣는 과목이면 그 순번을, 아니면 교양 구분을 본다
       const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
@@ -277,7 +287,7 @@ export default function Home() {
 
       return !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [profileMajors, query, excludedNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode]);
+  }, [profileMajors, query, excludedNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
 
   const timetableSlots = useMemo(() => groupTimetableEntries(
     filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
@@ -688,7 +698,7 @@ export default function Home() {
       </div>
 
       <section className="security-strip"><div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·소속 대학·전공과 익명 브라우저 ID만 저장합니다.</p></div><div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div><div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div></section>
-      <footer><span>CourseCheck · 서강대 전공 시간표 도우미</span><span>{userCount === null ? "브라우저 기준 익명 사용자 집계" : `${userCount.toLocaleString("ko-KR")}명이 설정을 완료했어요`} · 학교 공식 서비스가 아닙니다.</span></footer>
+      <footer><span>CourseCheck · 서강대 전공 시간표 도우미</span><span>학교 공식 서비스가 아닙니다.</span></footer>
 
       <button
         className="feedback-launcher"

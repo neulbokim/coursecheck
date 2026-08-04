@@ -1,0 +1,2 @@
+ALTER TABLE "user_profiles" ADD COLUMN "major_2_approved" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_profiles" ADD COLUMN "major_3_approved" boolean DEFAULT true NOT NULL;

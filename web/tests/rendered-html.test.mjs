@@ -46,6 +46,84 @@ test("groups timetable entries by start time so one period is one row", () => {
   assert.ok(slots[0].start < slots[1].start, "시작 시각 순으로 정렬된다");
 });
 
+test("filters courses the student cannot register for", async () => {
+  const { affiliationsOf, checkEligibility, parseEligibility, collegeOfDepartment } = await import(
+    "../app/data/affiliations.mjs"
+  );
+
+  assert.equal(collegeOfDepartment("경영학부(경영학전공)"), "경영대학");
+  assert.equal(collegeOfDepartment("신문방송학과"), "지식융합미디어대학");
+  assert.equal(collegeOfDepartment("아트&테크놀로지학과"), "지식융합미디어대학");
+  assert.equal(collegeOfDepartment("게페르트국제학부"), "로욜라국제대학");
+  assert.equal(collegeOfDepartment("글로벌융합학부"), "로욜라국제대학");
+  assert.equal(collegeOfDepartment("유럽문화학과"), "인문대학");
+  assert.equal(collegeOfDepartment("일본문화전공"), null, "학부에서 폐지되어 매핑하지 않는다");
+  assert.equal(collegeOfDepartment("글로벌한국학부", 2024), "로욜라국제대학");
+  assert.equal(collegeOfDepartment("글로벌한국학부", 2023), "지식융합미디어대학");
+
+  assert.deepEqual(parseEligibility("컴퓨터공학과(불가능),인공지능학과(1전공 가능)"), [
+    { name: "컴퓨터공학과", allow: false, firstMajorOnly: false },
+    { name: "인공지능학과", allow: true, firstMajorOnly: true },
+  ]);
+  assert.deepEqual(parseEligibility("경제대학(가능) · (전학년수강신청일에 비경제전공자 수강신청 가능)"), [
+    { name: "경제대학", allow: true, firstMajorOnly: false },
+  ]);
+  assert.deepEqual(parseEligibility(""), []);
+
+  const student = (majors, college, cohortYear = 2022) => affiliationsOf({ cohortYear, majors }, college);
+
+  const before = student([
+    { name: "국어국문학과", rank: 1, approved: true },
+    { name: "경영학부(경영학전공)", rank: 2, approved: false },
+  ], "인문대학");
+  assert.equal(checkEligibility("경영대학(가능)", before).eligible, false);
+  assert.match(checkEligibility("경영대학(가능)", before).reason, /경영대학/);
+
+  const after = student([
+    { name: "국어국문학과", rank: 1, approved: true },
+    { name: "경영학부(경영학전공)", rank: 2, approved: true },
+  ], "인문대학");
+  assert.equal(checkEligibility("경영대학(가능)", after).eligible, true);
+  assert.equal(checkEligibility("지식융합미디어대학(가능)", after).eligible, false);
+
+  const first = student([{ name: "경영학부(경영학전공)", rank: 1, approved: false }], "경영대학");
+  assert.equal(checkEligibility("경영대학(가능)", first).eligible, true, "1전공은 항상 인정");
+
+  assert.equal(checkEligibility("경영대학(1전공 가능)", after).eligible, false, "2전공자는 1전공 전용 과목 불가");
+  assert.equal(checkEligibility("경영대학(1전공 가능)", first).eligible, true);
+
+  const cse = student([
+    { name: "컴퓨터공학과", rank: 1, approved: true },
+    { name: "경영학부(경영학전공)", rank: 2, approved: true },
+  ], "소프트웨어융합대학");
+  const cseSecond = student([
+    { name: "국어국문학과", rank: 1, approved: true },
+    { name: "컴퓨터공학과", rank: 2, approved: true },
+  ], "인문대학");
+  assert.equal(checkEligibility("컴퓨터공학과(불가능)", cse).eligible, false);
+  assert.equal(checkEligibility("컴퓨터공학과(불가능)", cseSecond).eligible, false, "2전공자도 막힌다");
+  assert.equal(checkEligibility("컴퓨터공학과(1전공 불가능)", cse).eligible, false);
+  assert.equal(checkEligibility("컴퓨터공학과(1전공 불가능)", cseSecond).eligible, true, "2전공자는 들을 수 있다");
+
+  const linked = student([
+    { name: "국어국문학과", rank: 1, approved: true },
+    { name: "빅데이터사이언스 연계전공", rank: 2, approved: true },
+  ], "인문대학");
+  assert.equal(checkEligibility("빅데이터사이언스연계전공(가능)", linked).eligible, true, "표기의 공백 차이를 흡수");
+
+  // 같은 조직의 옛 이름·변형을 하나로 본다 (커뮤니케이션대학 = 지식융합미디어대학)
+  const media = student([
+    { name: "국어국문학과", rank: 1, approved: true },
+    { name: "신문방송학과", rank: 2, approved: true },
+  ], "인문대학");
+  assert.equal(checkEligibility("커뮤니케이션대학(가능)", media).eligible, true);
+  assert.equal(checkEligibility("지식융합미디어학부(가능)", media).eligible, true);
+  assert.equal(checkEligibility("지식융합대학(가능)", media).eligible, true);
+
+  assert.equal(checkEligibility("", after).eligible, true);
+  assert.equal(checkEligibility("전학년 수강 가능", after).eligible, true);
+});
+
 test("lays picked courses on a time-proportional calendar with lanes", async () => {
   const { assignLanes, layoutCalendar, hourMarks, SLOT_MINUTES } = await import("../app/lib/calendar-layout.mjs");
   const at = (day, start, end, id) => ({ id, meeting: { day, start, end } });
@@ -467,11 +545,9 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
   // 운영 통계는 관리자 전용이고, 공개되는 건 푸터용 숫자 하나뿐
   assert.match(stats, /verifyAdminSession/, "이벤트 합계는 관리자만 본다");
   assert.match(stats, /status: 401/);
-  const userCount = await readFile(new URL("../app/api/user-count/route.ts", import.meta.url), "utf8");
-  assert.match(userCount, /userProfiles/);
-  assert.doesNotMatch(userCount, /analyticsEvents|eventName/, "공개 엔드포인트는 이벤트를 노출하지 않는다");
-  assert.match(page, /api\/user-count/, "푸터는 공개 숫자만 가져온다");
-  assert.doesNotMatch(page, /fetch\("\/api\/stats"\)/, "본문에서 관리자 통계를 부르지 않는다");
+  assert.doesNotMatch(page, /api\/user-count|api\/stats/, "본문은 통계를 전혀 가져오지 않는다");
+  assert.doesNotMatch(page, /명이 설정을 완료했어요/, "사용자 수를 화면에 노출하지 않는다");
+  assert.match(page, /checkEligibility/, "소속 제한으로 신청 못 하는 과목을 뺀다");
   assert.match(database, /@neondatabase\/serverless/);
   assert.match(database, /process\.env\.DATABASE_URL/);
   assert.doesNotMatch(database, /cloudflare:workers|drizzle-orm\/d1/);

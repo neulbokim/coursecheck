@@ -11,6 +11,8 @@ export type UserProfile = {
   major1: string;
   major2: string | null;
   major3: string | null;
+  major2Approved: boolean;
+  major3Approved: boolean;
 };
 
 type Props = {
@@ -121,6 +123,8 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
   const [major1, setMajor1] = useState(initialProfile?.major1 ?? "");
   const [major2, setMajor2] = useState(initialProfile?.major2 ?? "");
   const [major3, setMajor3] = useState(initialProfile?.major3 ?? "");
+  const [major2Approved, setMajor2Approved] = useState(initialProfile?.major2Approved ?? true);
+  const [major3Approved, setMajor3Approved] = useState(initialProfile?.major3Approved ?? true);
   const [consent, setConsent] = useState(Boolean(initialProfile));
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -138,7 +142,11 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
       const response = await fetch("/api/profile", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ cohortYear, completedSemesters, college: college || null, major1, major2: major2 || null, major3: major3 || null }),
+        body: JSON.stringify({
+          cohortYear, completedSemesters, college: college || null,
+          major1, major2: major2 || null, major3: major3 || null,
+          major2Approved, major3Approved,
+        }),
       });
       const data = (await response.json()) as { profile?: UserProfile; error?: string };
       if (!response.ok || !data.profile) throw new Error(data.error || "저장하지 못했어요.");
@@ -193,11 +201,22 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
           </div>
           <MajorCombobox label="1전공" required value={major1} onChange={setMajor1} />
           <MajorCombobox label="2전공" value={major2} onChange={setMajor2} />
+          {major2 && (
+            <label className="approval-row">
+              <input type="checkbox" checked={major2Approved} onChange={(event) => setMajor2Approved(event.target.checked)} />
+              <span><strong>2전공 복수전공 신청을 마쳤어요</strong><small>신청 전이면 체크를 풀어주세요. 그 대학·학과로만 열린 과목은 아직 신청할 수 없어 시간표에서 빼드려요.</small></span>
+            </label>
+          )}
           <MajorCombobox label="3전공" value={major3} onChange={setMajor3} />
+          {major3 && (
+            <label className="approval-row">
+              <input type="checkbox" checked={major3Approved} onChange={(event) => setMajor3Approved(event.target.checked)} />
+              <span><strong>3전공 복수전공 신청을 마쳤어요</strong><small>신청 전이면 체크를 풀어주세요.</small></span>
+            </label>
+          )}
           <div className="profile-data-note">
             <strong>어떤 정보가 저장되나요?</strong>
             <p>입학 연도, 이수학기 수, 소속 대학, 선택 전공과 익명 브라우저 ID만 저장합니다. 이름·전체 학번·IP는 저장하지 않아요.</p>
-            <p>사용자 수는 브라우저 기준이라 실제 인원과 조금 다를 수 있습니다.</p>
           </div>
           {!initialProfile && (
             <label className="consent-row">

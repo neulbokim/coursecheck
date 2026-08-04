@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const analyticsEvents = pgTable("analytics_events", {
   id: serial("id").primaryKey(),
@@ -37,6 +37,10 @@ export const userProfiles = pgTable("user_profiles", {
   major1: text("major_1").notNull(),
   major2: text("major_2"),
   major3: text("major_3"),
+  // 복수전공 신청이 승인되기 전에는 해당 대학·학과 제한 과목을 신청할 수 없다.
+  // 기존 행은 신청 완료로 보아 과목을 감추지 않는다.
+  major2Approved: boolean("major_2_approved").notNull().default(true),
+  major3Approved: boolean("major_3_approved").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

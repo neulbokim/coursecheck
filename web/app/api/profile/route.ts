@@ -15,6 +15,8 @@ type ProfileInput = {
   cohortYear?: unknown;
   completedSemesters?: unknown;
   college?: unknown;
+  major2Approved?: unknown;
+  major3Approved?: unknown;
   major1?: unknown;
   major2?: unknown;
   major3?: unknown;
@@ -46,6 +48,8 @@ export async function GET(request: Request) {
         major1: userProfiles.major1,
         major2: userProfiles.major2,
         major3: userProfiles.major3,
+        major2Approved: userProfiles.major2Approved,
+        major3Approved: userProfiles.major3Approved,
       })
       .from(userProfiles)
       .where(eq(userProfiles.visitorId, visitorId))
@@ -67,6 +71,9 @@ export async function POST(request: Request) {
       typeof value === "string" ? value.trim() : "",
     );
     const college = typeof payload.college === "string" && payload.college.trim() ? payload.college.trim() : null;
+    // 명시하지 않으면 신청 완료로 본다 — 잘못 감추지 않기 위해
+    const major2Approved = payload.major2Approved !== false;
+    const major3Approved = payload.major3Approved !== false;
 
     if (!Number.isInteger(cohortYear) || cohortYear < MIN_COHORT_YEAR || cohortYear > MAX_COHORT_YEAR) {
       return Response.json({ error: "학번을 다시 선택해 주세요." }, { status: 400, headers: responseHeaders() });
@@ -93,6 +100,8 @@ export async function POST(request: Request) {
       major1: majors[0],
       major2: majors[1] || null,
       major3: majors[2] || null,
+      major2Approved,
+      major3Approved,
       updatedAt: new Date(),
     };
     await getDb()
@@ -107,6 +116,8 @@ export async function POST(request: Request) {
           major1: values.major1,
           major2: values.major2,
           major3: values.major3,
+          major2Approved: values.major2Approved,
+          major3Approved: values.major3Approved,
           updatedAt: values.updatedAt,
         },
       });
@@ -117,7 +128,13 @@ export async function POST(request: Request) {
       `${COOKIE_NAME}=${visitorId}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`,
     );
     return Response.json(
-      { profile: { cohortYear, completedSemesters, college, major1: majors[0], major2: majors[1] || null, major3: majors[2] || null } },
+      {
+        profile: {
+          cohortYear, completedSemesters, college,
+          major1: majors[0], major2: majors[1] || null, major3: majors[2] || null,
+          major2Approved, major3Approved,
+        },
+      },
       { headers },
     );
   } catch {

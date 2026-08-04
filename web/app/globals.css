@@ -605,3 +605,9 @@ footer { max-width: 1404px; margin: 0 auto; padding: 24px 0 34px; display: flex;
   .admin-log li { flex-wrap: wrap; gap: 6px; }
   .admin-table th:last-child, .admin-table td:last-child { display: none; }
 }
+
+/* 복수전공 신청 여부 */
+.approval-row { margin-top: -4px; padding: 11px 13px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 9px; border: 1px solid #ead1cf; border-radius: 11px; background: var(--cardinal-tint); cursor: pointer; }
+.approval-row input { margin-top: 2px; accent-color: var(--wine); }
+.approval-row strong { display: block; font-size: 11px; }
+.approval-row small { display: block; margin-top: 3px; color: #7a5f5c; font-size: 9px; line-height: 1.5; word-break: keep-all; }
