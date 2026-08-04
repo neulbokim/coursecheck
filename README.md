@@ -6,6 +6,7 @@ CourseCheck의 배포용 웹앱입니다. 2026학년도 2학기 개설과목 1,4
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
@@ -22,7 +23,22 @@ npm audit --omit=dev
 - `app/data/majors.ts`: 연계전공 과목표와 공식 출처
 - `scripts/import-sis.mjs`: SIS HTML 형식 `.xls` 정규화 도구
 - `db/schema.ts`: 최소 사용자 설정과 익명 운영 이벤트 스키마
-- `drizzle/`: 배포 시 적용되는 D1 마이그레이션
+- `drizzle/`: Neon PostgreSQL에 적용되는 마이그레이션
+
+## Vercel + Neon 배포
+
+1. Git 저장소를 Vercel Hobby 프로젝트로 가져옵니다.
+2. Vercel Marketplace에서 Neon을 설치하고 프로젝트에 연결합니다.
+3. Vercel이 만든 `DATABASE_URL` 환경 변수를 로컬로 내려받습니다.
+4. `npm run db:migrate`로 최초 테이블을 만든 뒤 배포합니다.
+
+```bash
+vercel env pull .env.local
+npm run db:migrate
+vercel --prod
+```
+
+`DATABASE_URL`은 저장소에 올리지 않습니다. Preview와 Production 환경에도 같은 이름으로 연결해야 합니다.
 
 ## 운영 통계
 

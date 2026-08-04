@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       major1: majors[0],
       major2: majors[1] || null,
       major3: majors[2] || null,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     };
     await getDb()
       .insert(userProfiles)

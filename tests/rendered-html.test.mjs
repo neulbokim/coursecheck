@@ -33,14 +33,15 @@ test("ships normalized course and linked-major data", async () => {
   await access(new URL("../public/og.png", import.meta.url));
 });
 
-test("keeps analytics anonymous and Everytime requests allowlisted", async () => {
-  const [events, everytime, schema, profile, profileSetup, stats] = await Promise.all([
+test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allowlisted", async () => {
+  const [events, everytime, schema, profile, profileSetup, stats, database] = await Promise.all([
     readFile(new URL("../app/api/events/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/everytime/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/profile/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/ProfileSetup.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/stats/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/index.ts", import.meta.url), "utf8"),
   ]);
   assert.match(everytime, /\["everytime\.kr", "www\.everytime\.kr"\]/);
   assert.match(everytime, /TOKEN_PATTERN/);
@@ -53,4 +54,7 @@ test("keeps analytics anonymous and Everytime requests allowlisted", async () =>
   assert.match(profileSetup, /국어국문학과/);
   assert.match(profileSetup, /이수학기 수/);
   assert.match(stats, /userProfiles/);
+  assert.match(database, /@neondatabase\/serverless/);
+  assert.match(database, /process\.env\.DATABASE_URL/);
+  assert.doesNotMatch(database, /cloudflare:workers|drizzle-orm\/d1/);
 });
