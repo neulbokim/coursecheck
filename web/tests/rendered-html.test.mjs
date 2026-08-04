@@ -46,6 +46,42 @@ test("groups timetable entries by start time so one period is one row", () => {
   assert.ok(slots[0].start < slots[1].start, "시작 시각 순으로 정렬된다");
 });
 
+test("parses SIS course files the same way for CLI and upload", async () => {
+  const { parseSisCourses } = await import("../app/lib/sis-parse.mjs");
+
+  const table = (rows) => `<html><body><table>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
+  const headers = ["학년도", "학기", "소속", "학과", "과목번호", "분반", "과목명", "학점", "수업시간/강의실", "시간", "교수진", "수강신청 참조사항", "비고"];
+  const row = (code, name) => ["2026 학년도", "2학기", "대학", "경영학부(경영학전공)", code, "01", name, "3.0", "월,수 12:00~13:15", "3.0", "김교수", "경영대학(가능)", "비고내용"];
+
+  // 열이 없으면 무엇이 없는지 알려준다
+  assert.throws(() => parseSisCourses(table([["학년도", "학기"], ["2026", "2학기"]])), /필요한 열이 없어요/);
+  assert.throws(() => parseSisCourses("<html><body>표 없음</body></html>"), /표를 찾지 못했어요/);
+  // 몇 줄뿐이면 전체 학기 파일이 아니라고 본다
+  assert.throws(() => parseSisCourses(table([headers, row("MGT2001", "회계학원론")])), /전체 학기 파일/);
+
+  const many = [headers, ...Array.from({ length: 60 }, (_, i) => row(`MGT${2000 + i}`, `과목${i}`))];
+  const { courses, semester } = parseSisCourses(table(many));
+  assert.equal(courses.length, 60);
+  assert.equal(semester, "2026-2");
+  assert.equal(courses[0].id, "MGT2000-01");
+  assert.equal(courses[0].credits, 3);
+  assert.equal(courses[0].department, "경영학부(경영학전공)");
+  // 수강 자격 판정이 보는 필드에 수강신청 참조사항이 먼저 들어간다
+  assert.match(courses[0].note, /^경영대학\(가능\)/);
+  assert.match(courses[0].note, /비고내용/);
+
+  // CLI 스크립트와 업로드 API가 같은 파서를 쓴다
+  const [cli, upload] = await Promise.all([
+    readFile(new URL("../scripts/import-sis.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/courses/route.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(cli, /parseSisCourses/);
+  assert.match(upload, /parseSisCourses/);
+  assert.match(upload, /verifyAdminSession/);
+  assert.match(upload, /status: 401/);
+  assert.match(upload, /MAX_UPLOAD_BYTES/);
+});
+
 test("filters courses the student cannot register for", async () => {
   const { affiliationsOf, checkEligibility, parseEligibility, collegeOfDepartment } = await import(
     "../app/data/affiliations.mjs"
@@ -229,8 +265,9 @@ test("defines the CourseCheck product page and social metadata", async () => {
   assert.match(layout, /<html lang="ko">/);
   assert.match(layout, /CourseCheck \| 서강대 전공 시간표/);
   assert.match(layout, /new URL\("\/og\.png", baseUrl\)/);
-  assert.match(page, /시간표를 다시 그리세요/, "히어로 문구는 바뀔 수 있으니 고정된 부분만 확인한다");
-  assert.match(page, /2026학년도 2학기/);
+  // 문구는 자주 바뀌므로 구조만 확인한다
+  assert.match(page, /className="hero"[\s\S]{0,500}<h1>[\s\S]{0,200}시간표/, "히어로에 제목이 있다");
+  assert.match(page, /semesterLabel/, "학기 표시는 실제 자료에서 온다");
   assert.match(page, /전공 단위로 한 번에 제외/, "전공별 일괄 제외");
   assert.match(page, /GE_MODES/, "교양 표시 전환");
   assert.match(page, /내 시간표/, "담은 과목 캘린더 뷰");

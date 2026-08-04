@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import coursesJson from "./data/courses.generated.json";
+import bundledCourses from "./data/courses.generated.json";
 import { linkedMajors, officialSources } from "./data/majors";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 import FeedbackChat from "./components/FeedbackChat";
@@ -22,7 +22,7 @@ import {
   trackGroupsOf,
 } from "./data/core-curriculum.mjs";
 
-type Course = (typeof coursesJson)[number];
+type Course = (typeof bundledCourses)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
 type ImportedTerm = { semester: string; courses: ImportedCourse[]; available?: boolean };
 type Meeting = { day: string; start: number; end: number };
@@ -114,6 +114,8 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"timetable" | "list" | "mine">("timetable");
   const [pickedIds, setPickedIds] = useState<string[]>([]);
+  /** 관리 화면에서 올린 자료가 있으면 그것을 쓰고, 없으면 빌드에 포함된 기본 자료를 쓴다 */
+  const [uploaded, setUploaded] = useState<{ semester: string; courses: Course[] } | null>(null);
   const [everytimeUrl, setEverytimeUrl] = useState("");
   const [importedTerms, setImportedTerms] = useState<ImportedTerm[]>([]);
   const [activeImportedTerm, setActiveImportedTerm] = useState("");
@@ -169,6 +171,18 @@ export default function Home() {
   }, [pickedIds]);
 
   useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/courses")
+      .then((response) => (response.status === 204 ? null : response.json()))
+      .then((data) => {
+        if (cancelled || !data?.courses?.length) return;
+        setUploaded({ semester: data.semester, courses: data.courses as Course[] });
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     void fetch("/api/profile", { cache: "no-store" })
       .then((response) => response.json())
       .then((profileData) => {
@@ -188,6 +202,9 @@ export default function Home() {
     postEvent("profile_saved");
   }
 
+  const courses: Course[] = uploaded?.courses ?? bundledCourses;
+  const semesterLabel = uploaded?.semester ?? "2026-2";
+
   const profileMajors = useMemo(
     () => profile ? [profile.major1, profile.major2, profile.major3].filter(Boolean) as string[] : [],
     [profile],
@@ -204,8 +221,8 @@ export default function Home() {
   }, [allImportedCourses, includedTakenSet, manualExcludedCourses]);
   // 요람이 「택1」로 묶은 과목은 하나만 들었어도 나머지까지 함께 제외한다
   const equivalents = useMemo(
-    () => expandEquivalents(takenForExclusion, coursesJson),
-    [takenForExclusion],
+    () => expandEquivalents(takenForExclusion, courses),
+    [takenForExclusion, courses],
   );
   const excludedNames = useMemo(() => {
     const names = new Set(takenForExclusion.map((course) => normalizeCourseName(course.name)));
@@ -213,8 +230,8 @@ export default function Home() {
     return names;
   }, [takenForExclusion, equivalents]);
   const courseNameOptions = useMemo(
-    () => [...new Set(coursesJson.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "ko")),
-    [],
+    () => [...new Set(courses.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "ko")),
+    [courses],
   );
 
   const bulletinYear = bulletinYearFor(profile?.cohortYear ?? LAST_BULLETIN_YEAR);
@@ -244,12 +261,12 @@ export default function Home() {
   );
   const trackOfferingCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const course of coursesJson) {
+    for (const course of courses) {
       const key = trackByCode.get(course.code);
       if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return counts;
-  }, [trackByCode]);
+  }, [courses, trackByCode]);
   const remainingTrackCount = coreTracks.length - completedTrackKeys.size;
 
   /** 복전 신청을 마친 전공만 소속으로 인정한다 (1전공은 항상 인정) */
@@ -266,7 +283,7 @@ export default function Home() {
     const ranks = majorRankIndex(profileMajors);
     const normalizedQuery = query.trim().toLowerCase();
 
-    return coursesJson.filter((course) => {
+    return courses.filter((course) => {
       const trackKey = trackByCode.get(course.code);
       if (trackKey && completedTrackKeys.has(trackKey)) return false;
       if (excludedNames.has(normalizeCourseName(course.name))) return false;
@@ -287,7 +304,7 @@ export default function Home() {
 
       return !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [profileMajors, query, excludedNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
+  }, [courses, profileMajors, query, excludedNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
 
   const timetableSlots = useMemo(() => groupTimetableEntries(
     filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
@@ -298,8 +315,8 @@ export default function Home() {
     byDay: Record<string, Array<{ course: Course; meeting: Meeting }>>;
   }>, [filteredCourses]);
   const hiddenTakenCount = useMemo(
-    () => coursesJson.filter((course) => excludedNames.has(normalizeCourseName(course.name))).length,
-    [excludedNames],
+    () => courses.filter((course) => excludedNames.has(normalizeCourseName(course.name))).length,
+    [courses, excludedNames],
   );
   // 범례에는 실제로 결과에 있는 구분만 보여준다
   const shownCategories = useMemo(() => {
@@ -316,8 +333,8 @@ export default function Home() {
 
   const pickedSet = useMemo(() => new Set(pickedIds), [pickedIds]);
   const pickedCourses = useMemo(
-    () => pickedIds.map((id) => coursesJson.find((course) => course.id === id)).filter(Boolean) as Course[],
-    [pickedIds],
+    () => pickedIds.map((id) => courses.find((course) => course.id === id)).filter(Boolean) as Course[],
+    [pickedIds, courses],
   );
   const pickedCredits = useMemo(
     () => pickedCourses.reduce((total, course) => total + (course.credits || 0), 0),
@@ -347,12 +364,12 @@ export default function Home() {
   /** 전공 순번별로 이번 학기 개설 과목이 몇 개인지 (제외 체크박스에 표시) */
   const majorCourseCounts = useMemo(() => {
     const counts = new Map<number, number>();
-    for (const course of coursesJson) {
+    for (const course of courses) {
       const rank = majorRanks.byCode.get(course.code) ?? majorRanks.byDepartment.get(course.department);
       if (rank) counts.set(rank, (counts.get(rank) ?? 0) + 1);
     }
     return counts;
-  }, [majorRanks]);
+  }, [courses, majorRanks]);
 
   /** 이 과목을 무엇으로 듣는지 — 1·2·3전공 > 필수교양 > 자유교양 순으로 판정 */
   function categoryOf(course: Course) {
@@ -468,12 +485,12 @@ export default function Home() {
         <a className="brand" href="#top" aria-label="CourseCheck 처음으로"><span className="brand-mark">C</span><span><strong>CourseCheck</strong><small>SOGANG</small></span></a>
         <div className="header-actions">
           {profile && <button className="profile-edit" type="button" onClick={() => setProfileOpen(true)}>{String(profile.cohortYear).slice(2)}학번 · {profile.completedSemesters}학기 <span>수정</span></button>}
-          <div className="header-meta"><span className="live-dot" />2026-2 개설과목 · 7월 27일 기준</div>
+          <div className="header-meta"><span className="live-dot" />{semesterLabel} 개설과목 · {courses.length.toLocaleString("ko-KR")}과목</div>
         </div>
       </header>
 
       <section className="hero" id="top">
-        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>이번 학기, 나에게 남은 과목들로{" "}<br className="wide-break" />시간표를 다시 그리세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.{" "}<br className="wide-break" />들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
+        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>나에게 남은 과목들로{" "}<br className="wide-break" />이번 학기 시간표를 그려보세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.{" "}<br className="wide-break" />들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
         <div className="trust-card"><span className="shield" aria-hidden="true">✓</span><div><strong>시간표 링크는 저장하지 않아요</strong><p>과목명만 비교하고 원문과 링크 토큰은 즉시 버립니다.</p></div></div>
       </section>
 
@@ -593,7 +610,7 @@ export default function Home() {
 
         <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
           <div className="result-toolbar">
-            <div><p className="semester-label">3 · 2026학년도 2학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && <small>{[hiddenTakenCount > 0 ? `${hiddenTakenCount}개 수강·추가 과목 제외됨` : "", remainingTrackCount > 0 ? `남은 필수 교양 ${remainingTrackCount}개 영역 포함` : "필수 교양 모두 이수"].filter(Boolean).join(" · ")}</small>}</div>
+            <div><p className="semester-label">3 · {semesterLabel.replace("-", "학년도 ")}학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && <small>{[hiddenTakenCount > 0 ? `${hiddenTakenCount}개 수강·추가 과목 제외됨` : "", remainingTrackCount > 0 ? `남은 필수 교양 ${remainingTrackCount}개 영역 포함` : "필수 교양 모두 이수"].filter(Boolean).join(" · ")}</small>}</div>
             {showResults && <div className="toolbar-actions"><div className="ge-switch" role="group" aria-label="교양 표시">{GE_MODES.map((mode) => <button key={mode.key} type="button" title={mode.hint} aria-pressed={geMode === mode.key} className={geMode === mode.key ? "active" : ""} onClick={() => changeGeMode(mode.key)}>{mode.label}</button>)}</div><div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="교시별 후보 보기" title="교시별 후보">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기" title="목록">☷</button><button type="button" className={view === "mine" ? "active mine" : "mine"} onClick={() => setView("mine")} aria-label="내 시간표 보기" title="내 시간표">내 시간표{pickedIds.length > 0 && <em>{pickedIds.length}</em>}</button></div></div>}
           </div>
 

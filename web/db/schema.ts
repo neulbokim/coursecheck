@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const analyticsEvents = pgTable("analytics_events", {
   id: serial("id").primaryKey(),
@@ -6,6 +6,18 @@ export const analyticsEvents = pgTable("analytics_events", {
   majorKey: text("major_key"),
   resultBucket: text("result_bucket"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 관리 화면에서 올린 개설과목 데이터. 가장 최근 것을 씁니다.
+ * 빌드에 포함된 courses.generated.json이 기본값이고, 이 표에 더 새 자료가 있으면 화면에서 갈아탑니다.
+ */
+export const courseDatasets = pgTable("course_datasets", {
+  id: serial("id").primaryKey(),
+  semester: text("semester").notNull(),
+  courseCount: integer("course_count").notNull(),
+  courses: jsonb("courses").notNull(),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 /**

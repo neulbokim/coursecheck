@@ -36,6 +36,13 @@
       "when": 1785855859442,
       "tag": "0004_yummy_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785856638555,
+      "tag": "0005_dry_alex_power",
+      "breakpoints": true
     }
   ]
 }

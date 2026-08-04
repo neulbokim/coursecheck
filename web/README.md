@@ -24,7 +24,8 @@ npm audit --omit=dev
 - `app/data/core-curriculum.mjs`: 요람 〈별표 1〉 기준 학번별 필수 교양 트랙
 - `app/data/equivalents.mjs`: 요람이 「택1」·「중복 수강 불가」로 묶은 동일 인정 과목
 - `app/data/affiliations.mjs`: 학과→대학 매핑과 소속별 수강 자격 판정
-- `scripts/import-sis.mjs`: SIS HTML 형식 `.xls` 정규화 도구
+- `app/lib/sis-parse.mjs`: SIS `.xls`(실제로는 HTML 표) 파서 — CLI와 업로드가 공유
+- `scripts/import-sis.mjs`: 파일을 `courses.generated.json`으로 굽는 CLI
 - `db/schema.ts`: 최소 사용자 설정과 익명 운영 이벤트 스키마
 - `drizzle/`: Neon PostgreSQL에 적용되는 마이그레이션
 
@@ -110,6 +111,21 @@ openssl rand -base64 32
 | 앱이 남긴 익명 이벤트 | `/admin` → 집계·로그 또는 `GET /api/stats` (둘 다 관리자 전용) |
 | 서버 예외·요청 로그 | `vercel logs <배포 URL>` 또는 Vercel 대시보드 Logs |
 | 로컬 개발 로그 | `npm run dev`를 띄운 터미널 |
+
+## 개설과목 데이터 갱신
+
+SIS의 [개설교과목정보](https://sis109.sogang.ac.kr/sap/bc/webdynpro/sap/zcmw9016?sap-language=KO)는 SAP WebDynpro 화면이라 초기 HTML에 과목이 한 건도 없고, 세션과 뷰 상태 토큰을 실은 상태 유지 POST로만 목록을 받습니다. 그래서 자동 수집 대신 **파일을 받아 씁니다.** 내려받은 `.xls`는 확장자만 엑셀이고 실제로는 HTML 표라서 엑셀 파서 없이 읽습니다.
+
+갱신 방법이 두 가지입니다.
+
+1. **관리 화면 업로드** (재배포 불필요) — `/admin` → 개설과목 탭에서 파일을 올리면 파싱해 `course_datasets`에 저장하고, 화면이 가장 최근 자료로 갈아탑니다. `GET /api/courses`가 이를 돌려주고, 올린 자료가 없으면 204를 주어 빌드에 포함된 기본 자료를 씁니다.
+2. **CLI** (기본 자료 교체, 재배포 필요)
+
+```bash
+npm run data:import 2026-2-sis.xls
+```
+
+두 경로가 `app/lib/sis-parse.mjs`를 함께 쓰므로 결과가 같습니다. 파서는 필요한 열(`학년도`·`학기`·`학과`·`과목번호`·`과목명`)이 없거나 과목이 50개 미만이면 무엇이 문제인지 알려주며 거부합니다.
 
 ## 수강 자격 (복수전공 신청 전)
 
