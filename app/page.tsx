@@ -5,6 +5,7 @@ import coursesJson from "./data/courses.generated.json";
 import { linkedMajors, officialSources } from "./data/majors";
 import { departmentOptions } from "./data/major-options";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
+import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
 
 type Course = (typeof coursesJson)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
@@ -319,9 +320,9 @@ export default function Home() {
                 id="everytime-url"
                 inputMode="url"
                 autoComplete="off"
-                placeholder="https://everytime.kr/app/@…"
+                placeholder="에브리타임 공유 문구를 그대로 붙여넣으세요"
                 value={everytimeUrl}
-                onChange={(event) => setEverytimeUrl(event.target.value)}
+                onChange={(event) => setEverytimeUrl(extractEverytimeUrl(event.target.value))}
                 required
               />
               <button className="primary-button" disabled={importState === "loading"}>

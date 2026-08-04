@@ -17,7 +17,7 @@ function decodeHtml(value: string) {
 }
 
 function getToken(input: string) {
-  const url = new URL(input);
+  const url = new URL(extractEverytimeUrl(input));
   if (url.protocol !== "https:" || !["everytime.kr", "www.everytime.kr"].includes(url.hostname)) {
     throw new Error("에브리타임의 HTTPS 공유 링크만 사용할 수 있어요.");
   }
@@ -114,3 +114,4 @@ export async function POST(request: Request) {
     return Response.json({ error: message }, { status: 400, headers: { "cache-control": "no-store", "referrer-policy": "no-referrer" } });
   }
 }
+import { extractEverytimeUrl } from "../../lib/everytime-link.mjs";

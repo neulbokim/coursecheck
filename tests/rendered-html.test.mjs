@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
+import { extractEverytimeUrl } from "../app/lib/everytime-link.mjs";
+
+test("extracts an Everytime timetable URL from the copied share message", () => {
+  const url = "https://everytime.kr/app/@A1b2C3d4E5f6G7h8";
+  const copied = `에브리타임에서 친구의 2026년 2학기 시간표를 확인해보세요!\n${url}`;
+  assert.equal(extractEverytimeUrl(copied), url);
+  assert.equal(extractEverytimeUrl(url), url);
+  assert.equal(
+    extractEverytimeUrl("https://www.everytime.kr/@A1b2C3d4E5f6G7h8"),
+    "https://www.everytime.kr/@A1b2C3d4E5f6G7h8",
+  );
+});
 
 test("defines the CourseCheck product page and social metadata", async () => {
   const [page, layout] = await Promise.all([
@@ -46,6 +58,7 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
   assert.match(everytime, /\["everytime\.kr", "www\.everytime\.kr"\]/);
   assert.match(everytime, /TOKEN_PATTERN/);
   assert.match(everytime, /MAX_HTML_SIZE/);
+  assert.match(everytime, /extractEverytimeUrl/);
   assert.doesNotMatch(schema, /ip|userAgent|token|url|courseName/i);
   assert.doesNotMatch(events, /request\.headers\.get\("user-agent"\)|cf-connecting-ip/i);
   assert.match(profile, /HttpOnly; Secure; SameSite=Lax/);
