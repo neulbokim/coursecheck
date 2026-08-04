@@ -372,6 +372,15 @@ test("accepts developer feedback one way and keeps it manageable", async () => {
   assert.match(adminFeedback, /verifyAdminSession/);
   assert.match(adminFeedback, /status: 401/);
   assert.match(adminFeedback, /export async function PATCH/);
+
+  // 집계·로그 화면도 같은 세션으로만 열린다
+  const adminOverview = await readFile(new URL("../app/api/admin/overview/route.ts", import.meta.url), "utf8");
+  assert.match(adminOverview, /verifyAdminSession/);
+  assert.match(adminOverview, /status: 401/);
+  assert.doesNotMatch(adminOverview, /visitorId|visitor_id|message:/, "로그에는 개인 식별 정보를 담지 않는다");
+  const adminPage = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
+  assert.match(adminPage, /집계·로그/);
+  assert.match(adminPage, /vercel logs/, "서버 예외 로그의 위치를 안내한다");
   assert.match(adminSession, /safeEqual\(given, token\)/, "관리자 키는 상수 시간으로 비교한다");
   assert.match(adminLib, /HttpOnly; Secure; SameSite=Strict/);
   assert.match(adminLib, /crypto\.subtle\.sign/, "쿠키에는 키가 아니라 서명값만 담는다");

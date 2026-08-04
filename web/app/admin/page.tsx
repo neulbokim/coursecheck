@@ -14,6 +14,25 @@ type Message = {
   college: string | null;
 };
 
+type Overview = {
+  users: { total: number; last24h: number };
+  events: Array<{ event: string; total: number; last24h: number }>;
+  feedback: Array<{ status: string; total: number }>;
+  recent: Array<{ id: number; event: string; majorKey: string | null; resultBucket: string | null; createdAt: string }>;
+};
+
+/** 이벤트 이름을 사람이 읽을 말로 */
+const EVENT_LABEL = new Map<string, string>([
+  ["page_view", "첫 화면 열기"],
+  ["profile_saved", "전공 설정 저장"],
+  ["results_view", "개설 시간표 확인"],
+  ["everytime_import", "에브리타임 가져오기"],
+  ["everytime_import_error", "에브리타임 실패"],
+  ["course_pick", "과목 담기"],
+  ["ge_mode", "교양 표시 전환"],
+  ["feedback_open", "건의 창 열기"],
+]);
+
 const CATEGORY_LABEL = new Map<string, string>(feedbackCategories.map((item) => [item.key, item.label]));
 const COLLEGE_LABEL = new Map<string, string>(colleges.map((item) => [item.key, item.label]));
 const STATUS_FLOW = [
@@ -26,46 +45,56 @@ export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [token, setToken] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [tab, setTab] = useState<"feedback" | "stats">("feedback");
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const fetchMessages = useCallback(async () => {
-    const response = await fetch("/api/admin/feedback", { cache: "no-store" });
-    if (response.status === 401) return { signedIn: false, messages: [] as Message[] };
-    const data = (await response.json()) as { messages?: Message[]; error?: string };
-    if (!response.ok) throw new Error(data.error || "불러오지 못했어요.");
-    return { signedIn: true, messages: data.messages ?? [] };
+  const fetchAll = useCallback(async () => {
+    const [feedbackResponse, overviewResponse] = await Promise.all([
+      fetch("/api/admin/feedback", { cache: "no-store" }),
+      fetch("/api/admin/overview", { cache: "no-store" }),
+    ]);
+    if (feedbackResponse.status === 401 || overviewResponse.status === 401) {
+      return { signedIn: false, messages: [] as Message[], overview: null };
+    }
+    const feedbackData = (await feedbackResponse.json()) as { messages?: Message[]; error?: string };
+    if (!feedbackResponse.ok) throw new Error(feedbackData.error || "불러오지 못했어요.");
+    const overviewData = overviewResponse.ok ? ((await overviewResponse.json()) as Overview) : null;
+    return { signedIn: true, messages: feedbackData.messages ?? [], overview: overviewData };
   }, []);
 
   const load = useCallback(async () => {
     setBusy(true);
     try {
-      const result = await fetchMessages();
+      const result = await fetchAll();
       setSignedIn(result.signedIn);
       setMessages(result.messages);
+      setOverview(result.overview);
       setError("");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "불러오지 못했어요.");
     } finally {
       setBusy(false);
     }
-  }, [fetchMessages]);
+  }, [fetchAll]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const result = await fetchMessages();
+        const result = await fetchAll();
         if (cancelled) return;
         setSignedIn(result.signedIn);
         setMessages(result.messages);
+        setOverview(result.overview);
       } catch {
         if (!cancelled) setSignedIn(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [fetchMessages]);
+  }, [fetchAll]);
 
   async function signIn(event: FormEvent) {
     event.preventDefault();
@@ -91,6 +120,7 @@ export default function AdminPage() {
     await fetch("/api/admin/session", { method: "DELETE" });
     setSignedIn(false);
     setMessages([]);
+    setOverview(null);
   }
 
   async function setStatus(id: number, status: string) {
@@ -149,6 +179,74 @@ export default function AdminPage() {
         </div>
       </header>
 
+      <div className="admin-tabs" role="tablist" aria-label="화면 전환">
+        <button type="button" role="tab" aria-selected={tab === "feedback"} className={tab === "feedback" ? "active" : ""} onClick={() => setTab("feedback")}>
+          건의<span>{messages.length}</span>
+        </button>
+        <button type="button" role="tab" aria-selected={tab === "stats"} className={tab === "stats" ? "active" : ""} onClick={() => setTab("stats")}>
+          집계·로그{overview && <span>{overview.recent.length}</span>}
+        </button>
+      </div>
+
+      {error && <p className="feedback-error" role="alert">{error}</p>}
+
+      {tab === "stats" ? (
+        !overview ? (
+          <p className="admin-empty">집계를 불러오지 못했어요.</p>
+        ) : (
+          <>
+            <div className="stat-cards">
+              <div className="stat-card"><small>설정 완료 사용자</small><strong>{overview.users.total.toLocaleString("ko-KR")}</strong><em>24시간 +{overview.users.last24h}</em></div>
+              {overview.feedback.map((row) => (
+                <div className="stat-card" key={row.status}>
+                  <small>{STATUS_FLOW.find((s) => s.key === row.status)?.label ?? row.status}</small>
+                  <strong>{row.total}</strong><em>건의</em>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="admin-subhead">이벤트 집계</h2>
+            {overview.events.length === 0 ? (
+              <p className="admin-empty">아직 기록된 이벤트가 없어요.</p>
+            ) : (
+              <table className="admin-table">
+                <thead><tr><th>이벤트</th><th>전체</th><th>최근 24시간</th></tr></thead>
+                <tbody>
+                  {overview.events.map((row) => (
+                    <tr key={row.event}>
+                      <td><strong>{EVENT_LABEL.get(row.event) ?? row.event}</strong><small>{row.event}</small></td>
+                      <td className="num">{row.total.toLocaleString("ko-KR")}</td>
+                      <td className="num">{row.last24h > 0 ? row.last24h.toLocaleString("ko-KR") : "–"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            <h2 className="admin-subhead">최근 로그<small>익명 이벤트 {overview.recent.length}건</small></h2>
+            {overview.recent.length === 0 ? (
+              <p className="admin-empty">기록이 없어요.</p>
+            ) : (
+              <ul className="admin-log">
+                {overview.recent.map((row) => (
+                  <li key={row.id}>
+                    <time>{new Date(row.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</time>
+                    <strong>{EVENT_LABEL.get(row.event) ?? row.event}</strong>
+                    {row.resultBucket && <em>{row.resultBucket}</em>}
+                    {row.majorKey && <em>{row.majorKey}</em>}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <p className="admin-note">
+              서버 예외와 요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다 — <code>vercel logs</code> 또는 Vercel 대시보드 Logs 탭에서 보세요.
+              여기 있는 건 앱이 직접 남긴 익명 이벤트입니다(개인 식별 정보 없음).
+            </p>
+          </>
+        )
+      ) : (
+      <>
       <div className="admin-filters" role="tablist" aria-label="처리 상태">
         {[{ key: "all", label: "전체" }, ...STATUS_FLOW].map((item) => (
           <button
@@ -163,8 +261,6 @@ export default function AdminPage() {
           </button>
         ))}
       </div>
-
-      {error && <p className="feedback-error" role="alert">{error}</p>}
 
       {shown.length === 0 ? (
         <p className="admin-empty">아직 받은 건의가 없어요.</p>
@@ -197,6 +293,8 @@ export default function AdminPage() {
             </li>
           ))}
         </ul>
+      )}
+      </>
       )}
     </main>
   );

@@ -564,3 +564,44 @@ footer { max-width: 1404px; margin: 0 auto; padding: 24px 0 34px; display: flex;
   .course-row > button:first-child { grid-template-columns: 4px minmax(0, 1fr) auto; padding-right: 22px; padding-bottom: 44px; }
   .course-row .pick-button { top: auto; bottom: 10px; right: 22px; transform: none; }
 }
+
+/* 관리 화면 탭·집계 */
+.admin-tabs { display: flex; gap: 5px; margin: 22px 0 16px; border-bottom: 1px solid var(--line); }
+.admin-tabs button {
+  min-height: 38px; padding: 0 14px; border: 0; border-bottom: 2px solid transparent;
+  background: transparent; color: #868585; font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.admin-tabs button.active { border-bottom-color: var(--cardinal); color: var(--cardinal); }
+.admin-tabs button span { margin-left: 5px; padding: 1px 5px; border-radius: 5px; background: #f1f1f1; color: #7d7d7d; font-size: 9px; }
+.admin-tabs button.active span { background: var(--cardinal-tint); color: var(--cardinal); }
+
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 24px; }
+.stat-card { padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.stat-card small { display: block; color: #949494; font-size: 10px; font-weight: 700; }
+.stat-card strong { display: block; margin-top: 5px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
+.stat-card em { display: block; margin-top: 2px; color: #868585; font-size: 9px; font-style: normal; }
+
+.admin-subhead { display: flex; align-items: baseline; gap: 8px; margin: 26px 0 10px; font-size: 14px; font-weight: 800; }
+.admin-subhead small { color: #949494; font-size: 10px; font-weight: 600; }
+
+.admin-table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.admin-table th, .admin-table td { padding: 10px 13px; border-bottom: 1px solid var(--line); text-align: left; font-size: 12px; }
+.admin-table th { background: #fafafa; color: #706f6f; font-size: 10px; font-weight: 800; }
+.admin-table tr:last-child td { border-bottom: 0; }
+.admin-table td strong { display: block; font-size: 12px; }
+.admin-table td small { display: block; margin-top: 2px; color: #a5a5a5; font-size: 9px; }
+.admin-table td.num { color: #4b4746; font-size: 13px; font-weight: 750; text-align: right; font-variant-numeric: tabular-nums; }
+
+.admin-log { max-height: 420px; margin: 0; padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; list-style: none; }
+.admin-log li { padding: 8px 13px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid #f2f2f2; font-size: 11px; }
+.admin-log li:last-child { border-bottom: 0; }
+.admin-log time { flex: 0 0 auto; color: #a5a5a5; font-size: 10px; font-variant-numeric: tabular-nums; }
+.admin-log strong { font-weight: 750; }
+.admin-log em { padding: 2px 6px; border-radius: 5px; background: #f1f1f1; color: #7d7d7d; font-size: 9px; font-style: normal; }
+.admin-note { margin: 18px 0 0; padding: 12px 14px; border-radius: 11px; background: #fafafa; color: #706f6f; font-size: 10px; line-height: 1.6; word-break: keep-all; }
+.admin-note code { padding: 1px 5px; border-radius: 4px; background: #f0f0f0; color: var(--cardinal); font-size: 10px; }
+
+@media (max-width: 680px) {
+  .admin-log li { flex-wrap: wrap; gap: 6px; }
+  .admin-table th:last-child, .admin-table td:last-child { display: none; }
+}
