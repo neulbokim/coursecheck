@@ -637,7 +637,15 @@ test("records every event the page actually sends", async () => {
   assert.ok(eventBody, "postEvent가 보내는 본문을 찾지 못했다");
   assert.doesNotMatch(eventBody, /college|major|cohort|consent/, "화면이 사용자 속성을 실어 보내면 안 된다");
   assert.match(profileSetup, /analyticsConsent/);
+  assert.match(profileSetup, /\(필수\)/, "설정 저장 동의는 필수로 받는다");
   assert.match(profileSetup, /\(선택\)/, "선택 동의는 필수 동의와 구분해 보여준다");
+  // 동의를 받을 때 보유기간을 함께 알린다 (알리기만 하고 안 지우면 약속이 아니므로 크론도 함께 본다)
+  assert.match(profileSetup, /1년이 지나면 파기|30일 뒤 파기/);
+  const cleanup = await readFile(new URL("../app/api/cron/cleanup/route.ts", import.meta.url), "utf8");
+  assert.match(cleanup, /CRON_SECRET/, "정리 경로는 크론만 부를 수 있어야 한다");
+  assert.match(cleanup, /status: 401/);
+  const vercelConfig = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
+  assert.equal(vercelConfig.crons?.[0]?.path, "/api/cron/cleanup", "적어둔 보유기간을 실제로 도는 크론이 있어야 한다");
   assert.doesNotMatch(
     profileSetup,
     /checked=\{analyticsConsent \?\? true\}|useState\(initialProfile\?\.analyticsConsent \?\? true\)/,

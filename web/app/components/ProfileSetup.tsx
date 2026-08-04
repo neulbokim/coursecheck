@@ -129,9 +129,9 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
   const [major2Approved, setMajor2Approved] = useState(initialProfile?.major2Approved ?? true);
   const [major3Approved, setMajor3Approved] = useState(initialProfile?.major3Approved ?? true);
   const [enrolled, setEnrolled] = useState(initialProfile?.enrolled ?? true);
+  const [consent, setConsent] = useState(Boolean(initialProfile));
   // 선택 동의는 미리 체크해 두지 않습니다 — 눌러 둔 동의는 동의가 아닙니다.
   const [analyticsConsent, setAnalyticsConsent] = useState(initialProfile?.analyticsConsent ?? false);
-  const [consent, setConsent] = useState(Boolean(initialProfile));
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -237,20 +237,20 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
           {!initialProfile && (
             <label className="consent-row">
               <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required />
-              <span><strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만드는 데 동의합니다.</span>
+              <span>
+                <strong>(필수)</strong> 위 정보를 저장해 내 전공에 맞는 시간표를 만드는 데 동의합니다.
+                <small>마지막으로 설정을 고친 지 1년이 지나면 파기합니다.</small>
+              </span>
             </label>
           )}
-          <label className="consent-row optional">
+          <label className="consent-row">
             <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
             <span>
-              <strong>(선택)</strong> 어떤 기능을 썼는지에 <b>소속 대학·1전공·입학연도</b>를 함께 남기고,
-              <b>내 기록끼리 이어 보는 것</b>에 동의합니다.
+              <strong>(선택)</strong> 어떤 기능을 썼는지 <b>소속 대학·1전공·입학연도</b>와 함께 남기고
+              순서대로 이어 보는 데 동의합니다.
               <small>
-                어느 전공·학번이 어디서 막히는지 순서대로 보고 다음 학기에 고치는 데만 씁니다.
-                기록이 이어지므로 <b>내 사용 내역이 한 사람의 것으로 묶이고</b>, 해당하는 사람이 적은 조합에서는
-                누구인지 짐작될 수 있습니다. 이름·전체 학번·IP는 어느 경우에도 저장하지 않습니다.
-                동의하지 않아도 모든 기능을 똑같이 쓸 수 있고, 그때는 어떤 기능이 몇 번 쓰였는지만 따로따로 남습니다.
-                <b>동의를 거두면 이미 쌓인 기록에서도 이어붙인 값을 지웁니다.</b> 설정을 다시 열어 언제든 바꿀 수 있어요.
+                해당하는 사람이 적은 조합에서는 누구인지 짐작될 수 있어요. 기록은 30일 뒤 파기합니다.
+                동의하지 않아도 모든 기능을 그대로 쓸 수 있고, 거두면 지난 기록에서도 지웁니다.
               </small>
             </span>
           </label>
