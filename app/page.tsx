@@ -6,15 +6,20 @@ import { linkedMajors, officialSources } from "./data/majors";
 import { departmentOptions } from "./data/major-options";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
+import { layoutTimetableEntries } from "./lib/timetable-layout.mjs";
 
 type Course = (typeof coursesJson)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
+type ImportedTerm = { semester: string; courses: ImportedCourse[] };
 type Meeting = { day: string; start: number; end: number };
 
 const DAY_LIST = ["월", "화", "수", "목", "금"] as const;
 const DAY_START = 9 * 60;
 const DAY_END = 21 * 60;
-const PIXELS_PER_MINUTE = 1.04;
+const PIXELS_PER_MINUTE = 1.45;
+const TIME_AXIS_WIDTH = 56;
+const MIN_DAY_WIDTH = 184;
+const LANE_WIDTH = 146;
 const PALETTE = ["#8b1e3f", "#1f6b5c", "#345995", "#c26532", "#6d4c8e"];
 
 function normalizeCourseName(value: string) {
@@ -23,6 +28,16 @@ function normalizeCourseName(value: string) {
     .replace(/\([^)]*(캡스톤|영어|온라인|재수강)[^)]*\)/gi, "")
     .replace(/[\s·&_-]+/g, "")
     .toLowerCase();
+}
+
+function compactSemester(value: string) {
+  const match = value.match(/(\d{4}).*?([12])\s*학기/);
+  return match ? `${match[1]}-${match[2]}` : value || "가져온 시간표";
+}
+
+function semesterOrder(value: string) {
+  const match = value.match(/(\d{4})-(\d)/);
+  return match ? Number(match[1]) * 10 + Number(match[2]) : 0;
 }
 
 function minutes(value: string) {
@@ -37,9 +52,7 @@ function parseMeetings(schedule: string): Meeting[] {
     const start = minutes(match[2]);
     const end = minutes(match[3]);
     for (const day of match[1].split(",").map((item) => item.trim())) {
-      if (DAY_LIST.includes(day as (typeof DAY_LIST)[number])) {
-        meetings.push({ day, start, end });
-      }
+      if (DAY_LIST.includes(day as (typeof DAY_LIST)[number])) meetings.push({ day, start, end });
     }
   }
   return meetings;
@@ -70,13 +83,15 @@ function profileSelections(savedProfile: UserProfile) {
 export default function Home() {
   const [selectedLinked, setSelectedLinked] = useState<string[]>(["BDS"]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [departmentToAdd, setDepartmentToAdd] = useState("");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"timetable" | "list">("timetable");
   const [everytimeUrl, setEverytimeUrl] = useState("");
-  const [importedCourses, setImportedCourses] = useState<ImportedCourse[]>([]);
-  const [importedSemester, setImportedSemester] = useState("");
-  const [hideTaken, setHideTaken] = useState(true);
+  const [importedTerms, setImportedTerms] = useState<ImportedTerm[]>([]);
+  const [activeImportedTerm, setActiveImportedTerm] = useState("");
+  const [includedTakenNames, setIncludedTakenNames] = useState<string[]>([]);
+  const [manualExcludeInput, setManualExcludeInput] = useState("");
+  const [manualExcludedCourses, setManualExcludedCourses] = useState<string[]>([]);
+  const [showResults, setShowResults] = useState(false);
   const [importState, setImportState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [importMessage, setImportMessage] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -85,6 +100,7 @@ export default function Home() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [userCount, setUserCount] = useState<number | null>(null);
   const viewed = useRef(false);
+  const resultsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!viewed.current) {
@@ -110,8 +126,6 @@ export default function Home() {
     }).catch(() => setProfileOpen(true)).finally(() => setProfileLoading(false));
   }, []);
 
-  const departments = departmentOptions;
-
   function profileSaved(savedProfile: UserProfile) {
     const isNew = !profile;
     setProfile(savedProfile);
@@ -119,13 +133,30 @@ export default function Home() {
     setSelectedLinked(selections.linked);
     setSelectedDepartments(selections.departments);
     setProfileOpen(false);
+    setShowResults(false);
     if (isNew) setUserCount((current) => current === null ? null : current + 1);
     postEvent("profile_saved");
   }
 
-  const importedNames = useMemo(
-    () => new Set(importedCourses.map((course) => normalizeCourseName(course.name))),
-    [importedCourses],
+  const profileMajors = useMemo(
+    () => profile ? [profile.major1, profile.major2, profile.major3].filter(Boolean) as string[] : [],
+    [profile],
+  );
+  const activeTerm = importedTerms.find((term) => term.semester === activeImportedTerm) ?? importedTerms[0];
+  const includedTakenSet = useMemo(() => new Set(includedTakenNames), [includedTakenNames]);
+  const allImportedCourses = useMemo(() => importedTerms.flatMap((term) => term.courses), [importedTerms]);
+  const excludedNames = useMemo(() => {
+    const names = new Set(
+      allImportedCourses
+        .map((course) => normalizeCourseName(course.name))
+        .filter((name) => !includedTakenSet.has(name)),
+    );
+    manualExcludedCourses.forEach((name) => names.add(normalizeCourseName(name)));
+    return names;
+  }, [allImportedCourses, includedTakenSet, manualExcludedCourses]);
+  const courseNameOptions = useMemo(
+    () => [...new Set(coursesJson.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "ko")),
+    [],
   );
 
   const filteredCourses = useMemo(() => {
@@ -135,55 +166,32 @@ export default function Home() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return coursesJson.filter((course) => {
-      const majorMatch =
-        selectedCodeSets.some((codes) => codes.has(course.code)) ||
-        selectedDepartments.includes(course.department);
-      const searchMatch =
-        !normalizedQuery ||
-        `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
-      const taken = importedNames.has(normalizeCourseName(course.name));
-      return majorMatch && searchMatch && !(hideTaken && taken);
+      const majorMatch = selectedCodeSets.some((codes) => codes.has(course.code)) || selectedDepartments.includes(course.department);
+      const searchMatch = !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
+      return majorMatch && searchMatch && !excludedNames.has(normalizeCourseName(course.name));
     });
-  }, [selectedLinked, selectedDepartments, query, hideTaken, importedNames]);
+  }, [selectedLinked, selectedDepartments, query, excludedNames]);
 
-  const timetableEntries = useMemo(
-    () =>
-      filteredCourses.flatMap((course) =>
-        parseMeetings(course.schedule).map((meeting) => ({ course, meeting })),
-      ),
-    [filteredCourses],
-  );
+  const timetableEntries = useMemo(() => layoutTimetableEntries(
+    filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
+    DAY_LIST,
+  ) as Array<{ course: Course; meeting: Meeting; lane: number; laneCount: number }>, [filteredCourses]);
 
+  const maxLanesByDay = useMemo(() => DAY_LIST.map((day) => Math.max(
+    1,
+    ...timetableEntries.filter((entry) => entry.meeting.day === day).map((entry) => entry.laneCount),
+  )), [timetableEntries]);
+  const dayWidths = maxLanesByDay.map((laneCount) => Math.max(MIN_DAY_WIDTH, laneCount * LANE_WIDTH));
+  const dayOffsets = dayWidths.map((_, index) => dayWidths.slice(0, index).reduce((sum, width) => sum + width, 0));
+  const boardWidth = TIME_AXIS_WIDTH + dayWidths.reduce((sum, width) => sum + width, 0);
   const hiddenTakenCount = useMemo(
-    () =>
-      coursesJson.filter((course) =>
-        importedNames.has(normalizeCourseName(course.name)),
-      ).length,
-    [importedNames],
+    () => coursesJson.filter((course) => excludedNames.has(normalizeCourseName(course.name))).length,
+    [excludedNames],
   );
 
   function colorFor(course: Course) {
-    const linked = linkedMajors.find(
-      (major) => selectedLinked.includes(major.key) && major.codes.includes(course.code),
-    );
+    const linked = linkedMajors.find((major) => selectedLinked.includes(major.key) && major.codes.includes(course.code));
     return linked?.color ?? hashColor(course.department);
-  }
-
-  function toggleLinked(key: string) {
-    setSelectedLinked((current) => {
-      const next = current.includes(key)
-        ? current.filter((item) => item !== key)
-        : [...current, key];
-      postEvent("major_filter", key);
-      return next;
-    });
-  }
-
-  function addDepartment() {
-    if (!departmentToAdd || selectedDepartments.includes(departmentToAdd)) return;
-    setSelectedDepartments((current) => [...current, departmentToAdd]);
-    postEvent("department_filter");
-    setDepartmentToAdd("");
   }
 
   async function importEverytime(event: FormEvent) {
@@ -196,22 +204,19 @@ export default function Home() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ url: everytimeUrl }),
       });
-      const data = (await response.json()) as {
-        courses?: ImportedCourse[];
-        semester?: string;
-        error?: string;
-      };
+      const data = (await response.json()) as { courses?: ImportedCourse[]; semester?: string; error?: string };
       if (!response.ok) throw new Error(data.error || "시간표를 가져오지 못했어요.");
       const imported = data.courses ?? [];
-      setImportedCourses(imported);
-      setImportedSemester(data.semester ?? "");
-      setHideTaken(true);
+      const semester = compactSemester(data.semester ?? "");
+      setImportedTerms((current) => [...current.filter((term) => term.semester !== semester), { semester, courses: imported }]
+        .sort((a, b) => semesterOrder(b.semester) - semesterOrder(a.semester)));
+      setActiveImportedTerm(semester);
+      setEverytimeUrl("");
+      setShowResults(false);
       setImportState("done");
-      setImportMessage(
-        imported.length
-          ? `${imported.length}개 과목을 확인했어요. 같은 과목은 시간표에서 숨겼습니다.`
-          : "공유 시간표에 등록된 과목이 아직 없어요.",
-      );
+      setImportMessage(imported.length
+        ? `${semester} ${imported.length}개 과목을 가져왔어요. 다른 학기 링크도 이어서 넣을 수 있어요.`
+        : `${semester} 공유 시간표에 등록된 과목이 아직 없어요.`);
       postEvent("everytime_import", undefined, imported.length === 0 ? "0" : imported.length <= 5 ? "1-5" : "6+");
     } catch (error) {
       setImportState("error");
@@ -220,245 +225,134 @@ export default function Home() {
     }
   }
 
+  function toggleImportedCourse(courseName: string, shouldExclude: boolean) {
+    const normalized = normalizeCourseName(courseName);
+    setIncludedTakenNames((current) => shouldExclude
+      ? current.filter((name) => name !== normalized)
+      : [...new Set([...current, normalized])]);
+    setShowResults(false);
+  }
+
+  function addManualExclusion(event: FormEvent) {
+    event.preventDefault();
+    const name = manualExcludeInput.trim();
+    if (!name || manualExcludedCourses.some((course) => normalizeCourseName(course) === normalizeCourseName(name))) return;
+    setManualExcludedCourses((current) => [...current, name]);
+    setManualExcludeInput("");
+    setShowResults(false);
+  }
+
+  function revealResults() {
+    setShowResults(true);
+    postEvent("results_view", undefined, filteredCourses.length === 0 ? "0" : filteredCourses.length <= 25 ? "1-25" : "26+");
+    window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  }
+
   const hours = Array.from({ length: 13 }, (_, index) => 9 + index);
 
   return (
     <main>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="CourseCheck 처음으로">
-          <span className="brand-mark">C</span>
-          <span>
-            <strong>CourseCheck</strong>
-            <small>SOGANG</small>
-          </span>
-        </a>
+        <a className="brand" href="#top" aria-label="CourseCheck 처음으로"><span className="brand-mark">C</span><span><strong>CourseCheck</strong><small>SOGANG</small></span></a>
         <div className="header-actions">
-          {profile && (
-            <button className="profile-edit" type="button" onClick={() => setProfileOpen(true)}>
-              {String(profile.cohortYear).slice(2)}학번 · {profile.completedSemesters}학기 <span>수정</span>
-            </button>
-          )}
-          <div className="header-meta">
-            <span className="live-dot" />
-            2026-2 개설과목 · 7월 27일 기준
-          </div>
+          {profile && <button className="profile-edit" type="button" onClick={() => setProfileOpen(true)}>{String(profile.cohortYear).slice(2)}학번 · {profile.completedSemesters}학기 <span>수정</span></button>}
+          <div className="header-meta"><span className="live-dot" />2026-2 개설과목 · 7월 27일 기준</div>
         </div>
       </header>
 
       <section className="hero" id="top">
-        <div>
-          <p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p>
-          <h1>내 전공으로 이번 학기<br />시간표를 다시 그리세요.</h1>
-          <p className="hero-copy">
-            학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.
-            들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.
-          </p>
-        </div>
-        <div className="trust-card">
-          <span className="shield" aria-hidden="true">✓</span>
-          <div>
-            <strong>시간표 링크는 저장하지 않아요</strong>
-            <p>과목명만 비교하고 원문과 링크 토큰은 즉시 버립니다.</p>
-          </div>
-        </div>
+        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>내 전공으로 이번 학기<br />시간표를 다시 그리세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다. 들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
+        <div className="trust-card"><span className="shield" aria-hidden="true">✓</span><div><strong>시간표 링크는 저장하지 않아요</strong><p>과목명만 비교하고 원문과 링크 토큰은 즉시 버립니다.</p></div></div>
       </section>
 
       <div className="workspace">
         <aside className="control-panel" aria-label="시간표 설정">
           <section className="control-section">
-            <div className="section-heading">
-              <span className="step">1</span>
-              <div><strong>전공 선택</strong><small>여러 개 선택할 수 있어요</small></div>
+            <div className="section-heading"><span className="step">1</span><div><strong>전공 선택 확인</strong><small>처음 입력한 내 전공이에요</small></div></div>
+            <div className="profile-summary">
+              <div><span>{profile ? `${String(profile.cohortYear).slice(2)}학번` : "학번"}</span><span>{profile ? `${profile.completedSemesters}학기 이수` : "이수학기"}</span></div>
+              <ul>{profileMajors.map((major, index) => <li key={`${major}-${index}`}><small>{index + 1}전공</small><strong>{major}</strong></li>)}</ul>
+              <button type="button" onClick={() => setProfileOpen(true)}>전공 정보 수정</button>
             </div>
-            <div className="chip-list">
-              {linkedMajors.map((major) => {
-                const active = selectedLinked.includes(major.key);
-                return (
-                  <button
-                    className={`major-chip ${active ? "active" : ""}`}
-                    style={active ? { borderColor: major.color, color: major.color, background: major.softColor } : undefined}
-                    key={major.key}
-                    onClick={() => toggleLinked(major.key)}
-                    aria-pressed={active}
-                    type="button"
-                  >
-                    <span className="chip-check">{active ? "✓" : "+"}</span>{major.shortLabel}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="department-picker">
-              <select
-                aria-label="일반 학과 전공 선택"
-                value={departmentToAdd}
-                onChange={(event) => setDepartmentToAdd(event.target.value)}
-              >
-                <option value="">다른 학과 전공 찾기</option>
-                {departments.map((department) => <option key={department}>{department}</option>)}
-              </select>
-              <button type="button" onClick={addDepartment}>추가</button>
-            </div>
-            {selectedDepartments.length > 0 && (
-              <div className="selected-departments">
-                {selectedDepartments.map((department) => (
-                  <button key={department} onClick={() => setSelectedDepartments((items) => items.filter((item) => item !== department))}>
-                    {department}<span>×</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </section>
 
-          <section className="control-section">
-            <div className="section-heading">
-              <span className="step">2</span>
-              <div><strong>들은 과목 가져오기</strong><small>선택 사항</small></div>
-            </div>
+          <section className="control-section exclusion-section">
+            <div className="section-heading"><span className="step">2</span><div><strong>들은 과목 제외하기</strong><small>선택 사항 · 과목별로 바꿀 수 있어요</small></div></div>
+            <p className="semester-help">공개 링크 하나에는 한 학기만 들어 있어요. 이전 학기도 각 학기 공유 링크를 차례로 붙이면 아래 탭에 모아드려요.</p>
             <form onSubmit={importEverytime} className="import-form">
-              <label htmlFor="everytime-url">에브리타임 공유 링크</label>
-              <input
-                id="everytime-url"
-                inputMode="url"
-                autoComplete="off"
-                placeholder="에브리타임 공유 문구를 그대로 붙여넣으세요"
-                value={everytimeUrl}
-                onChange={(event) => setEverytimeUrl(extractEverytimeUrl(event.target.value))}
-                required
-              />
-              <button className="primary-button" disabled={importState === "loading"}>
-                {importState === "loading" ? "확인하는 중…" : "내 과목 가져오기"}
-              </button>
+              <label htmlFor="everytime-url">에브리타임 공유 링크 또는 복사한 문구</label>
+              <input id="everytime-url" inputMode="url" autoComplete="off" placeholder="공유 문구 전체를 그대로 붙여넣으세요" value={everytimeUrl} onChange={(event) => setEverytimeUrl(extractEverytimeUrl(event.target.value))} required />
+              <button className="primary-button" disabled={importState === "loading"}>{importState === "loading" ? "확인하는 중…" : importedTerms.length ? "다른 학기 추가" : "내 과목 가져오기"}</button>
             </form>
-            {importMessage && (
-              <p className={`import-message ${importState}`} role="status">{importMessage}</p>
-            )}
-            {importedCourses.length > 0 && (
-              <div className="taken-summary">
-                <div><strong>{importedSemester || "가져온 시간표"}</strong><span>{importedCourses.length}과목</span></div>
-                <label className="switch-row">
-                  <input type="checkbox" checked={hideTaken} onChange={(event) => setHideTaken(event.target.checked)} />
-                  들었던 과목 숨기기
-                </label>
+            {importMessage && <p className={`import-message ${importState}`} role="status">{importMessage}</p>}
+
+            {importedTerms.length > 0 && (
+              <div className="semester-history">
+                <div className="semester-tabs" role="tablist" aria-label="가져온 학기">
+                  {importedTerms.map((term) => <button key={term.semester} type="button" role="tab" aria-selected={activeTerm?.semester === term.semester} className={activeTerm?.semester === term.semester ? "active" : ""} onClick={() => setActiveImportedTerm(term.semester)}>{term.semester}<span>{term.courses.length}</span></button>)}
+                </div>
+                <div className="taken-course-list" role="tabpanel">
+                  {activeTerm?.courses.length ? activeTerm.courses.map((course, index) => {
+                    const excluded = !includedTakenSet.has(normalizeCourseName(course.name));
+                    return <label key={`${course.name}-${course.professor}-${index}`}><input type="checkbox" checked={excluded} onChange={(event) => toggleImportedCourse(course.name, event.target.checked)} /><span><strong>{course.name}</strong><small>{course.professor || course.room || "상세 정보 없음"}</small></span><em>{excluded ? "제외" : "다시 표시"}</em></label>;
+                  }) : <p>이 학기에는 등록된 과목이 없어요.</p>}
+                </div>
               </div>
             )}
-            <p className="privacy-note"><span>잠금</span> 이름·전체 학번·링크·IP를 저장하지 않습니다.</p>
+
+            <div className="manual-exclusion">
+              <label htmlFor="manual-course">추가로 제외할 과목</label>
+              <form onSubmit={addManualExclusion}><input id="manual-course" list="course-name-options" placeholder="과목명을 검색하거나 직접 입력" value={manualExcludeInput} onChange={(event) => setManualExcludeInput(event.target.value)} /><button type="submit">추가</button></form>
+              <datalist id="course-name-options">{courseNameOptions.map((name) => <option key={name} value={name} />)}</datalist>
+              {manualExcludedCourses.length > 0 && <div className="manual-course-tags">{manualExcludedCourses.map((name) => <button key={name} type="button" onClick={() => { setManualExcludedCourses((current) => current.filter((course) => course !== name)); setShowResults(false); }}>{name}<span>×</span></button>)}</div>}
+            </div>
+
+            <p className="privacy-note"><span>잠금</span> 이름·전체 학번·링크·IP는 저장하지 않습니다.</p>
+            <button className="show-results-button" type="button" onClick={revealResults}>개설 시간표 확인하기 <span>→</span></button>
           </section>
 
-          <section className="source-card">
-            <strong>데이터 출처</strong>
-            <a href={officialSources.bulletin} target="_blank" rel="noreferrer">서강대학교 대학요람 <span>↗</span></a>
-            <a href={officialSources.courses} target="_blank" rel="noreferrer">개설교과목정보 <span>↗</span></a>
-          </section>
+          <section className="source-card"><strong>데이터 출처</strong><a href={officialSources.bulletin} target="_blank" rel="noreferrer">서강대학교 대학요람 <span>↗</span></a><a href={officialSources.courses} target="_blank" rel="noreferrer">개설교과목정보 <span>↗</span></a></section>
         </aside>
 
-        <section className="result-panel" aria-label="개설 과목 시간표">
+        <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
           <div className="result-toolbar">
-            <div>
-              <p className="semester-label">2026학년도 2학기</p>
-              <h2>개설 시간표 <span>{filteredCourses.length}과목</span></h2>
-              {hiddenTakenCount > 0 && hideTaken && <small>{hiddenTakenCount}개 수강 과목 제외됨</small>}
-            </div>
-            <div className="toolbar-actions">
-              <label className="search-box">
-                <span aria-hidden="true">⌕</span>
-                <input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
-              </label>
-              <div className="view-toggle" aria-label="보기 방식">
-                <button className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button>
-                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button>
-              </div>
-            </div>
+            <div><p className="semester-label">3 · 2026학년도 2학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && hiddenTakenCount > 0 && <small>{hiddenTakenCount}개 수강·추가 과목 제외됨</small>}</div>
+            {showResults && <div className="toolbar-actions"><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button></div></div>}
           </div>
 
-          {filteredCourses.length === 0 ? (
-            <div className="empty-state"><span>⌕</span><strong>조건에 맞는 과목이 없어요</strong><p>전공을 하나 이상 선택하거나 검색어를 바꿔보세요.</p></div>
+          {!showResults ? (
+            <div className="result-placeholder"><span>3</span><strong>조건을 확인하면 시간표가 열려요</strong><p>전공과 제외할 과목을 확인한 뒤<br />‘개설 시간표 확인하기’를 눌러주세요.</p></div>
+          ) : filteredCourses.length === 0 ? (
+            <div className="empty-state"><span>⌕</span><strong>조건에 맞는 과목이 없어요</strong><p>전공 정보를 수정하거나 제외 과목을 줄여보세요.</p></div>
           ) : view === "timetable" ? (
             <div className="timetable-scroll">
-              <div className="timetable" style={{ "--board-height": `${(DAY_END - DAY_START) * PIXELS_PER_MINUTE}px` } as React.CSSProperties}>
+              <div className="timetable" style={{ "--board-height": `${(DAY_END - DAY_START) * PIXELS_PER_MINUTE}px`, width: `${boardWidth}px`, gridTemplateColumns: `${TIME_AXIS_WIDTH}px ${dayWidths.map((width) => `${width}px`).join(" ")}` } as React.CSSProperties}>
                 <div className="day-head time-head">시간</div>
                 {DAY_LIST.map((day) => <div className="day-head" key={day}>{day}요일</div>)}
-                <div className="time-axis">
-                  {hours.map((hour) => <span key={hour} style={{ top: `${(hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }}>{hour}:00</span>)}
-                </div>
+                <div className="time-axis">{hours.map((hour) => <span key={hour} style={{ top: `${(hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }}>{hour}:00</span>)}</div>
                 {DAY_LIST.map((day) => <div className="day-column" key={day} />)}
                 {hours.map((hour) => <div className="hour-line" key={hour} style={{ top: `${48 + (hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }} />)}
-                {timetableEntries.map(({ course, meeting }, index) => {
+                {timetableEntries.map(({ course, meeting, lane, laneCount }, index) => {
                   const dayIndex = DAY_LIST.indexOf(meeting.day as (typeof DAY_LIST)[number]);
                   const top = Math.max(0, meeting.start - DAY_START) * PIXELS_PER_MINUTE;
-                  const height = Math.max(42, (Math.min(meeting.end, DAY_END) - Math.max(meeting.start, DAY_START)) * PIXELS_PER_MINUTE);
-                  return (
-                    <button
-                      className="course-block"
-                      key={`${course.id}-${meeting.day}-${index}`}
-                      style={{
-                        top: `${48 + top + 1}px`,
-                        height: `${height - 2}px`,
-                        left: `calc(56px + ${dayIndex} * ((100% - 56px) / 5) + 3px)`,
-                        width: "calc((100% - 56px) / 5 - 6px)",
-                        borderLeftColor: colorFor(course),
-                        background: `${colorFor(course)}12`,
-                      }}
-                      onClick={() => setSelectedCourse(course)}
-                    >
-                      <strong>{course.name}</strong>
-                      <span>{course.code}-{course.section}</span>
-                      <small>{course.professor || "담당교수 미정"}</small>
-                    </button>
-                  );
+                  const height = (Math.min(meeting.end, DAY_END) - Math.max(meeting.start, DAY_START)) * PIXELS_PER_MINUTE;
+                  const slotWidth = dayWidths[dayIndex] / laneCount;
+                  return <button className="course-block" key={`${course.id}-${meeting.day}-${index}`} title={`${course.name} · ${course.code}-${course.section} · ${course.professor || "담당교수 미정"}`} style={{ top: `${48 + top + 1}px`, height: `${Math.max(22, height - 2)}px`, left: `${TIME_AXIS_WIDTH + dayOffsets[dayIndex] + lane * slotWidth + 3}px`, width: `${slotWidth - 6}px`, borderLeftColor: colorFor(course), background: `${colorFor(course)}12` }} onClick={() => setSelectedCourse(course)}><strong>{course.name}</strong><span>{course.code}-{course.section}</span><small>{course.professor || "담당교수 미정"}</small></button>;
                 })}
               </div>
             </div>
           ) : (
-            <div className="course-list">
-              {filteredCourses.map((course) => (
-                <button key={course.id} onClick={() => setSelectedCourse(course)}>
-                  <span className="course-color" style={{ background: colorFor(course) }} />
-                  <span className="course-list-main"><strong>{course.name}</strong><small>{course.code}-{course.section} · {course.department}</small></span>
-                  <span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span>
-                  <span aria-hidden="true">›</span>
-                </button>
-              ))}
-            </div>
+            <div className="course-list">{filteredCourses.map((course) => <button key={course.id} onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button>)}</div>
           )}
         </section>
       </div>
 
-      <section className="security-strip">
-        <div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·전공과 익명 브라우저 ID만 저장합니다.</p></div>
-        <div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div>
-        <div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div>
-      </section>
+      <section className="security-strip"><div><span>01</span><strong>최소 수집</strong><p>입학 연도·이수학기·전공과 익명 브라우저 ID만 저장합니다.</p></div><div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div><div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div></section>
+      <footer><span>CourseCheck · 서강대 전공 시간표 도우미</span><span>{userCount === null ? "브라우저 기준 익명 사용자 집계" : `${userCount.toLocaleString("ko-KR")}명이 설정을 완료했어요`} · 학교 공식 서비스가 아닙니다.</span></footer>
 
-      <footer>
-        <span>CourseCheck · 서강대 전공 시간표 도우미</span>
-        <span>{userCount === null ? "브라우저 기준 익명 사용자 집계" : `${userCount.toLocaleString("ko-KR")}명이 설정을 완료했어요`} · 학교 공식 서비스가 아닙니다.</span>
-      </footer>
-
-      {profileLoading && (
-        <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>
-      )}
-
-      {!profileLoading && profileOpen && (
-        <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />
-      )}
-
-      {selectedCourse && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}>
-          <article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button>
-            <span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span>
-            <h3 id="course-title">{selectedCourse.name}</h3>
-            <dl>
-              <div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div>
-              <div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div>
-              <div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div>
-              <div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>
-            </dl>
-            {selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}
-            <a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a>
-          </article>
-        </div>
-      )}
+      {profileLoading && <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>}
+      {!profileLoading && profileOpen && <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />}
+      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div></dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></article></div>}
     </main>
   );
 }

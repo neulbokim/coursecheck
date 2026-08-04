@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import { extractEverytimeUrl } from "../app/lib/everytime-link.mjs";
+import { layoutTimetableEntries } from "../app/lib/timetable-layout.mjs";
 
 test("extracts an Everytime timetable URL from the copied share message", () => {
   const url = "https://everytime.kr/app/@A1b2C3d4E5f6G7h8";
@@ -12,6 +13,19 @@ test("extracts an Everytime timetable URL from the copied share message", () => 
     extractEverytimeUrl("https://www.everytime.kr/@A1b2C3d4E5f6G7h8"),
     "https://www.everytime.kr/@A1b2C3d4E5f6G7h8",
   );
+});
+
+test("lays overlapping timetable entries into separate horizontal lanes", () => {
+  const entries = [
+    { id: "a", meeting: { day: "월", start: 540, end: 630 } },
+    { id: "b", meeting: { day: "월", start: 570, end: 660 } },
+    { id: "c", meeting: { day: "월", start: 600, end: 690 } },
+    { id: "d", meeting: { day: "월", start: 690, end: 750 } },
+  ];
+  const laidOut = layoutTimetableEntries(entries, ["월"]);
+  assert.equal(new Set(laidOut.slice(0, 3).map((entry) => entry.lane)).size, 3);
+  assert.deepEqual(laidOut.slice(0, 3).map((entry) => entry.laneCount), [3, 3, 3]);
+  assert.equal(laidOut[3].laneCount, 1);
 });
 
 test("defines the CourseCheck product page and social metadata", async () => {
@@ -25,7 +39,24 @@ test("defines the CourseCheck product page and social metadata", async () => {
   assert.match(page, /내 전공으로 이번 학기/);
   assert.match(page, /2026학년도 2학기/);
   assert.match(page, /useState<string\[\]>\(\["BDS"\]\)/);
+  assert.match(page, /전공 선택 확인/);
+  assert.match(page, /다른 학기 추가/);
+  assert.match(page, /추가로 제외할 과목/);
+  assert.match(page, /개설 시간표 확인하기/);
+  assert.doesNotMatch(page, /className="major-chip"/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton|Your site is taking shape/);
+});
+
+test("self-hosts Pretendard and uses it as the single UI typeface", async () => {
+  const [layout, css, packageText] = await Promise.all([
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+  ]);
+  assert.match(layout, /pretendardvariable\.css/);
+  assert.match(css, /"Pretendard Variable"/);
+  assert.doesNotMatch(css, /Georgia|Times New Roman|ui-monospace|monospace/);
+  assert.match(packageText, /"pretendard"/);
 });
 
 test("ships normalized course and linked-major data", async () => {

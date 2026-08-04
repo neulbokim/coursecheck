@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import "pretendard/dist/web/variable/pretendardvariable.css";
 import "./globals.css";
 
 const title = "CourseCheck | 서강대 전공 시간표";
