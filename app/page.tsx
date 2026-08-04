@@ -10,7 +10,7 @@ import { groupTimetableEntries } from "./lib/timetable-layout.mjs";
 
 type Course = (typeof coursesJson)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
-type ImportedTerm = { semester: string; courses: ImportedCourse[] };
+type ImportedTerm = { semester: string; courses: ImportedCourse[]; available?: boolean };
 type Meeting = { day: string; start: number; end: number };
 
 const DAY_LIST = ["월", "화", "수", "목", "금"] as const;
@@ -25,13 +25,15 @@ function normalizeCourseName(value: string) {
 }
 
 function compactSemester(value: string) {
-  const match = value.match(/(\d{4}).*?([12])\s*학기/);
+  const match = value.match(/(\d{4}).*?(1|2|여름|겨울)\s*학기/);
   return match ? `${match[1]}-${match[2]}` : value || "가져온 시간표";
 }
 
 function semesterOrder(value: string) {
-  const match = value.match(/(\d{4})-(\d)/);
-  return match ? Number(match[1]) * 10 + Number(match[2]) : 0;
+  const match = value.match(/(\d{4})-(1|2|여름|겨울)/);
+  if (!match) return 0;
+  const termOrder = { "1": 1, "여름": 2, "2": 3, "겨울": 4 }[match[2]] ?? 0;
+  return Number(match[1]) * 10 + termOrder;
 }
 
 function minutes(value: string) {
@@ -198,20 +200,29 @@ export default function Home() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ url: everytimeUrl }),
       });
-      const data = (await response.json()) as { courses?: ImportedCourse[]; semester?: string; error?: string };
+      const data = (await response.json()) as {
+        terms?: ImportedTerm[];
+        courses?: ImportedCourse[];
+        semester?: string;
+        error?: string;
+      };
       if (!response.ok) throw new Error(data.error || "시간표를 가져오지 못했어요.");
-      const imported = data.courses ?? [];
-      const semester = compactSemester(data.semester ?? "");
-      setImportedTerms((current) => [...current.filter((term) => term.semester !== semester), { semester, courses: imported }]
-        .sort((a, b) => semesterOrder(b.semester) - semesterOrder(a.semester)));
-      setActiveImportedTerm(semester);
+      const importedTermsFromLink = (data.terms?.length
+        ? data.terms
+        : [{ semester: data.semester ?? "", courses: data.courses ?? [], available: true }])
+        .map((term) => ({ ...term, semester: compactSemester(term.semester) }));
+      setImportedTerms((current) => {
+        const bySemester = new Map(current.map((term) => [term.semester, term]));
+        importedTermsFromLink.forEach((term) => bySemester.set(term.semester, term));
+        return [...bySemester.values()].sort((a, b) => semesterOrder(b.semester) - semesterOrder(a.semester));
+      });
+      setActiveImportedTerm(importedTermsFromLink[0]?.semester ?? "");
       setEverytimeUrl("");
       setShowResults(false);
       setImportState("done");
-      setImportMessage(imported.length
-        ? `${semester} ${imported.length}개 과목을 가져왔어요. 다른 학기 링크도 이어서 넣을 수 있어요.`
-        : `${semester} 공유 시간표에 등록된 과목이 아직 없어요.`);
-      postEvent("everytime_import", undefined, imported.length === 0 ? "0" : imported.length <= 5 ? "1-5" : "6+");
+      const importedCourseCount = importedTermsFromLink.reduce((sum, term) => sum + term.courses.length, 0);
+      setImportMessage(`${importedTermsFromLink.length}개 학기에서 ${importedCourseCount}개 수강 과목을 가져왔어요.`);
+      postEvent("everytime_import", undefined, importedCourseCount === 0 ? "0" : importedCourseCount <= 5 ? "1-5" : "6+");
     } catch (error) {
       setImportState("error");
       setImportMessage(error instanceof Error ? error.message : "시간표를 가져오지 못했어요.");
@@ -270,11 +281,11 @@ export default function Home() {
 
           <section className="control-section exclusion-section">
             <div className="section-heading"><span className="step">2</span><div><strong>들은 과목 제외하기</strong><small>선택 사항 · 과목별로 바꿀 수 있어요</small></div></div>
-            <p className="semester-help">공개 링크 하나에는 한 학기만 들어 있어요. 이전 학기도 각 학기 공유 링크를 차례로 붙이면 아래 탭에 모아드려요.</p>
+            <p className="semester-help">공유 링크 하나로 공개된 이전 학기 시간표까지 모두 가져와 학기별 탭에 모아드려요.</p>
             <form onSubmit={importEverytime} className="import-form">
               <label htmlFor="everytime-url">에브리타임 공유 링크 또는 복사한 문구</label>
               <input id="everytime-url" inputMode="url" autoComplete="off" placeholder="공유 문구 전체를 그대로 붙여넣으세요" value={everytimeUrl} onChange={(event) => setEverytimeUrl(extractEverytimeUrl(event.target.value))} required />
-              <button className="primary-button" disabled={importState === "loading"}>{importState === "loading" ? "확인하는 중…" : importedTerms.length ? "다른 학기 추가" : "내 과목 가져오기"}</button>
+              <button className="primary-button" disabled={importState === "loading"}>{importState === "loading" ? "전체 학기 확인하는 중…" : importedTerms.length ? "수강 내역 다시 가져오기" : "전체 수강 내역 가져오기"}</button>
             </form>
             {importMessage && <p className={`import-message ${importState}`} role="status">{importMessage}</p>}
 
@@ -287,7 +298,7 @@ export default function Home() {
                   {activeTerm?.courses.length ? activeTerm.courses.map((course, index) => {
                     const excluded = !includedTakenSet.has(normalizeCourseName(course.name));
                     return <label key={`${course.name}-${course.professor}-${index}`}><input type="checkbox" checked={excluded} onChange={(event) => toggleImportedCourse(course.name, event.target.checked)} /><span><strong>{course.name}</strong><small>{course.professor || course.room || "상세 정보 없음"}</small></span><em>{excluded ? "제외" : "다시 표시"}</em></label>;
-                  }) : <p>이 학기에는 등록된 과목이 없어요.</p>}
+                  }) : <p>{activeTerm?.available === false ? "공개되지 않았거나 가져오지 못한 학기예요." : "이 학기에는 등록된 과목이 없어요."}</p>}
                 </div>
               </div>
             )}

@@ -4,6 +4,20 @@ import test from "node:test";
 import { extractEverytimeUrl } from "../app/lib/everytime-link.mjs";
 import { groupTimetableEntries } from "../app/lib/timetable-layout.mjs";
 
+test("discovers every public semester identifier in an Everytime response", async () => {
+  const { extractSemesterReferences } = await import("../app/lib/everytime-timetable.mjs");
+  const xml = `<?xml version="1.0"?><response><primaryTables>
+    <primaryTable identifier="currentIdentifier123" year="2026" semester="2" />
+    <primaryTable identifier="summerIdentifier123" year="2026" semester="여름" />
+    <primaryTable identifier="pastIdentifier123456" year="2025" semester="2" />
+  </primaryTables><table identifier="currentIdentifier123" year="2026" semester="2" /></response>`;
+  assert.deepEqual(extractSemesterReferences(xml), [
+    { identifier: "currentIdentifier123", year: "2026", semester: "2" },
+    { identifier: "summerIdentifier123", year: "2026", semester: "여름" },
+    { identifier: "pastIdentifier123456", year: "2025", semester: "2" },
+  ]);
+});
+
 test("extracts an Everytime timetable URL from the copied share message", () => {
   const url = "https://everytime.kr/app/@A1b2C3d4E5f6G7h8";
   const copied = `에브리타임에서 친구의 2026년 2학기 시간표를 확인해보세요!\n${url}`;
@@ -53,7 +67,7 @@ test("defines the CourseCheck product page and social metadata", async () => {
   assert.match(page, /2026학년도 2학기/);
   assert.match(page, /useState<string\[\]>\(\["BDS"\]\)/);
   assert.match(page, /전공 선택 확인/);
-  assert.match(page, /다른 학기 추가/);
+  assert.match(page, /이전 학기 시간표까지 모두/);
   assert.match(page, /추가로 제외할 과목/);
   assert.match(page, /개설 시간표 확인하기/);
   assert.doesNotMatch(page, /className="major-chip"/);
@@ -101,7 +115,10 @@ test("keeps analytics anonymous, PostgreSQL-backed, and Everytime requests allow
   ]);
   assert.match(everytime, /\["everytime\.kr", "www\.everytime\.kr"\]/);
   assert.match(everytime, /TOKEN_PATTERN/);
-  assert.match(everytime, /MAX_HTML_SIZE/);
+  assert.match(everytime, /MAX_XML_SIZE/);
+  assert.match(everytime, /MAX_SEMESTERS/);
+  assert.match(everytime, /extractSemesterReferences/);
+  assert.match(everytime, /\{ terms, courses:/);
   assert.match(everytime, /extractEverytimeUrl/);
   assert.doesNotMatch(schema, /ip|userAgent|token|url|courseName/i);
   assert.doesNotMatch(events, /request\.headers\.get\("user-agent"\)|cf-connecting-ip/i);
