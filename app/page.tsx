@@ -1,0 +1,409 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import coursesJson from "./data/courses.generated.json";
+import { linkedMajors, officialSources } from "./data/majors";
+
+type Course = (typeof coursesJson)[number];
+type ImportedCourse = { name: string; professor: string; room: string };
+type Meeting = { day: string; start: number; end: number };
+
+const DAY_LIST = ["월", "화", "수", "목", "금"] as const;
+const DAY_START = 9 * 60;
+const DAY_END = 21 * 60;
+const PIXELS_PER_MINUTE = 1.04;
+const PALETTE = ["#8b1e3f", "#1f6b5c", "#345995", "#c26532", "#6d4c8e"];
+
+function normalizeCourseName(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/\([^)]*(캡스톤|영어|온라인|재수강)[^)]*\)/gi, "")
+    .replace(/[\s·&_-]+/g, "")
+    .toLowerCase();
+}
+
+function minutes(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function parseMeetings(schedule: string): Meeting[] {
+  const meetings: Meeting[] = [];
+  const pattern = /([월화수목금토일](?:\s*,\s*[월화수목금토일])*)\s*(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/g;
+  for (const match of schedule.matchAll(pattern)) {
+    const start = minutes(match[2]);
+    const end = minutes(match[3]);
+    for (const day of match[1].split(",").map((item) => item.trim())) {
+      if (DAY_LIST.includes(day as (typeof DAY_LIST)[number])) {
+        meetings.push({ day, start, end });
+      }
+    }
+  }
+  return meetings;
+}
+
+function hashColor(value: string) {
+  const hash = [...value].reduce((total, char) => total + char.charCodeAt(0), 0);
+  return PALETTE[hash % PALETTE.length];
+}
+
+function postEvent(event: string, majorKey?: string, resultBucket?: string) {
+  void fetch("/api/events", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ event, majorKey, resultBucket }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
+export default function Home() {
+  const [selectedLinked, setSelectedLinked] = useState<string[]>(["BDS"]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [departmentToAdd, setDepartmentToAdd] = useState("");
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState<"timetable" | "list">("timetable");
+  const [everytimeUrl, setEverytimeUrl] = useState("");
+  const [importedCourses, setImportedCourses] = useState<ImportedCourse[]>([]);
+  const [importedSemester, setImportedSemester] = useState("");
+  const [hideTaken, setHideTaken] = useState(true);
+  const [importState, setImportState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [importMessage, setImportMessage] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const viewed = useRef(false);
+
+  useEffect(() => {
+    if (!viewed.current) {
+      viewed.current = true;
+      postEvent("page_view");
+    }
+  }, []);
+
+  const departments = useMemo(
+    () => [...new Set(coursesJson.map((course) => course.department))].sort((a, b) => a.localeCompare(b, "ko")),
+    [],
+  );
+
+  const importedNames = useMemo(
+    () => new Set(importedCourses.map((course) => normalizeCourseName(course.name))),
+    [importedCourses],
+  );
+
+  const filteredCourses = useMemo(() => {
+    const selectedCodeSets = linkedMajors
+      .filter((major) => selectedLinked.includes(major.key))
+      .map((major) => new Set(major.codes));
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return coursesJson.filter((course) => {
+      const majorMatch =
+        selectedCodeSets.some((codes) => codes.has(course.code)) ||
+        selectedDepartments.includes(course.department);
+      const searchMatch =
+        !normalizedQuery ||
+        `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
+      const taken = importedNames.has(normalizeCourseName(course.name));
+      return majorMatch && searchMatch && !(hideTaken && taken);
+    });
+  }, [selectedLinked, selectedDepartments, query, hideTaken, importedNames]);
+
+  const timetableEntries = useMemo(
+    () =>
+      filteredCourses.flatMap((course) =>
+        parseMeetings(course.schedule).map((meeting) => ({ course, meeting })),
+      ),
+    [filteredCourses],
+  );
+
+  const hiddenTakenCount = useMemo(
+    () =>
+      coursesJson.filter((course) =>
+        importedNames.has(normalizeCourseName(course.name)),
+      ).length,
+    [importedNames],
+  );
+
+  function colorFor(course: Course) {
+    const linked = linkedMajors.find(
+      (major) => selectedLinked.includes(major.key) && major.codes.includes(course.code),
+    );
+    return linked?.color ?? hashColor(course.department);
+  }
+
+  function toggleLinked(key: string) {
+    setSelectedLinked((current) => {
+      const next = current.includes(key)
+        ? current.filter((item) => item !== key)
+        : [...current, key];
+      postEvent("major_filter", key);
+      return next;
+    });
+  }
+
+  function addDepartment() {
+    if (!departmentToAdd || selectedDepartments.includes(departmentToAdd)) return;
+    setSelectedDepartments((current) => [...current, departmentToAdd]);
+    postEvent("department_filter");
+    setDepartmentToAdd("");
+  }
+
+  async function importEverytime(event: FormEvent) {
+    event.preventDefault();
+    setImportState("loading");
+    setImportMessage("");
+    try {
+      const response = await fetch("/api/everytime", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: everytimeUrl }),
+      });
+      const data = (await response.json()) as {
+        courses?: ImportedCourse[];
+        semester?: string;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(data.error || "시간표를 가져오지 못했어요.");
+      const imported = data.courses ?? [];
+      setImportedCourses(imported);
+      setImportedSemester(data.semester ?? "");
+      setHideTaken(true);
+      setImportState("done");
+      setImportMessage(
+        imported.length
+          ? `${imported.length}개 과목을 확인했어요. 같은 과목은 시간표에서 숨겼습니다.`
+          : "공유 시간표에 등록된 과목이 아직 없어요.",
+      );
+      postEvent("everytime_import", undefined, imported.length === 0 ? "0" : imported.length <= 5 ? "1-5" : "6+");
+    } catch (error) {
+      setImportState("error");
+      setImportMessage(error instanceof Error ? error.message : "시간표를 가져오지 못했어요.");
+      postEvent("everytime_import_error");
+    }
+  }
+
+  const hours = Array.from({ length: 13 }, (_, index) => 9 + index);
+
+  return (
+    <main>
+      <header className="site-header">
+        <a className="brand" href="#top" aria-label="CourseCheck 처음으로">
+          <span className="brand-mark">C</span>
+          <span>
+            <strong>CourseCheck</strong>
+            <small>SOGANG</small>
+          </span>
+        </a>
+        <div className="header-meta">
+          <span className="live-dot" />
+          2026-2 개설과목 · 7월 27일 기준
+        </div>
+      </header>
+
+      <section className="hero" id="top">
+        <div>
+          <p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p>
+          <h1>내 전공으로 이번 학기<br />시간표를 다시 그리세요.</h1>
+          <p className="hero-copy">
+            학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.
+            들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.
+          </p>
+        </div>
+        <div className="trust-card">
+          <span className="shield" aria-hidden="true">✓</span>
+          <div>
+            <strong>시간표 링크는 저장하지 않아요</strong>
+            <p>과목명만 비교하고 원문과 링크 토큰은 즉시 버립니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="workspace">
+        <aside className="control-panel" aria-label="시간표 설정">
+          <section className="control-section">
+            <div className="section-heading">
+              <span className="step">1</span>
+              <div><strong>전공 선택</strong><small>여러 개 선택할 수 있어요</small></div>
+            </div>
+            <div className="chip-list">
+              {linkedMajors.map((major) => {
+                const active = selectedLinked.includes(major.key);
+                return (
+                  <button
+                    className={`major-chip ${active ? "active" : ""}`}
+                    style={active ? { borderColor: major.color, color: major.color, background: major.softColor } : undefined}
+                    key={major.key}
+                    onClick={() => toggleLinked(major.key)}
+                    aria-pressed={active}
+                    type="button"
+                  >
+                    <span className="chip-check">{active ? "✓" : "+"}</span>{major.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="department-picker">
+              <select
+                aria-label="일반 학과 전공 선택"
+                value={departmentToAdd}
+                onChange={(event) => setDepartmentToAdd(event.target.value)}
+              >
+                <option value="">다른 학과 전공 찾기</option>
+                {departments.map((department) => <option key={department}>{department}</option>)}
+              </select>
+              <button type="button" onClick={addDepartment}>추가</button>
+            </div>
+            {selectedDepartments.length > 0 && (
+              <div className="selected-departments">
+                {selectedDepartments.map((department) => (
+                  <button key={department} onClick={() => setSelectedDepartments((items) => items.filter((item) => item !== department))}>
+                    {department}<span>×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="control-section">
+            <div className="section-heading">
+              <span className="step">2</span>
+              <div><strong>들은 과목 가져오기</strong><small>선택 사항</small></div>
+            </div>
+            <form onSubmit={importEverytime} className="import-form">
+              <label htmlFor="everytime-url">에브리타임 공유 링크</label>
+              <input
+                id="everytime-url"
+                inputMode="url"
+                autoComplete="off"
+                placeholder="https://everytime.kr/app/@…"
+                value={everytimeUrl}
+                onChange={(event) => setEverytimeUrl(event.target.value)}
+                required
+              />
+              <button className="primary-button" disabled={importState === "loading"}>
+                {importState === "loading" ? "확인하는 중…" : "내 과목 가져오기"}
+              </button>
+            </form>
+            {importMessage && (
+              <p className={`import-message ${importState}`} role="status">{importMessage}</p>
+            )}
+            {importedCourses.length > 0 && (
+              <div className="taken-summary">
+                <div><strong>{importedSemester || "가져온 시간표"}</strong><span>{importedCourses.length}과목</span></div>
+                <label className="switch-row">
+                  <input type="checkbox" checked={hideTaken} onChange={(event) => setHideTaken(event.target.checked)} />
+                  들었던 과목 숨기기
+                </label>
+              </div>
+            )}
+            <p className="privacy-note"><span>잠금</span> 앱 DB에 이름·학번·링크·IP를 저장하지 않습니다.</p>
+          </section>
+
+          <section className="source-card">
+            <strong>데이터 출처</strong>
+            <a href={officialSources.bulletin} target="_blank" rel="noreferrer">서강대학교 대학요람 <span>↗</span></a>
+            <a href={officialSources.courses} target="_blank" rel="noreferrer">개설교과목정보 <span>↗</span></a>
+          </section>
+        </aside>
+
+        <section className="result-panel" aria-label="개설 과목 시간표">
+          <div className="result-toolbar">
+            <div>
+              <p className="semester-label">2026학년도 2학기</p>
+              <h2>개설 시간표 <span>{filteredCourses.length}과목</span></h2>
+              {hiddenTakenCount > 0 && hideTaken && <small>{hiddenTakenCount}개 수강 과목 제외됨</small>}
+            </div>
+            <div className="toolbar-actions">
+              <label className="search-box">
+                <span aria-hidden="true">⌕</span>
+                <input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
+              </label>
+              <div className="view-toggle" aria-label="보기 방식">
+                <button className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="시간표 보기">▦</button>
+                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기">☷</button>
+              </div>
+            </div>
+          </div>
+
+          {filteredCourses.length === 0 ? (
+            <div className="empty-state"><span>⌕</span><strong>조건에 맞는 과목이 없어요</strong><p>전공을 하나 이상 선택하거나 검색어를 바꿔보세요.</p></div>
+          ) : view === "timetable" ? (
+            <div className="timetable-scroll">
+              <div className="timetable" style={{ "--board-height": `${(DAY_END - DAY_START) * PIXELS_PER_MINUTE}px` } as React.CSSProperties}>
+                <div className="day-head time-head">시간</div>
+                {DAY_LIST.map((day) => <div className="day-head" key={day}>{day}요일</div>)}
+                <div className="time-axis">
+                  {hours.map((hour) => <span key={hour} style={{ top: `${(hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }}>{hour}:00</span>)}
+                </div>
+                {DAY_LIST.map((day) => <div className="day-column" key={day} />)}
+                {hours.map((hour) => <div className="hour-line" key={hour} style={{ top: `${48 + (hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }} />)}
+                {timetableEntries.map(({ course, meeting }, index) => {
+                  const dayIndex = DAY_LIST.indexOf(meeting.day as (typeof DAY_LIST)[number]);
+                  const top = Math.max(0, meeting.start - DAY_START) * PIXELS_PER_MINUTE;
+                  const height = Math.max(42, (Math.min(meeting.end, DAY_END) - Math.max(meeting.start, DAY_START)) * PIXELS_PER_MINUTE);
+                  return (
+                    <button
+                      className="course-block"
+                      key={`${course.id}-${meeting.day}-${index}`}
+                      style={{
+                        top: `${48 + top + 1}px`,
+                        height: `${height - 2}px`,
+                        left: `calc(56px + ${dayIndex} * ((100% - 56px) / 5) + 3px)`,
+                        width: "calc((100% - 56px) / 5 - 6px)",
+                        borderLeftColor: colorFor(course),
+                        background: `${colorFor(course)}12`,
+                      }}
+                      onClick={() => setSelectedCourse(course)}
+                    >
+                      <strong>{course.name}</strong>
+                      <span>{course.code}-{course.section}</span>
+                      <small>{course.professor || "담당교수 미정"}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="course-list">
+              {filteredCourses.map((course) => (
+                <button key={course.id} onClick={() => setSelectedCourse(course)}>
+                  <span className="course-color" style={{ background: colorFor(course) }} />
+                  <span className="course-list-main"><strong>{course.name}</strong><small>{course.code}-{course.section} · {course.department}</small></span>
+                  <span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span>
+                  <span aria-hidden="true">›</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <section className="security-strip">
+        <div><span>01</span><strong>최소 수집</strong><p>운영 로그는 화면 조회·전공 선택·성공 여부만 익명 집계합니다.</p></div>
+        <div><span>02</span><strong>외부 요청 제한</strong><p>에브리타임 공식 도메인과 올바른 공유 토큰만 허용합니다.</p></div>
+        <div><span>03</span><strong>원문 즉시 폐기</strong><p>시간표 HTML과 공유 링크는 응답 후 저장하지 않습니다.</p></div>
+      </section>
+
+      <footer>
+        <span>CourseCheck · 서강대 전공 시간표 도우미</span>
+        <span>학교 공식 서비스가 아니며, 수강신청 전 공식 정보를 다시 확인하세요.</span>
+      </footer>
+
+      {selectedCourse && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}>
+          <article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button>
+            <span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span>
+            <h3 id="course-title">{selectedCourse.name}</h3>
+            <dl>
+              <div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div>
+              <div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div>
+              <div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div>
+              <div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>
+            </dl>
+            {selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}
+            <a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a>
+          </article>
+        </div>
+      )}
+    </main>
+  );
+}
