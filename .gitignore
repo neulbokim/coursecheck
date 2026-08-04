@@ -26,3 +26,4 @@ web/.vinext/
 web/.wrangler/
 web/.env*
 !web/.env.example
+.vercel
