@@ -15,16 +15,24 @@ function daysAgo(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
-/** Vercel 크론은 CRON_SECRET을 Bearer로 실어 보냅니다. 없으면 아무나 부를 수 있으므로 닫습니다. */
-function authorized(request: Request) {
+/**
+ * Vercel 크론은 CRON_SECRET을 Bearer로 실어 보냅니다. 값이 없으면 아무나 부를 수 있으므로 닫습니다.
+ * 설정이 없는 것과 값이 틀린 것을 나눠 답합니다 — 둘 다 401이면 왜 안 도는지 알 수 없어서,
+ * 관리 API가 ADMIN_TOKEN에 쓰는 방식과 같게 뒀습니다.
+ */
+function checkAuth(request: Request): "ok" | "unset" | "mismatch" {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  if (!secret) return "unset";
+  return request.headers.get("authorization") === `Bearer ${secret}` ? "ok" : "mismatch";
 }
 
 export async function GET(request: Request) {
   const headers = { "cache-control": "no-store", "x-content-type-options": "nosniff" };
-  if (!authorized(request)) {
+  const auth = checkAuth(request);
+  if (auth === "unset") {
+    return Response.json({ error: "CRON_SECRET이 설정되지 않아 정리가 돌지 않습니다." }, { status: 503, headers });
+  }
+  if (auth === "mismatch") {
     return Response.json({ error: "크론 전용입니다." }, { status: 401, headers });
   }
   try {
