@@ -10,7 +10,8 @@
 import { execFileSync } from "node:child_process";
 
 function git(...args) {
-  return execFileSync("git", args, { encoding: "utf8" }).trim();
+  // 실패는 호출부에서 catch로 다룬다 — git이 stderr에 찍는 말이 점검 결과에 섞이지 않게 막는다
+  return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 }
 
 const problems = [];
