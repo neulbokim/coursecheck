@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import { extractEverytimeUrl } from "../app/lib/everytime-link.mjs";
-import { layoutTimetableEntries } from "../app/lib/timetable-layout.mjs";
+import { groupTimetableEntries } from "../app/lib/timetable-layout.mjs";
 
 test("extracts an Everytime timetable URL from the copied share message", () => {
   const url = "https://everytime.kr/app/@A1b2C3d4E5f6G7h8";
@@ -15,17 +15,30 @@ test("extracts an Everytime timetable URL from the copied share message", () => 
   );
 });
 
-test("lays overlapping timetable entries into separate horizontal lanes", () => {
+test("groups timetable entries into fixed weekday columns by time slot", () => {
   const entries = [
     { id: "a", meeting: { day: "월", start: 540, end: 630 } },
-    { id: "b", meeting: { day: "월", start: 570, end: 660 } },
-    { id: "c", meeting: { day: "월", start: 600, end: 690 } },
-    { id: "d", meeting: { day: "월", start: 690, end: 750 } },
+    { id: "b", meeting: { day: "월", start: 540, end: 630 } },
+    { id: "c", meeting: { day: "화", start: 540, end: 630 } },
+    { id: "d", meeting: { day: "월", start: 630, end: 720 } },
   ];
-  const laidOut = layoutTimetableEntries(entries, ["월"]);
-  assert.equal(new Set(laidOut.slice(0, 3).map((entry) => entry.lane)).size, 3);
-  assert.deepEqual(laidOut.slice(0, 3).map((entry) => entry.laneCount), [3, 3, 3]);
-  assert.equal(laidOut[3].laneCount, 1);
+  const slots = groupTimetableEntries(entries, ["월", "화"]);
+  assert.equal(slots.length, 2);
+  assert.deepEqual(slots[0].byDay["월"].map((entry) => entry.id), ["a", "b"]);
+  assert.deepEqual(slots[0].byDay["화"].map((entry) => entry.id), ["c"]);
+  assert.deepEqual(slots[1].byDay["월"].map((entry) => entry.id), ["d"]);
+});
+
+test("keeps the timetable within the viewport and lists courses by time slot", async () => {
+  const [page, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.doesNotMatch(page, /boardWidth|LANE_WIDTH|layoutTimetableEntries/);
+  assert.match(page, /groupTimetableEntries/);
+  assert.match(page, /course\.name.*course\.professor/s);
+  assert.match(css, /grid-template-columns:\s*minmax\([^;]+repeat\(5,\s*minmax\(0,\s*1fr\)\)/);
+  assert.doesNotMatch(css, /\.course-line[^}]*text-overflow:\s*ellipsis/s);
 });
 
 test("defines the CourseCheck product page and social metadata", async () => {

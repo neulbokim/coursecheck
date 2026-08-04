@@ -6,7 +6,7 @@ import { linkedMajors, officialSources } from "./data/majors";
 import { departmentOptions } from "./data/major-options";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
-import { layoutTimetableEntries } from "./lib/timetable-layout.mjs";
+import { groupTimetableEntries } from "./lib/timetable-layout.mjs";
 
 type Course = (typeof coursesJson)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
@@ -14,12 +14,6 @@ type ImportedTerm = { semester: string; courses: ImportedCourse[] };
 type Meeting = { day: string; start: number; end: number };
 
 const DAY_LIST = ["월", "화", "수", "목", "금"] as const;
-const DAY_START = 9 * 60;
-const DAY_END = 21 * 60;
-const PIXELS_PER_MINUTE = 1.45;
-const TIME_AXIS_WIDTH = 56;
-const MIN_DAY_WIDTH = 184;
-const LANE_WIDTH = 146;
 const PALETTE = ["#8b1e3f", "#1f6b5c", "#345995", "#c26532", "#6d4c8e"];
 
 function normalizeCourseName(value: string) {
@@ -43,6 +37,10 @@ function semesterOrder(value: string) {
 function minutes(value: string) {
   const [hour, minute] = value.split(":").map(Number);
   return hour * 60 + minute;
+}
+
+function formatMinutes(value: number) {
+  return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
 }
 
 function parseMeetings(schedule: string): Meeting[] {
@@ -172,18 +170,14 @@ export default function Home() {
     });
   }, [selectedLinked, selectedDepartments, query, excludedNames]);
 
-  const timetableEntries = useMemo(() => layoutTimetableEntries(
+  const timetableSlots = useMemo(() => groupTimetableEntries(
     filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
     DAY_LIST,
-  ) as Array<{ course: Course; meeting: Meeting; lane: number; laneCount: number }>, [filteredCourses]);
-
-  const maxLanesByDay = useMemo(() => DAY_LIST.map((day) => Math.max(
-    1,
-    ...timetableEntries.filter((entry) => entry.meeting.day === day).map((entry) => entry.laneCount),
-  )), [timetableEntries]);
-  const dayWidths = maxLanesByDay.map((laneCount) => Math.max(MIN_DAY_WIDTH, laneCount * LANE_WIDTH));
-  const dayOffsets = dayWidths.map((_, index) => dayWidths.slice(0, index).reduce((sum, width) => sum + width, 0));
-  const boardWidth = TIME_AXIS_WIDTH + dayWidths.reduce((sum, width) => sum + width, 0);
+  ) as Array<{
+    start: number;
+    end: number;
+    byDay: Record<string, Array<{ course: Course; meeting: Meeting }>>;
+  }>, [filteredCourses]);
   const hiddenTakenCount = useMemo(
     () => coursesJson.filter((course) => excludedNames.has(normalizeCourseName(course.name))).length,
     [excludedNames],
@@ -247,8 +241,6 @@ export default function Home() {
     postEvent("results_view", undefined, filteredCourses.length === 0 ? "0" : filteredCourses.length <= 25 ? "1-25" : "26+");
     window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }
-
-  const hours = Array.from({ length: 13 }, (_, index) => 9 + index);
 
   return (
     <main>
@@ -326,19 +318,29 @@ export default function Home() {
             <div className="empty-state"><span>⌕</span><strong>조건에 맞는 과목이 없어요</strong><p>전공 정보를 수정하거나 제외 과목을 줄여보세요.</p></div>
           ) : view === "timetable" ? (
             <div className="timetable-scroll">
-              <div className="timetable" style={{ "--board-height": `${(DAY_END - DAY_START) * PIXELS_PER_MINUTE}px`, width: `${boardWidth}px`, gridTemplateColumns: `${TIME_AXIS_WIDTH}px ${dayWidths.map((width) => `${width}px`).join(" ")}` } as React.CSSProperties}>
-                <div className="day-head time-head">시간</div>
-                {DAY_LIST.map((day) => <div className="day-head" key={day}>{day}요일</div>)}
-                <div className="time-axis">{hours.map((hour) => <span key={hour} style={{ top: `${(hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }}>{hour}:00</span>)}</div>
-                {DAY_LIST.map((day) => <div className="day-column" key={day} />)}
-                {hours.map((hour) => <div className="hour-line" key={hour} style={{ top: `${48 + (hour * 60 - DAY_START) * PIXELS_PER_MINUTE}px` }} />)}
-                {timetableEntries.map(({ course, meeting, lane, laneCount }, index) => {
-                  const dayIndex = DAY_LIST.indexOf(meeting.day as (typeof DAY_LIST)[number]);
-                  const top = Math.max(0, meeting.start - DAY_START) * PIXELS_PER_MINUTE;
-                  const height = (Math.min(meeting.end, DAY_END) - Math.max(meeting.start, DAY_START)) * PIXELS_PER_MINUTE;
-                  const slotWidth = dayWidths[dayIndex] / laneCount;
-                  return <button className="course-block" key={`${course.id}-${meeting.day}-${index}`} title={`${course.name} · ${course.code}-${course.section} · ${course.professor || "담당교수 미정"}`} style={{ top: `${48 + top + 1}px`, height: `${Math.max(22, height - 2)}px`, left: `${TIME_AXIS_WIDTH + dayOffsets[dayIndex] + lane * slotWidth + 3}px`, width: `${slotWidth - 6}px`, borderLeftColor: colorFor(course), background: `${colorFor(course)}12` }} onClick={() => setSelectedCourse(course)}><strong>{course.name}</strong><span>{course.code}-{course.section}</span><small>{course.professor || "담당교수 미정"}</small></button>;
-                })}
+              <div className="timetable-matrix" role="table" aria-label="요일별 개설 시간표">
+                <div className="matrix-head matrix-time-head" role="columnheader">시간</div>
+                {DAY_LIST.map((day) => <div className="matrix-head" role="columnheader" key={day}>{day}요일</div>)}
+                {timetableSlots.map((slot) => (
+                  <div className="matrix-row" role="row" key={`${slot.start}-${slot.end}`}>
+                    <div className="matrix-time" role="rowheader"><strong>{formatMinutes(slot.start)}</strong><span>{formatMinutes(slot.end)}</span></div>
+                    {DAY_LIST.map((day) => (
+                      <div className="matrix-cell" role="cell" key={day}>
+                        {slot.byDay[day].map(({ course }, index) => (
+                          <button
+                            className="course-line"
+                            type="button"
+                            key={`${course.id}-${index}`}
+                            style={{ borderLeftColor: colorFor(course), background: `${colorFor(course)}12` }}
+                            onClick={() => setSelectedCourse(course)}
+                          >
+                            <strong>{course.name}</strong><small>({course.professor || "미정"})</small>
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
           ) : (

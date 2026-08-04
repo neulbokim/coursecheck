@@ -160,32 +160,20 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .result-placeholder strong { margin-top: 15px; color: #4a4446; font-size: 15px; }
 .result-placeholder p { margin: 8px 0 0; font-size: 11px; line-height: 1.65; }
 
-.timetable-scroll { width: 100%; overflow-x: auto; }
-.timetable {
-  --board-height: 1044px;
-  position: relative;
-  min-width: 0;
-  height: calc(var(--board-height) + 48px);
-  display: grid;
-  grid-template-columns: 56px repeat(5, 1fr);
-  grid-template-rows: 48px var(--board-height);
-  background: #fff;
-}
-.day-head { position: sticky; top: 0; z-index: 4; display: grid; place-items: center; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #fbfaf9; color: #554f51; font-size: 11px; font-weight: 800; }
-.time-head { left: 0; z-index: 7; color: #a29a9d; font-size: 9px; }
-.time-axis { position: sticky; left: 0; z-index: 3; border-right: 1px solid var(--line); background: #fbfaf9; }
-.time-axis span { position: absolute; right: 9px; transform: translateY(-7px); color: #aaa2a5; font-size: 9px; }
-.day-column { position: relative; border-right: 1px solid var(--line); background-image: linear-gradient(to bottom, transparent calc(50% - .5px), #f2eeef calc(50% - .5px), #f2eeef calc(50% + .5px), transparent calc(50% + .5px)); background-size: 100% 87px; }
-.hour-line { position: absolute; z-index: 1; left: 56px; right: 0; height: 1px; background: #e9e4e5; pointer-events: none; }
-.course-block {
-  position: absolute; z-index: 2; overflow: hidden; padding: 8px 8px 6px; text-align: left;
-  border: 0; border-left: 3px solid; border-radius: 7px; cursor: pointer; transition: z-index .05s, transform .12s, box-shadow .12s;
-}
-.course-block:hover, .course-block:focus-visible { z-index: 5; transform: translateY(-1px) scale(1.015); box-shadow: 0 8px 18px rgb(39 25 30 / 16%); outline: none; }
-.course-block strong, .course-block span, .course-block small { min-width: 0; display: block; white-space: normal; overflow-wrap: anywhere; }
-.course-block strong { font-size: 10px; line-height: 1.35; }
-.course-block span { margin-top: 4px; color: #655e61; font-size: 8px; line-height: 1.3; }
-.course-block small { margin-top: 2px; color: #7c7578; font-size: 8px; line-height: 1.3; }
+.timetable-scroll { width: 100%; overflow-x: hidden; }
+.timetable-matrix { width: 100%; display: grid; grid-template-columns: minmax(58px, .42fr) repeat(5, minmax(0, 1fr)); background: #fff; }
+.matrix-head { min-width: 0; min-height: 46px; padding: 8px 3px; display: grid; place-items: center; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #fbfaf9; color: #554f51; font-size: 10px; font-weight: 800; text-align: center; }
+.matrix-time-head { color: #9f979a; font-size: 9px; }
+.matrix-row { display: contents; }
+.matrix-time { min-width: 0; padding: 10px 3px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #fbfaf9; color: #817a7c; text-align: center; }
+.matrix-time strong { font-size: 9px; }
+.matrix-time span { color: #aaa2a5; font-size: 8px; }
+.matrix-cell { min-width: 0; min-height: 66px; padding: 4px; display: flex; flex-direction: column; gap: 4px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.course-line { width: 100%; min-width: 0; padding: 7px 6px; border: 0; border-left: 3px solid; border-radius: 6px; background: #f8f3f5; text-align: left; white-space: normal; overflow-wrap: anywhere; word-break: keep-all; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.course-line:hover, .course-line:focus-visible { z-index: 2; transform: translateY(-1px); box-shadow: 0 5px 12px rgb(39 25 30 / 12%); outline: none; }
+.course-line strong, .course-line small { display: inline; font-size: 9px; line-height: 1.45; }
+.course-line strong { font-weight: 750; }
+.course-line small { color: #6f686b; font-weight: 500; }
 .course-list { max-height: 760px; overflow: auto; }
 .course-list > button { width: 100%; min-height: 76px; padding: 14px 24px; display: grid; grid-template-columns: 4px minmax(0, 1fr) minmax(180px, .65fr) auto; align-items: center; gap: 14px; border: 0; border-bottom: 1px solid var(--line); background: #fff; text-align: left; cursor: pointer; }
 .course-list > button:hover { background: #fcf8f9; }
@@ -281,6 +269,13 @@ footer { max-width: 1404px; margin: 0 auto; padding: 24px 0 34px; display: flex;
   .toolbar-actions { width: 100%; }
   .search-box { flex: 1; }
   .search-box input { width: 100%; }
+  .timetable-matrix { grid-template-columns: minmax(43px, .5fr) repeat(5, minmax(0, 1fr)); }
+  .matrix-head { min-height: 40px; padding: 6px 2px; font-size: 9px; }
+  .matrix-time { padding: 8px 2px; }
+  .matrix-time strong, .matrix-time span { font-size: 7px; }
+  .matrix-cell { min-height: 58px; padding: 2px; gap: 2px; }
+  .course-line { padding: 5px 3px; border-left-width: 2px; }
+  .course-line strong, .course-line small { font-size: 8px; line-height: 1.4; }
   .course-list > button { grid-template-columns: 4px minmax(0, 1fr) auto; }
   .course-list-time { grid-column: 2 / -1; text-align: left; }
   .security-strip { margin: 0 14px 38px; grid-template-columns: 1fr; }
