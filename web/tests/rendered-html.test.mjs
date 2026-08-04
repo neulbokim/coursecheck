@@ -492,7 +492,15 @@ test("accepts developer feedback one way and keeps it manageable", async () => {
   const adminOverview = await readFile(new URL("../app/api/admin/overview/route.ts", import.meta.url), "utf8");
   assert.match(adminOverview, /verifyAdminSession/);
   assert.match(adminOverview, /status: 401/);
-  assert.doesNotMatch(adminOverview, /visitorId|visitor_id|message:/, "로그에는 개인 식별 정보를 담지 않는다");
+  assert.doesNotMatch(adminOverview, /message:/, "건의 본문은 집계 응답에 담지 않는다");
+  // 흐름을 세려면 안쪽 질의에서 visitor_id로 묶어야 하지만, 밖으로 나가는 값은 집계뿐이어야 한다
+  assert.doesNotMatch(
+    adminOverview,
+    /visitorId: analyticsEvents\.visitorId/,
+    "방문자 ID를 응답 필드로 고르면 안 된다",
+  );
+  assert.match(adminOverview, /count\(distinct/, "몇 사람인지만 센다");
+  assert.match(adminOverview, /select path, count\(\*\)::int as people/, "흐름은 길과 사람 수로만 나간다");
   const adminPage = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
   assert.match(adminPage, /집계·로그/);
   assert.match(adminPage, /vercel logs/, "서버 예외 로그의 위치를 안내한다");
@@ -622,8 +630,12 @@ test("records every event the page actually sends", async () => {
     assert.ok(allowedBuckets.has(bucket), `${bucket} 묶음이 ALLOWED_BUCKETS에 없다`);
   }
 
-  // 소속·전공·학번은 선택 동의를 한 사람에게만 붙인다
-  assert.match(page, /profile\?\.analyticsConsent/, "동의 없이 이벤트에 속성을 붙이면 안 된다");
+  // 누구인지는 브라우저 말이 아니라 서버가 정한다 — 화면은 이름과 묶음 값만 보낸다
+  assert.match(events, /analytics_consent/, "동의 여부를 서버에서 확인해야 한다");
+  assert.match(events, /HttpOnly 쿠키|coursecheck_visitor/);
+  const eventBody = page.match(/body: JSON\.stringify\(\{ event[^}]*\}\)/)?.[0] ?? "";
+  assert.ok(eventBody, "postEvent가 보내는 본문을 찾지 못했다");
+  assert.doesNotMatch(eventBody, /college|major|cohort|consent/, "화면이 사용자 속성을 실어 보내면 안 된다");
   assert.match(profileSetup, /analyticsConsent/);
   assert.match(profileSetup, /\(선택\)/, "선택 동의는 필수 동의와 구분해 보여준다");
   assert.doesNotMatch(
@@ -631,10 +643,12 @@ test("records every event the page actually sends", async () => {
     /checked=\{analyticsConsent \?\? true\}|useState\(initialProfile\?\.analyticsConsent \?\? true\)/,
     "선택 동의를 미리 체크해 두면 동의가 아니다",
   );
-  // 이벤트에 붙는 값은 전부 허용 목록·범위 검사를 거친다 (임의 문자열이 들어오지 못하게)
-  assert.match(events, /ALLOWED_COLLEGES/);
-  assert.match(events, /ALLOWED_MAJORS/);
-  assert.match(events, /MIN_COHORT_YEAR/);
-  // 방문자 ID는 이벤트에 붙이지 않는다 — 붙는 순간 각 행이 한 사람으로 되짚어진다
-  assert.doesNotMatch(events, /visitorId|visitor_id/);
+  // 이벤트 이름과 묶음 값은 허용 목록을 거친다 (임의 문자열이 들어오지 못하게)
+  assert.match(events, /ALLOWED_EVENTS/);
+  assert.match(events, /ALLOWED_BUCKETS/);
+  assert.match(events, /VISITOR_ID_PATTERN/, "쿠키에서 온 방문자 ID도 형식을 확인한다");
+  // 동의를 거두면 이미 쌓인 기록에서도 사람과 이어지는 값을 지운다
+  const profileRoute = await readFile(new URL("../app/api/profile/route.ts", import.meta.url), "utf8");
+  assert.match(profileRoute, /if \(!analyticsConsent\)/);
+  assert.match(profileRoute, /visitorId: null/);
 });

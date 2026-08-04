@@ -13,6 +13,12 @@ export const analyticsEvents = pgTable(
     college: text("college"),
     major: text("major"),
     cohortYear: integer("cohort_year"),
+    /**
+     * 한 사람의 기록을 이어 흐름을 보기 위한 방문자 ID. 선택 동의를 한 사람에게만 채웁니다.
+     * 이 값이 있으면 그 사람의 사용 순서를 따라갈 수 있고 user_profiles와도 이어지므로,
+     * 동의를 거두면 지난 기록에서도 이 값과 소속·전공·학번을 지웁니다.
+     */
+    visitorId: text("visitor_id"),
     resultBucket: text("result_bucket"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

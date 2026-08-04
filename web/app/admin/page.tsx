@@ -25,6 +25,10 @@ type Overview = {
     byMajor: Array<{ major: string; first: number; second: number; third: number; total: number }>;
   };
   eventsBy: Record<Unit, Array<{ key: string | null; event: string; total: number }>>;
+  flow: {
+    reach: Array<{ event: string; people: number }>;
+    journeys: Array<{ steps: string[]; people: number }>;
+  };
   feedback: Array<{ status: string; total: number }>;
   recent: Array<{
     id: number;
@@ -66,6 +70,9 @@ const BUCKET_LABEL = new Map<string, string>([
   ["core", "필수 교양만"],
   ["none", "교양 숨김"],
 ]);
+
+/** 사람들이 대개 밟는 순서. 흐름을 이 차례로 세웁니다. */
+const FLOW_STEPS = ["page_view", "profile_saved", "results_view", "course_pick", "helpful_vote"];
 
 const CATEGORY_LABEL = new Map<string, string>(feedbackCategories.map((item) => [item.key, item.label]));
 const COLLEGE_LABEL = new Map<string, string>(colleges.map((item) => [item.key, item.label]));
@@ -257,6 +264,25 @@ export default function AdminPage() {
     }
     return { columns, rows: [...rows.values()].sort((a, b) => b.total - a.total) };
   }, [overview, unit]);
+
+  /** 알려진 차례대로 세우고, 그 밖의 이벤트는 사람 수 순으로 뒤에 붙인다 */
+  const reach = useMemo(() => {
+    if (!overview) return [] as Array<{ event: string; people: number; share: number; dropped: number }>;
+    const people = new Map(overview.flow.reach.map((row) => [row.event, row.people]));
+    const ordered = [
+      ...FLOW_STEPS.filter((event) => people.has(event)),
+      ...overview.flow.reach
+        .filter((row) => !FLOW_STEPS.includes(row.event))
+        .sort((a, b) => b.people - a.people)
+        .map((row) => row.event),
+    ];
+    const top = Math.max(...people.values(), 1);
+    return ordered.map((event, index) => {
+      const count = people.get(event) ?? 0;
+      const previous = index > 0 ? people.get(ordered[index - 1]) ?? 0 : count;
+      return { event, people: count, share: Math.round((count / top) * 100), dropped: Math.max(previous - count, 0) };
+    });
+  }, [overview]);
 
   function unitLabel(key: string | null) {
     if (key === null) return UNITS.find((item) => item.key === unit)!.empty;
@@ -486,6 +512,50 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+            )}
+
+            <h2 className="admin-subhead">
+              흐름
+              <small>동의한 {overview.users.consented.toLocaleString("ko-KR")}명이 어디까지 왔는지</small>
+            </h2>
+            {reach.length === 0 ? (
+              <p className="admin-empty">아직 이어볼 기록이 없어요. 선택 동의를 한 사람이 쓰기 시작하면 채워집니다.</p>
+            ) : (
+              <>
+                <ol className="admin-funnel">
+                  {reach.map((step, index) => (
+                    <li key={step.event}>
+                      <span className="funnel-label">{EVENT_LABEL.get(step.event) ?? step.event}</span>
+                      <span className="funnel-bar"><i style={{ width: `${step.share}%` }} /></span>
+                      <span className="funnel-count">
+                        {step.people.toLocaleString("ko-KR")}명
+                        {index > 0 && <small>{step.dropped > 0 ? `−${step.dropped}` : "유지"}</small>}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+
+                <h2 className="admin-subhead">많이 걸은 길<small>같은 순서로 움직인 사람 수</small></h2>
+                {overview.flow.journeys.length === 0 ? (
+                  <p className="admin-empty">아직 기록이 없어요.</p>
+                ) : (
+                  <ul className="admin-journeys">
+                    {overview.flow.journeys.map((journey) => (
+                      <li key={journey.steps.join(">")}>
+                        <span className="journey-people">{journey.people.toLocaleString("ko-KR")}명</span>
+                        <span className="journey-path">
+                          {journey.steps.map((step, index) => (
+                            <span key={`${step}-${index}`}>
+                              {index > 0 && <i aria-hidden="true">→</i>}
+                              {EVENT_LABEL.get(step) ?? step}
+                            </span>
+                          ))}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
 
             <h2 className="admin-subhead">최근 로그<small>익명 이벤트 {overview.recent.length}건</small></h2>

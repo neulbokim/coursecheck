@@ -243,12 +243,14 @@ export default function ProfileSetup({ initialProfile, onClose, onSaved }: Props
           <label className="consent-row optional">
             <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
             <span>
-              <strong>(선택)</strong> 어떤 기능을 썼는지에 <b>소속 대학·1전공·입학연도</b>를 함께 남겨도 좋습니다.
+              <strong>(선택)</strong> 어떤 기능을 썼는지에 <b>소속 대학·1전공·입학연도</b>를 함께 남기고,
+              <b>내 기록끼리 이어 보는 것</b>에 동의합니다.
               <small>
-                어느 전공·학번이 무엇을 필요로 하는지 보고 다음 학기에 고치는 데만 씁니다.
-                해당하는 사람이 적은 조합에서는 이 기록으로 누구인지 짐작될 수 있습니다.
-                동의하지 않아도 모든 기능을 똑같이 쓸 수 있고, 그때는 어떤 기능이 몇 번 쓰였는지만 남습니다.
-                설정을 다시 열어 언제든 바꿀 수 있어요.
+                어느 전공·학번이 어디서 막히는지 순서대로 보고 다음 학기에 고치는 데만 씁니다.
+                기록이 이어지므로 <b>내 사용 내역이 한 사람의 것으로 묶이고</b>, 해당하는 사람이 적은 조합에서는
+                누구인지 짐작될 수 있습니다. 이름·전체 학번·IP는 어느 경우에도 저장하지 않습니다.
+                동의하지 않아도 모든 기능을 똑같이 쓸 수 있고, 그때는 어떤 기능이 몇 번 쓰였는지만 따로따로 남습니다.
+                <b>동의를 거두면 이미 쌓인 기록에서도 이어붙인 값을 지웁니다.</b> 설정을 다시 열어 언제든 바꿀 수 있어요.
               </small>
             </span>
           </label>

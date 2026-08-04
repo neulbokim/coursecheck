@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { userProfiles } from "../../../db/schema";
+import { analyticsEvents, userProfiles } from "../../../db/schema";
 import { majorOptions } from "../../data/major-options";
 import { LAST_BULLETIN_YEAR, colleges } from "../../data/core-curriculum.mjs";
 
@@ -133,6 +133,15 @@ export async function POST(request: Request) {
           updatedAt: values.updatedAt,
         },
       });
+
+    // 동의를 거두면 지난 기록에서도 사람과 이어지는 값을 지웁니다.
+    // 앞으로만 안 남기고 이미 쌓인 걸 두면 철회가 아닙니다.
+    if (!analyticsConsent) {
+      await getDb()
+        .update(analyticsEvents)
+        .set({ visitorId: null, college: null, major: null, cohortYear: null })
+        .where(eq(analyticsEvents.visitorId, visitorId));
+    }
 
     const headers = new Headers(responseHeaders());
     headers.set(

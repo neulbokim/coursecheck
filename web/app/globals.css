@@ -609,6 +609,20 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .admin-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: start; }
 .admin-scroll { overflow-x: auto; }
 .admin-scroll .admin-table { min-width: 640px; }
+.admin-funnel { margin: 0; padding: 0; display: grid; gap: 6px; list-style: none; }
+.admin-funnel li { display: grid; grid-template-columns: 120px 1fr 96px; align-items: center; gap: 12px; }
+.funnel-label { color: #4b4746; font-size: 11px; font-weight: 700; }
+.funnel-bar { height: 24px; border-radius: 6px; background: #f2f2f2; overflow: hidden; }
+.funnel-bar i { display: block; height: 100%; border-radius: 6px; background: var(--wine); }
+.funnel-count { color: #4b4746; font-size: 12px; font-weight: 750; text-align: right; font-variant-numeric: tabular-nums; }
+.funnel-count small { margin-left: 6px; color: #a5a5a5; font-size: 9px; font-weight: 600; }
+
+.admin-journeys { margin: 0; padding: 0; display: grid; gap: 5px; list-style: none; }
+.admin-journeys li { display: flex; align-items: baseline; gap: 12px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.journey-people { flex: 0 0 52px; color: var(--wine); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.journey-path { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; color: #4b4746; font-size: 11px; }
+.journey-path i { color: #c4c4c4; font-style: normal; }
+
 .admin-danger { margin-top: 26px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid #ecd5d3; border-radius: 12px; background: #fdf7f6; }
 .admin-danger strong { display: block; font-size: 12px; }
 .admin-danger small { display: block; margin-top: 4px; max-width: 62ch; color: #8a8888; font-size: 10px; line-height: 1.6; word-break: keep-all; }

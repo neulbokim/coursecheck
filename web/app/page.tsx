@@ -100,24 +100,15 @@ function parseMeetings(schedule: string): Meeting[] {
 }
 
 /**
- * 이벤트에 붙일 사용자 속성. 선택 동의를 한 사람에게만 채운다.
- * 동의하지 않았거나 아직 설정을 저장하기 전이면 비어 있고, 그때는 이벤트에
- * 이름과 묶음 값만 남는다.
+ * 누가 쏜 이벤트인지는 서버가 방문자 쿠키로 판단한다.
+ * 쿠키가 HttpOnly라 여기서는 읽을 수 없고, 읽을 필요도 없다 —
+ * 선택 동의 여부와 소속·전공·학번은 서버가 저장된 설정에서 직접 가져온다.
  */
-const NO_AUDIENCE = { college: null, major: null, cohortYear: null };
-let eventAudience: { college: string | null; major: string | null; cohortYear: number | null } = NO_AUDIENCE;
-
-function setEventAudience(profile: UserProfile | null) {
-  eventAudience = profile?.analyticsConsent
-    ? { college: profile.college, major: profile.major1, cohortYear: profile.cohortYear }
-    : NO_AUDIENCE;
-}
-
 function postEvent(event: string, resultBucket?: string) {
   void fetch("/api/events", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ event, ...eventAudience, resultBucket }),
+    body: JSON.stringify({ event, resultBucket }),
     keepalive: true,
   }).catch(() => undefined);
 }
@@ -231,7 +222,6 @@ export default function Home() {
       .then((response) => response.json())
       .then((profileData) => {
         const savedProfile = profileData.profile as UserProfile | null;
-        setEventAudience(savedProfile);
         setProfile(savedProfile);
         setProfileOpen(!savedProfile);
       })
@@ -240,7 +230,6 @@ export default function Home() {
   }, []);
 
   function profileSaved(savedProfile: UserProfile) {
-    setEventAudience(savedProfile);
     setProfile(savedProfile);
     setProfileOpen(false);
     setShowResults(false);

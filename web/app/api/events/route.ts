@@ -1,7 +1,5 @@
+import { sql } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { analyticsEvents } from "../../../db/schema";
-import { majorOptions } from "../../data/major-options";
-import { LAST_BULLETIN_YEAR, colleges } from "../../data/core-curriculum.mjs";
 
 /**
  * 화면에서 실제로 쏘는 이벤트만 받습니다. 목록에 없으면 400으로 버리므로
@@ -18,9 +16,6 @@ const ALLOWED_EVENTS = new Set([
   "feedback_open",
   "helpful_vote",
 ]);
-const ALLOWED_COLLEGES = new Set<string>(colleges.map((college: { key: string }) => college.key));
-const ALLOWED_MAJORS = new Set<string>(majorOptions);
-const MIN_COHORT_YEAR = 2012;
 /**
  * 이벤트마다 뜻이 다른 묶음 값입니다.
  * results_view는 결과 과목 수(0·1-25·26+), everytime_import는 가져온 과목 수(0·1-5·6+),
@@ -28,31 +23,46 @@ const MIN_COHORT_YEAR = 2012;
  */
 const ALLOWED_BUCKETS = new Set(["0", "1-5", "6+", "1-25", "26+", "all", "core", "none", "yes", "no"]);
 
+const COOKIE_NAME = "coursecheck_visitor";
+const VISITOR_ID_PATTERN = /^[0-9a-f-]{36}$/i;
+
+function visitorIdFrom(request: Request) {
+  const raw = (request.headers.get("cookie") ?? "")
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${COOKIE_NAME}=`))
+    ?.slice(COOKIE_NAME.length + 1);
+  return raw && VISITOR_ID_PATTERN.test(raw) ? raw : null;
+}
+
 export async function POST(request: Request) {
   try {
     const length = Number(request.headers.get("content-length") || 0);
     if (length > 1024) return Response.json({ error: "요청이 너무 큽니다." }, { status: 413 });
-    const payload = (await request.json()) as {
-      event?: string;
-      college?: string;
-      major?: string;
-      cohortYear?: number;
-      resultBucket?: string;
-    };
+    const payload = (await request.json()) as { event?: string; resultBucket?: string };
     if (!payload.event || !ALLOWED_EVENTS.has(payload.event)) {
       return Response.json({ error: "허용되지 않은 이벤트입니다." }, { status: 400 });
     }
-    const cohortYear = Number(payload.cohortYear);
-    await getDb().insert(analyticsEvents).values({
-      eventName: payload.event,
-      college: payload.college && ALLOWED_COLLEGES.has(payload.college) ? payload.college : null,
-      major: payload.major && ALLOWED_MAJORS.has(payload.major) ? payload.major : null,
-      cohortYear:
-        Number.isInteger(cohortYear) && cohortYear >= MIN_COHORT_YEAR && cohortYear <= LAST_BULLETIN_YEAR
-          ? cohortYear
-          : null,
-      resultBucket: payload.resultBucket && ALLOWED_BUCKETS.has(payload.resultBucket) ? payload.resultBucket : null,
-    });
+    const bucket = payload.resultBucket && ALLOWED_BUCKETS.has(payload.resultBucket) ? payload.resultBucket : null;
+
+    /**
+     * 누구인지는 브라우저 말이 아니라 서버가 정합니다. 방문자 쿠키는 HttpOnly라
+     * 화면 코드가 읽지 못하고, 소속·전공·학번·방문자 ID는 저장된 설정에서 직접 가져옵니다.
+     * 선택 동의를 하지 않았거나 설정이 없으면 전부 NULL로 들어가 이름과 묶음 값만 남습니다.
+     *
+     * 설정을 한 번 읽고 넣는 일을 한 문장으로 처리해 왕복을 늘리지 않습니다.
+     */
+    const visitorId = visitorIdFrom(request);
+    await getDb().execute(sql`
+      insert into analytics_events (event_name, result_bucket, college, major, cohort_year, visitor_id)
+      select ${payload.event}, ${bucket},
+             case when p.analytics_consent then p.college end,
+             case when p.analytics_consent then p.major_1 end,
+             case when p.analytics_consent then p.cohort_year end,
+             case when p.analytics_consent then p.visitor_id end
+      from (select 1) as always
+      left join user_profiles p on p.visitor_id = ${visitorId}
+    `);
     return Response.json({ ok: true }, { headers: { "cache-control": "no-store" } });
   } catch {
     return Response.json({ error: "통계를 기록할 수 없습니다." }, { status: 503, headers: { "cache-control": "no-store" } });

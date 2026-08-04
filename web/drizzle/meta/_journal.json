@@ -78,6 +78,13 @@
       "when": 1785861664417,
       "tag": "0010_add_analytics_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785862605588,
+      "tag": "0011_add_event_visitor_link",
+      "breakpoints": true
     }
   ]
 }
