@@ -69,6 +69,19 @@ test("parses SIS course files the same way for CLI and upload", async () => {
   // 수강 자격 판정이 보는 필드에 수강신청 참조사항이 먼저 들어간다
   assert.match(courses[0].note, /^경영대학\(가능\)/);
   assert.match(courses[0].note, /비고내용/);
+  // 「영어강의」 열이 아예 없는 옛 파일은 영어강의가 없는 것으로 본다
+  assert.equal(courses[0].english, false);
+
+  // SIS는 영어강의에 O만 찍는다 — 빈 칸은 영어강의가 아니다
+  const englishHeaders = [...headers, "영어강의"];
+  const englishRow = (code, mark) => [...row(code, `과목${code}`), mark];
+  const { courses: withEnglish } = parseSisCourses(table([
+    englishHeaders,
+    ...Array.from({ length: 60 }, (_, i) => englishRow(`MGT${3000 + i}`, i % 2 === 0 ? "O" : "")),
+  ]));
+  assert.equal(withEnglish[0].english, true);
+  assert.equal(withEnglish[1].english, false);
+  assert.equal(withEnglish.filter((course) => course.english).length, 30);
 
   // CLI 스크립트와 업로드 API가 같은 파서를 쓴다
   const [cli, upload] = await Promise.all([

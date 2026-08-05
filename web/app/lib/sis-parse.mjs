@@ -59,6 +59,8 @@ export function parseSisCourses(html) {
       credits: Number(take(row, "학점")) || 0,
       schedule: take(row, "수업시간/강의실"),
       professor: take(row, "교수진"),
+      // SIS는 「영어강의」 열에 O만 찍는다. 영어강의 요건이 남은 학생이 찾아야 하는 값이라 남긴다
+      english: /^[oO○]$/.test(take(row, "영어강의")),
       // 수강 자격 판정이 이 필드를 본다 — 「경영대학(가능)」 표기가 수강신청 참조사항에 있다
       note: [take(row, "수강신청 참조사항"), take(row, "비고")]
         .filter(Boolean)

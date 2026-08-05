@@ -70,6 +70,7 @@ const EVENT_LABEL = new Map<string, string>([
   ["everytime_import_error", "에브리타임 실패"],
   ["course_pick", "과목 담기"],
   ["ge_mode", "교양 표시 전환"],
+  ["english_highlight", "영어강의 강조 전환"],
   ["feedback_open", "건의 창 열기"],
   ["helpful_vote", "도움이 됐나요 응답"],
 ]);
@@ -80,7 +81,9 @@ const BUCKET_LABEL = new Map<string, string>([
   ["no", "아쉬웠어요"],
   ["all", "교양 전체"],
   ["core", "필수 교양만"],
-  ["none", "교양 숨김"],
+  ["none", "전공만"],
+  ["on", "켬"],
+  ["off", "끔"],
 ]);
 
 /** 에브리타임 실패 사유 코드를 사람이 읽을 말로 (route.ts의 EverytimeFailure 코드와 짝) */

@@ -14,15 +14,17 @@ const ALLOWED_EVENTS = new Set([
   "everytime_import_error",
   "course_pick",
   "ge_mode",
+  "english_highlight",
   "feedback_open",
   "helpful_vote",
 ]);
 /**
  * 이벤트마다 뜻이 다른 묶음 값입니다.
  * results_view는 결과 과목 수(0·1-25·26+), everytime_import는 가져온 과목 수(0·1-5·6+),
- * ge_mode는 고른 교양 표시(all·core·none), helpful_vote는 도움이 됐는지(yes·no)를 담습니다.
+ * ge_mode는 고른 교양 표시(all·core·none), english_highlight는 강조를 켰는지(on·off),
+ * helpful_vote는 도움이 됐는지(yes·no)를 담습니다.
  */
-const ALLOWED_BUCKETS = new Set(["0", "1-5", "6+", "1-25", "26+", "all", "core", "none", "yes", "no"]);
+const ALLOWED_BUCKETS = new Set(["0", "1-5", "6+", "1-25", "26+", "all", "core", "none", "on", "off", "yes", "no"]);
 
 const COOKIE_NAME = "coursecheck_visitor";
 const VISITOR_ID_PATTERN = /^[0-9a-f-]{36}$/i;

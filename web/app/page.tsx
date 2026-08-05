@@ -62,7 +62,7 @@ const GENERAL_EDUCATION_DEPARTMENTS = ["전인교육원", "융합교육원"];
 const GE_MODES = [
   { key: "all", label: "전체", hint: "필수교양 + 자유교양" },
   { key: "core", label: "필수만", hint: "남은 필수 교양 영역만" },
-  { key: "none", label: "숨기기", hint: "전공 과목만" },
+  { key: "none", label: "전공만", hint: "교양 없이 전공 과목만" },
 ] as const;
 type GeMode = (typeof GE_MODES)[number]["key"];
 
@@ -100,6 +100,13 @@ function parseMeetings(schedule: string): Meeting[] {
   return meetings;
 }
 
+/**
+ * 영어강의인지. 관리 화면에서 이 열이 생기기 전에 올린 자료에는 값이 없으므로 true만 영어강의로 본다.
+ */
+function isEnglish(course: Course) {
+  return course.english === true;
+}
+
 /** 전공 순번(1·2·3전공)별로 과목 코드와 학과를 찾을 표를 만든다 */
 function majorRankIndex(majors: string[]) {
   const byCode = new Map<string, number>();
@@ -129,6 +136,8 @@ export default function Home() {
   const [manualTrackState, setManualTrackState] = useState<Record<string, boolean>>({});
   const [excludedMajorRanks, setExcludedMajorRanks] = useState<number[]>([]);
   const [geMode, setGeMode] = useState<GeMode>("core");
+  /** 영어강의 요건이 남은 사람이 영어강의만 눈으로 골라낼 수 있게 하는 강조 (기본 꺼짐) */
+  const [highlightEnglish, setHighlightEnglish] = useState(false);
   const [manualExcludeInput, setManualExcludeInput] = useState("");
   const [manualExcludedCourses, setManualExcludedCourses] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -354,6 +363,14 @@ export default function Home() {
     return keys;
   }, [filteredCourses, profileMajors, trackByCode]);
 
+  /**
+   * 관리 화면에 영어강의 열이 생기기 전에 올린 자료로 보고 있으면 켤 것이 없다.
+   * 그때는 「영어강의 강조 0」을 띄우지 않고 스위치 자체를 감춘다.
+   */
+  const hasEnglishData = useMemo(() => courses.some(isEnglish), [courses]);
+  /** 결과에 영어강의가 몇 개인지 — 강조를 켜기 전에도 켤 만한지 보이게 스위치에 함께 적는다 */
+  const englishCount = useMemo(() => filteredCourses.filter(isEnglish).length, [filteredCourses]);
+
   const pickedSet = useMemo(() => new Set(pickedIds), [pickedIds]);
   const pickedCourses = useMemo(
     () => pickedIds.map((id) => courses.find((course) => course.id === id)).filter(Boolean) as Course[],
@@ -432,6 +449,11 @@ export default function Home() {
   function changeGeMode(mode: GeMode) {
     setGeMode(mode);
     postEvent("ge_mode", mode);
+  }
+
+  function changeEnglishHighlight(on: boolean) {
+    setHighlightEnglish(on);
+    postEvent("english_highlight", on ? "on" : "off");
   }
 
   function toggleTrack(trackKey: string, completed: boolean) {
@@ -645,7 +667,7 @@ export default function Home() {
         <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
           <div className="result-toolbar">
             <div><p className="semester-label">3 · {semesterLabel.replace("-", "학년도 ")}학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && <small>{[hiddenTakenCount > 0 ? `${hiddenTakenCount}개 수강·추가 과목 제외됨` : "", remainingTrackCount > 0 ? `남은 필수 교양 ${remainingTrackCount}개 영역 포함` : "필수 교양 모두 이수"].filter(Boolean).join(" · ")}</small>}</div>
-            {showResults && <div className="toolbar-actions"><div className="ge-switch" role="group" aria-label="교양 표시">{GE_MODES.map((mode) => <button key={mode.key} type="button" title={mode.hint} aria-pressed={geMode === mode.key} className={geMode === mode.key ? "active" : ""} onClick={() => changeGeMode(mode.key)}>{mode.label}</button>)}</div><div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="교시별 후보 보기" title="교시별 후보">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기" title="목록">☷</button><button type="button" className={view === "mine" ? "active mine" : "mine"} onClick={() => setView("mine")} aria-label="내 시간표 보기" title="내 시간표">내 시간표{pickedIds.length > 0 && <em>{pickedIds.length}</em>}</button></div></div>}
+            {showResults && <div className="toolbar-actions"><div className="ge-switch" role="group" aria-label="교양 표시"><span className="ge-switch-label" aria-hidden="true">교양</span>{GE_MODES.map((mode) => <button key={mode.key} type="button" title={mode.hint} aria-pressed={geMode === mode.key} className={geMode === mode.key ? "active" : ""} onClick={() => changeGeMode(mode.key)}>{mode.label}</button>)}</div>{hasEnglishData && <label className={highlightEnglish ? "english-switch on" : "english-switch"} title="영어강의를 노란 윤곽선으로 표시합니다"><input type="checkbox" checked={highlightEnglish} onChange={(event) => changeEnglishHighlight(event.target.checked)} />영어강의 강조<em>{englishCount}</em></label>}<div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="교시별 후보 보기" title="교시별 후보">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기" title="목록">☷</button><button type="button" className={view === "mine" ? "active mine" : "mine"} onClick={() => setView("mine")} aria-label="내 시간표 보기" title="내 시간표">내 시간표{pickedIds.length > 0 && <em>{pickedIds.length}</em>}</button></div></div>}
           </div>
 
           {!showResults ? (
@@ -663,10 +685,11 @@ export default function Home() {
                     {DAY_LIST.map((day) => (
                       <div className="matrix-cell" role="cell" key={day}>
                         {slot.byDay[day].map(({ course, meeting }, index) => (
-                          <div className={pickedSet.has(course.id) ? "course-line-wrap picked" : "course-line-wrap"} key={`${course.id}-${index}`}>
+                          <div className={["course-line-wrap", pickedSet.has(course.id) ? "picked" : "", highlightEnglish && isEnglish(course) ? "english" : ""].filter(Boolean).join(" ")} key={`${course.id}-${index}`}>
                             <button
                               className="course-line"
                               type="button"
+                              title={isEnglish(course) ? "영어강의" : undefined}
                               style={{ borderLeftColor: colorFor(course), background: `${colorFor(course)}12` }}
                               onClick={() => setSelectedCourse(course)}
                             >
@@ -691,7 +714,7 @@ export default function Home() {
               </div>
             </div>
           ) : view === "list" ? (
-            <div className="course-list">{filteredCourses.map((course) => <div key={course.id} className={pickedSet.has(course.id) ? "course-row picked" : "course-row"}><button onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}{categoryLabelFor(course) && <em className="core-badge" style={{ color: colorFor(course), background: `${colorFor(course)}14` }}>{categoryLabelFor(course)}{trackLabelFor(course) && ` · ${trackLabelFor(course)}`}</em>}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button><button className="pick-button" type="button" aria-pressed={pickedSet.has(course.id)} aria-label={`${course.name} ${pickedSet.has(course.id) ? "담기 취소" : "담기"}`} onClick={() => togglePicked(course)}>{pickedSet.has(course.id) ? "✓ 담김" : "+ 담기"}</button></div>)}</div>
+            <div className="course-list">{filteredCourses.map((course) => <div key={course.id} className={["course-row", pickedSet.has(course.id) ? "picked" : "", highlightEnglish && isEnglish(course) ? "english" : ""].filter(Boolean).join(" ")}><button onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}{categoryLabelFor(course) && <em className="core-badge" style={{ color: colorFor(course), background: `${colorFor(course)}14` }}>{categoryLabelFor(course)}{trackLabelFor(course) && ` · ${trackLabelFor(course)}`}</em>}{highlightEnglish && isEnglish(course) && <em className="core-badge english">영어강의</em>}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button><button className="pick-button" type="button" aria-pressed={pickedSet.has(course.id)} aria-label={`${course.name} ${pickedSet.has(course.id) ? "담기 취소" : "담기"}`} onClick={() => togglePicked(course)}>{pickedSet.has(course.id) ? "✓ 담김" : "+ 담기"}</button></div>)}</div>
           ) : view === "mine" ? (
             pickedCourses.length === 0 ? (
               <div className="empty-state"><span>▦</span><strong>담은 과목이 없어요</strong><p>교시별 후보나 목록에서 <b>+</b>를 눌러 담으면<br />여기에 시간표로 그려드려요.</p></div>
@@ -720,7 +743,7 @@ export default function Home() {
                     >
                       {myCalendar.byDay[day].blocks.map(({ entry, lane, conflict, rowStart, rowSpan }, index) => (
                         <button
-                          className={conflict ? "calendar-block clash" : "calendar-block"}
+                          className={["calendar-block", conflict ? "clash" : "", highlightEnglish && isEnglish(entry.course) ? "english" : ""].filter(Boolean).join(" ")}
                           type="button"
                           key={`${entry.course.id}-${index}`}
                           style={{
@@ -729,6 +752,7 @@ export default function Home() {
                             borderLeftColor: colorFor(entry.course),
                             background: `${colorFor(entry.course)}14`,
                           }}
+                          title={isEnglish(entry.course) ? "영어강의" : undefined}
                           onClick={() => setSelectedCourse(entry.course)}
                         >
                           <strong>{entry.course.name}</strong>
@@ -777,7 +801,7 @@ export default function Home() {
 
       {profileLoading && <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>}
       {!profileLoading && profileOpen && <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />}
-      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>{trackLabelFor(selectedCourse) && <div><dt>필수 교양</dt><dd>{trackLabelFor(selectedCourse)} · {bulletinYear}학년도 요람</dd></div>}</dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<div className="modal-actions"><button className="primary-button" type="button" onClick={() => togglePicked(selectedCourse)}>{pickedSet.has(selectedCourse.id) ? "내 시간표에서 빼기" : "내 시간표에 담기"}</button><a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></div></article></div>}
+      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>{isEnglish(selectedCourse) && <div><dt>강의언어</dt><dd>영어강의</dd></div>}{trackLabelFor(selectedCourse) && <div><dt>필수 교양</dt><dd>{trackLabelFor(selectedCourse)} · {bulletinYear}학년도 요람</dd></div>}</dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<div className="modal-actions"><button className="primary-button" type="button" onClick={() => togglePicked(selectedCourse)}>{pickedSet.has(selectedCourse.id) ? "내 시간표에서 빼기" : "내 시간표에 담기"}</button><a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></div></article></div>}
     </main>
   );
 }
