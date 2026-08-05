@@ -3,7 +3,6 @@ import { getDb } from "../../../../db";
 import { analyticsEvents, everytimeFailures, feedbackMessages, userProfiles } from "../../../../db/schema";
 import { verifyAdminSession } from "../../../lib/admin-session.mjs";
 
-const RECENT_LIMIT = 120;
 const OLD_EVENT_DAYS = 30;
 
 function responseHeaders() {
@@ -24,7 +23,7 @@ export async function GET(request: Request) {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 이벤트 이름별 전체 합계와 최근 24시간 합계
-    const [totals, recentTotals, [users], recent, feedbackByStatus] = await Promise.all([
+    const [totals, recentTotals, [users], feedbackByStatus] = await Promise.all([
       db
         .select({ event: analyticsEvents.eventName, total: count() })
         .from(analyticsEvents)
@@ -36,20 +35,6 @@ export async function GET(request: Request) {
         .where(gte(analyticsEvents.createdAt, since))
         .groupBy(analyticsEvents.eventName),
       db.select({ total: count() }).from(userProfiles),
-      db
-        .select({
-          id: analyticsEvents.id,
-          event: analyticsEvents.eventName,
-          college: analyticsEvents.college,
-          major: analyticsEvents.major,
-          cohortYear: analyticsEvents.cohortYear,
-          completedSemesters: analyticsEvents.completedSemesters,
-          resultBucket: analyticsEvents.resultBucket,
-          createdAt: analyticsEvents.createdAt,
-        })
-        .from(analyticsEvents)
-        .orderBy(desc(analyticsEvents.createdAt))
-        .limit(RECENT_LIMIT),
       db
         .select({ status: feedbackMessages.status, total: count() })
         .from(feedbackMessages)
@@ -219,7 +204,6 @@ export async function GET(request: Request) {
         helpful: helpfulVotes.map((row) => ({ vote: row.bucket ?? "unknown", total: row.total })),
         // 에브리타임 실패 — 사유 코드별·단계별. ready가 false면 표가 아직 없다는 뜻입니다.
         everytimeFailures: failures,
-        recent,
         // 서버 예외·요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다.
         runtimeLogHint: "vercel logs",
       },

@@ -730,6 +730,36 @@ test("writes down why an Everytime read failed, without the link or token", asyn
   assert.match(adminPage, /\["unknown",/);
 });
 
+test("pages the whole event log instead of cutting it off", async () => {
+  const [events, overview, adminPage] = await Promise.all([
+    readFile(new URL("../app/api/admin/events/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/overview/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  // 목록은 관리자만 보고, 쿼리를 돌리기 전에 막는다
+  assert.match(events, /verifyAdminSession/);
+  assert.match(events, /status: 401/);
+
+  // 이어 보는 기준은 시각이 아니라 id — 같은 초에 여러 건이 들어오면 경계에서 줄이 겹치거나 빠진다
+  assert.match(events, /lt\(analyticsEvents\.id, before\)/);
+  assert.match(events, /orderBy\(desc\(analyticsEvents\.id\)\)/);
+  assert.match(events, /\/\^\\d\{1,12\}\$\/\.test\(beforeRaw\)/, "커서는 숫자만 받아야 한다");
+  assert.match(events, /Math\.min\(requested, MAX_PAGE_SIZE\)/, "한 쪽 크기에 상한이 있어야 한다");
+  // 한 줄 더 받아 다음 쪽이 있는지 보고, 그 한 줄은 돌려주지 않는다
+  assert.match(events, /limit\(limit \+ 1\)/);
+  assert.match(events, /rows\.slice\(0, limit\), hasMore: rows\.length > limit/);
+
+  // 집계에는 목록을 싣지 않는다 — 더 보기를 누를 때마다 무거운 집계를 다시 돌리면 안 된다
+  assert.doesNotMatch(overview, /RECENT_LIMIT/);
+  assert.doesNotMatch(overview, /recent,\n/);
+
+  // 화면은 마지막 줄의 id로 다음 쪽을 물어 이어 붙인다
+  assert.match(adminPage, /events\?before=\$\{last\.id\}/);
+  assert.match(adminPage, /setLog\(\(current\) => \[\.\.\.current, \.\.\.\(data\.events \?\? \[\]\)\]\)/);
+  assert.match(adminPage, /더 보기/);
+});
+
 test("splits the helpful-vote answers on the admin dashboard", async () => {
   const [admin, adminPage] = await Promise.all([
     readFile(new URL("../app/api/admin/overview/route.ts", import.meta.url), "utf8"),

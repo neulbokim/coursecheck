@@ -38,16 +38,18 @@ type Overview = {
     last24h: number;
     ready: boolean;
   };
-  recent: Array<{
-    id: number;
-    event: string;
-    college: string | null;
-    major: string | null;
-    cohortYear: number | null;
-    completedSemesters: number | null;
-    resultBucket: string | null;
-    createdAt: string;
-  }>;
+};
+
+/** 최근 기록 한 줄. 목록은 집계와 따로 /api/admin/events가 쪽 단위로 답합니다. */
+type LogEntry = {
+  id: number;
+  event: string;
+  college: string | null;
+  major: string | null;
+  cohortYear: number | null;
+  completedSemesters: number | null;
+  resultBucket: string | null;
+  createdAt: string;
 };
 
 /** 이벤트를 어떤 단위로 묶어 볼지 */
@@ -126,25 +128,45 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [purgeMessage, setPurgeMessage] = useState("");
+  /** 최근 기록은 한 쪽씩 이어 받습니다 — 30일치를 한 번에 내려보내면 응답이 너무 커집니다. */
+  const [log, setLog] = useState<LogEntry[]>([]);
+  const [logTotal, setLogTotal] = useState(0);
+  const [logHasMore, setLogHasMore] = useState(false);
+  const [logBusy, setLogBusy] = useState(false);
 
   const fetchAll = useCallback(async () => {
-    const [feedbackResponse, overviewResponse, coursesResponse] = await Promise.all([
+    const [feedbackResponse, overviewResponse, coursesResponse, logResponse] = await Promise.all([
       fetch("/api/admin/feedback", { cache: "no-store" }),
       fetch("/api/admin/overview", { cache: "no-store" }),
       fetch("/api/admin/courses", { cache: "no-store" }),
+      fetch("/api/admin/events", { cache: "no-store" }),
     ]);
     if (feedbackResponse.status === 401 || overviewResponse.status === 401) {
-      return { signedIn: false, messages: [] as Message[], overview: null, datasets: [] as Dataset[] };
+      return {
+        signedIn: false,
+        messages: [] as Message[],
+        overview: null,
+        datasets: [] as Dataset[],
+        log: [] as LogEntry[],
+        logTotal: 0,
+        logHasMore: false,
+      };
     }
     const feedbackData = (await feedbackResponse.json()) as { messages?: Message[]; error?: string };
     if (!feedbackResponse.ok) throw new Error(feedbackData.error || "불러오지 못했어요.");
     const overviewData = overviewResponse.ok ? ((await overviewResponse.json()) as Overview) : null;
     const coursesData = coursesResponse.ok ? ((await coursesResponse.json()) as { datasets?: Dataset[] }) : null;
+    const logData = logResponse.ok
+      ? ((await logResponse.json()) as { events?: LogEntry[]; hasMore?: boolean; total?: number })
+      : null;
     return {
       signedIn: true,
       messages: feedbackData.messages ?? [],
       overview: overviewData,
       datasets: coursesData?.datasets ?? [],
+      log: logData?.events ?? [],
+      logTotal: logData?.total ?? 0,
+      logHasMore: logData?.hasMore ?? false,
     };
   }, []);
 
@@ -156,6 +178,9 @@ export default function AdminPage() {
       setMessages(result.messages);
       setOverview(result.overview);
       setDatasets(result.datasets);
+      setLog(result.log);
+      setLogTotal(result.logTotal);
+      setLogHasMore(result.logHasMore);
       setError("");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "불러오지 못했어요.");
@@ -174,6 +199,9 @@ export default function AdminPage() {
         setMessages(result.messages);
         setOverview(result.overview);
         setDatasets(result.datasets);
+        setLog(result.log);
+        setLogTotal(result.logTotal);
+        setLogHasMore(result.logHasMore);
       } catch {
         if (!cancelled) setSignedIn(false);
       }
@@ -266,6 +294,28 @@ export default function AdminPage() {
     if (!response.ok) {
       setError("상태를 바꾸지 못했어요.");
       void load();
+    }
+  }
+
+  /**
+   * 다음 쪽을 이어 받습니다. 마지막으로 받은 줄의 id를 기준으로 물어 같은 줄이 겹치지 않게 합니다.
+   */
+  async function loadMoreLog() {
+    const last = log[log.length - 1];
+    if (!last || logBusy) return;
+    setLogBusy(true);
+    try {
+      const response = await fetch(`/api/admin/events?before=${last.id}`, { cache: "no-store" });
+      const data = (await response.json()) as { events?: LogEntry[]; hasMore?: boolean; total?: number; error?: string };
+      if (!response.ok) throw new Error(data.error || "기록을 더 불러오지 못했어요.");
+      setLog((current) => [...current, ...(data.events ?? [])]);
+      setLogHasMore(data.hasMore ?? false);
+      setLogTotal(data.total ?? logTotal);
+      setError("");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "기록을 더 불러오지 못했어요.");
+    } finally {
+      setLogBusy(false);
     }
   }
 
@@ -375,7 +425,7 @@ export default function AdminPage() {
           건의<span>{messages.length}</span>
         </button>
         <button type="button" role="tab" aria-selected={tab === "stats"} className={tab === "stats" ? "active" : ""} onClick={() => setTab("stats")}>
-          집계·로그{overview && <span>{overview.recent.length}</span>}
+          집계·로그{logTotal > 0 && <span>{logTotal.toLocaleString("ko-KR")}</span>}
         </button>
         <button type="button" role="tab" aria-selected={tab === "courses"} className={tab === "courses" ? "active" : ""} onClick={() => setTab("courses")}>
           개설과목{datasets.length > 0 && <span>{datasets.length}</span>}
@@ -688,12 +738,18 @@ export default function AdminPage() {
               </>
             )}
 
-            <h2 className="admin-subhead">최근 로그<small>익명 이벤트 {overview.recent.length}건</small></h2>
-            {overview.recent.length === 0 ? (
+            <h2 className="admin-subhead">
+              최근 로그
+              <small>
+                익명 이벤트 {logTotal.toLocaleString("ko-KR")}건
+                {logTotal > log.length && ` 중 ${log.length.toLocaleString("ko-KR")}건`}
+              </small>
+            </h2>
+            {log.length === 0 ? (
               <p className="admin-empty">기록이 없어요.</p>
             ) : (
               <ul className="admin-log">
-                {overview.recent.map((row) => (
+                {log.map((row) => (
                   <li key={row.id}>
                     <time>{new Date(row.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</time>
                     <strong>{EVENT_LABEL.get(row.event) ?? row.event}</strong>
@@ -705,6 +761,13 @@ export default function AdminPage() {
                   </li>
                 ))}
               </ul>
+            )}
+            {logHasMore && (
+              <div className="admin-more">
+                <button type="button" onClick={() => void loadMoreLog()} disabled={logBusy}>
+                  {logBusy ? "불러오는 중…" : `더 보기 (${(logTotal - log.length).toLocaleString("ko-KR")}건 남음)`}
+                </button>
+              </div>
             )}
 
             <div className="admin-danger">
