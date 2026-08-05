@@ -39,6 +39,8 @@ npm audit --omit=dev
 3. Vercel이 만든 `DATABASE_URL` 환경 변수를 로컬로 내려받습니다.
 4. `npm run db:migrate`로 최초 테이블을 만든 뒤 배포합니다.
 
+`drizzle-kit`은 `.env.local`을 읽지 않아 `drizzle.config.ts`가 직접 읽습니다. 셸에 `DATABASE_URL`이 있으면 그것을 먼저 쓰고, 둘 다 없으면 placeholder로 붙어 마이그레이션이 오류 없이 멈춰 있게 됩니다.
+
 ```bash
 vercel env pull .env.local
 npm run db:migrate
