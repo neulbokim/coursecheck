@@ -671,4 +671,141 @@ test("records every event the page actually sends", async () => {
   const profileRoute = await readFile(new URL("../app/api/profile/route.ts", import.meta.url), "utf8");
   assert.match(profileRoute, /if \(!analyticsConsent\)/);
   assert.match(profileRoute, /visitorId: null/);
+  // 로컬 사본에는 방문자 ID를 그대로 넘기지 않는다 (있었는지 여부만 넘긴다)
+  const mirrored = events.match(/appendLocalLog\("analytics-events\.jsonl", \{[^}]*\}\)/)?.[0] ?? "";
+  assert.ok(mirrored, "로컬 사본에 넘기는 값을 찾지 못했다");
+  assert.match(mirrored, /hasVisitor: visitorId !== null/);
+  assert.doesNotMatch(mirrored, /visitorId,|visitorId:\s*visitorId/, "방문자 ID를 파일에 적으면 안 된다");
+});
+
+test("writes down why an Everytime read failed, without the link or token", async () => {
+  const [everytime, admin, adminPage, cleanup] = await Promise.all([
+    readFile(new URL("../app/api/everytime/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/overview/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/cron/cleanup/route.ts", import.meta.url), "utf8"),
+  ]);
+
+  // 화면 문구를 다듬어도 집계가 끊기지 않게, 세는 값은 코드로 던진다
+  const codes = [...everytime.matchAll(/new EverytimeFailure\("([a-z_]+)"/g)].map((match) => match[1]);
+  assert.ok(codes.length >= 5, "실패마다 사유 코드를 붙여야 한다");
+  for (const code of ["not_everytime_link", "bad_link", "not_public", "blocked", "too_big"]) {
+    assert.ok(codes.includes(code), `${code} 코드를 던지는 곳이 없다`);
+  }
+  assert.match(everytime, /error\.name === "AbortError"\) return "timeout"/, "타임아웃도 코드로 세야 한다");
+  assert.match(everytime, /return "unknown"/, "예상 못 한 오류도 묶어 세야 한다");
+
+  // 요청 전체 실패와 학기별 실패를 모두 남긴다
+  const recorded = [...everytime.matchAll(/await recordFailures\(/g)];
+  assert.equal(recorded.length, 2, "요청 전체 실패와 학기별 실패를 모두 남겨야 한다");
+  assert.match(everytime, /scope: "request", step, reasonCode, elapsedMs/);
+  assert.match(everytime, /failures\.push\(\{ scope: "semester", reasonCode: failureCode\(error\), semester \}\)/);
+  for (const step of ["link", "bootstrap", "first_table", "terms"]) {
+    assert.match(everytime, new RegExp(`"${step}"`), `${step} 단계를 표시하지 않는다`);
+  }
+
+  // 배포에서도 세려면 표에 쌓아야 하고, 표에 못 넣어도 사용자 응답은 그대로여야 한다
+  assert.match(everytime, /insert\(everytimeFailures\)/, "배포에서는 표에 쌓아야 한다");
+  assert.match(everytime, /insert\(everytimeFailures\)[\s\S]{0,120}catch \{/, "표에 못 넣어도 응답을 깨지 말아야 한다");
+  assert.match(cleanup, /delete\(everytimeFailures\)/, "적어둔 보유기간대로 실패 기록도 지워야 한다");
+
+  // 예상 못 한 오류만 원본을 런타임 로그로 보낸다 — 그때도 링크·토큰은 넣지 않는다
+  const runtimeLog = everytime.match(/console\.error\([\s\S]*?\}\);/)?.[0] ?? "";
+  assert.ok(runtimeLog, "예상 못 한 오류의 원본을 남기지 않는다");
+  assert.match(everytime, /if \(reasonCode === "unknown"\)/);
+  assert.doesNotMatch(runtimeLog, /token|payload\.url|finalUrl|cookie/i);
+
+  // 표에 넣는 값에도 링크·토큰·방문자 ID가 없다
+  const recordSignature = everytime.match(/async function recordFailures\([\s\S]*?\n\}/)?.[0] ?? "";
+  assert.ok(recordSignature, "recordFailures를 찾지 못했다");
+  assert.doesNotMatch(recordSignature, /token|url|visitor|cookie/i, "링크·토큰·방문자 ID를 기록하면 안 된다");
+
+  // 관리 화면에서 사유별로 볼 수 있어야 하고, 표가 아직 없어도 나머지 집계는 살아야 한다
+  assert.match(admin, /from\(everytimeFailures\)/);
+  assert.match(admin, /ready: false/, "표가 없을 때도 집계 전체가 503이 되면 안 된다");
+  for (const code of codes) {
+    assert.match(adminPage, new RegExp(`\\["${code}",`), `${code}에 붙일 한글 이름이 /admin에 없다`);
+  }
+  assert.match(adminPage, /\["timeout",/);
+  assert.match(adminPage, /\["unknown",/);
+});
+
+test("splits the helpful-vote answers on the admin dashboard", async () => {
+  const [admin, adminPage] = await Promise.all([
+    readFile(new URL("../app/api/admin/overview/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+  ]);
+  // 만족도는 이벤트 합계가 아니라 묶음 값(yes·no)에 있으므로 갈라 세야 보인다
+  assert.match(admin, /eq\(analyticsEvents\.eventName, "helpful_vote"\)/);
+  assert.match(admin, /groupBy\(analyticsEvents\.resultBucket\)/);
+  assert.match(admin, /helpful: helpfulVotes\.map/);
+  // 답 없는 옛 기록은 비율에서 뺀다 (안 그러면 만족도가 낮아 보인다)
+  assert.match(adminPage, /const answered = yes \+ no/);
+  assert.match(adminPage, /answered > 0 \? Math\.round\(\(yes \/ answered\) \* 100\)/);
+  assert.match(adminPage, /도움이 됐나요 응답/, "대시보드에 응답 표가 있어야 한다");
+});
+
+test("mirrors events to a local file while writing nothing in production", async () => {
+  const { appendLocalLog } = await import("../app/lib/local-event-log.mjs");
+  const { mkdtemp, readFile: read, rm } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+
+  const directory = await mkdtemp(join(tmpdir(), "coursecheck-local-log-"));
+  const logDirectory = join(directory, "nested");
+  const events = join(logDirectory, "analytics-events.jsonl");
+  const failures = join(logDirectory, "everytime-failures.jsonl");
+  const previousDirectory = process.env.LOCAL_LOG_DIR;
+  const previousEnv = process.env.NODE_ENV;
+  const previousCwd = process.cwd();
+  try {
+    // 개발 중에는 없는 폴더까지 만들어 파일별로 한 줄씩 덧붙인다
+    process.env.LOCAL_LOG_DIR = logDirectory;
+    await appendLocalLog("analytics-events.jsonl", { at: "2026-08-05T00:00:00.000Z", event: "everytime_import_error", stored: true });
+    await appendLocalLog("analytics-events.jsonl", { at: "2026-08-05T00:00:01.000Z", event: "page_view", stored: false, note: "not_allowed" });
+    await appendLocalLog("everytime-failures.jsonl", { at: "2026-08-05T00:00:02.000Z", scope: "semester", semester: "2025년 2학기", reason: "공유 시간표를 열 수 없어요." });
+    const lines = (await read(events, "utf8")).trim().split("\n");
+    assert.equal(lines.length, 2, "한 줄씩 덧붙여야 한다");
+    assert.deepEqual(JSON.parse(lines[1]), {
+      at: "2026-08-05T00:00:01.000Z",
+      event: "page_view",
+      stored: false,
+      note: "not_allowed",
+    });
+    // 실패 사유는 이용 기록과 섞이지 않는다
+    assert.deepEqual(JSON.parse((await read(failures, "utf8")).trim()), {
+      at: "2026-08-05T00:00:02.000Z",
+      scope: "semester",
+      semester: "2025년 2학기",
+      reason: "공유 시간표를 열 수 없어요.",
+    });
+
+    // off로 두면 개발 중에도 적지 않는다
+    process.env.LOCAL_LOG_DIR = "off";
+    await appendLocalLog("analytics-events.jsonl", { at: "2026-08-05T00:00:03.000Z", event: "page_view", stored: true });
+    assert.equal((await read(events, "utf8")).trim().split("\n").length, 2);
+
+    // 배포에서는 폴더를 지정하지 않으므로 기본 폴더조차 생기지 않는다 (빈 폴더에서 확인한다)
+    process.chdir(directory);
+    process.env.NODE_ENV = "production";
+    delete process.env.LOCAL_LOG_DIR;
+    await appendLocalLog("analytics-events.jsonl", { at: "2026-08-05T00:00:04.000Z", event: "page_view", stored: true });
+    await assert.rejects(() => read(join(directory, ".local-logs", "analytics-events.jsonl"), "utf8"));
+
+    // 폴더를 지정하지 않아도 개발 중에는 기본 폴더에 적는다
+    process.env.NODE_ENV = "development";
+    await appendLocalLog("analytics-events.jsonl", { at: "2026-08-05T00:00:05.000Z", event: "page_view", stored: true });
+    assert.match(await read(join(directory, ".local-logs", "analytics-events.jsonl"), "utf8"), /00:00:05/);
+    process.chdir(previousCwd);
+
+    // 적을 수 없는 폴더여도 조용히 넘어간다 — 사본 때문에 응답이 깨지면 안 된다
+    process.env.LOCAL_LOG_DIR = events;
+    await appendLocalLog("analytics-events.jsonl", { at: "2026-08-05T00:00:06.000Z", event: "page_view", stored: true });
+  } finally {
+    process.chdir(previousCwd);
+    if (previousDirectory === undefined) delete process.env.LOCAL_LOG_DIR;
+    else process.env.LOCAL_LOG_DIR = previousDirectory;
+    process.env.NODE_ENV = previousEnv;
+    await rm(directory, { recursive: true, force: true });
+  }
 });

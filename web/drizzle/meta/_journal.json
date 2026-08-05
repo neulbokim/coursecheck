@@ -92,6 +92,13 @@
       "when": 1785864502587,
       "tag": "0012_add_event_semesters",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785905383082,
+      "tag": "0013_add_everytime_failures",
+      "breakpoints": true
     }
   ]
 }

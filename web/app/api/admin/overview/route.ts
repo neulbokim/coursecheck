@@ -1,6 +1,6 @@
 import { and, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { analyticsEvents, feedbackMessages, userProfiles } from "../../../../db/schema";
+import { analyticsEvents, everytimeFailures, feedbackMessages, userProfiles } from "../../../../db/schema";
 import { verifyAdminSession } from "../../../lib/admin-session.mjs";
 
 const RECENT_LIMIT = 120;
@@ -55,6 +55,41 @@ export async function GET(request: Request) {
         .from(feedbackMessages)
         .groupBy(feedbackMessages.status),
     ]);
+
+    /**
+     * 「도움이 됐나요」 응답은 묶음 값(yes·no)에만 남으므로 이벤트 합계로는 만족도가 안 보입니다.
+     * 여기서 갈라 세어 관리 화면에 만족도로 띄웁니다.
+     */
+    const helpfulVotes = await db
+      .select({ bucket: analyticsEvents.resultBucket, total: count() })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.eventName, "helpful_vote"))
+      .groupBy(analyticsEvents.resultBucket);
+
+    /**
+     * 에브리타임 실패는 사유 코드별로 셉니다. 마이그레이션을 아직 안 돌렸으면 표가 없으므로,
+     * 그때는 이 칸만 비우고 나머지 집계는 그대로 보여줍니다(전체가 503이 되면 안 됩니다).
+     */
+    const failures = await (async () => {
+      try {
+        const [byReason, byStep, [recent]] = await Promise.all([
+          db
+            .select({ scope: everytimeFailures.scope, reasonCode: everytimeFailures.reasonCode, total: count() })
+            .from(everytimeFailures)
+            .groupBy(everytimeFailures.scope, everytimeFailures.reasonCode)
+            .orderBy(desc(count())),
+          db
+            .select({ step: everytimeFailures.step, total: count() })
+            .from(everytimeFailures)
+            .where(eq(everytimeFailures.scope, "request"))
+            .groupBy(everytimeFailures.step),
+          db.select({ total: count() }).from(everytimeFailures).where(gte(everytimeFailures.createdAt, since)),
+        ]);
+        return { byReason, byStep, last24h: recent?.total ?? 0, ready: true };
+      } catch {
+        return { byReason: [], byStep: [], last24h: 0, ready: false };
+      }
+    })();
 
     const recentByEvent = new Map(recentTotals.map((row) => [row.event, row.total]));
 
@@ -180,6 +215,10 @@ export async function GET(request: Request) {
           })),
         },
         feedback: feedbackByStatus,
+        // 도움이 됐다·아쉬웠다 응답 수 (묶음 값이 비어 있는 옛 기록은 unknown으로 옵니다)
+        helpful: helpfulVotes.map((row) => ({ vote: row.bucket ?? "unknown", total: row.total })),
+        // 에브리타임 실패 — 사유 코드별·단계별. ready가 false면 표가 아직 없다는 뜻입니다.
+        everytimeFailures: failures,
         recent,
         // 서버 예외·요청 로그는 앱이 아니라 Vercel 함수 로그에 남습니다.
         runtimeLogHint: "vercel logs",

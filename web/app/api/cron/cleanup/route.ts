@@ -1,6 +1,6 @@
 import { lt, sql } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { analyticsEvents, feedbackMessages, userProfiles } from "../../../../db/schema";
+import { analyticsEvents, everytimeFailures, feedbackMessages, userProfiles } from "../../../../db/schema";
 
 /**
  * 적어둔 보유기간을 실제로 지키는 청소기. Vercel 크론이 하루 한 번 부릅니다(vercel.json).
@@ -8,6 +8,7 @@ import { analyticsEvents, feedbackMessages, userProfiles } from "../../../../db/
  * 같이 고쳐야 합니다.
  */
 const EVENT_DAYS = 30;
+const FAILURE_DAYS = 30;
 const PROFILE_DAYS = 365;
 const FEEDBACK_DAYS = 365;
 
@@ -37,11 +38,13 @@ export async function GET(request: Request) {
   }
   try {
     const db = getDb();
-    const [events, profiles, feedback] = await Promise.all([
+    const [events, profiles, feedback, failures] = await Promise.all([
       db.delete(analyticsEvents).where(lt(analyticsEvents.createdAt, daysAgo(EVENT_DAYS))).returning({ id: analyticsEvents.id }),
       // 마지막으로 설정을 만진 지 1년이 지난 사람. 쿠키도 만료돼 어차피 찾아 쓸 수 없습니다.
       db.delete(userProfiles).where(lt(userProfiles.updatedAt, daysAgo(PROFILE_DAYS))).returning({ visitorId: userProfiles.visitorId }),
       db.delete(feedbackMessages).where(lt(feedbackMessages.createdAt, daysAgo(FEEDBACK_DAYS))).returning({ id: feedbackMessages.id }),
+      // 에브리타임 실패는 사람과 잇지 않는 사유 코드뿐이지만, 이벤트와 같은 기간만 둡니다.
+      db.delete(everytimeFailures).where(lt(everytimeFailures.createdAt, daysAgo(FAILURE_DAYS))).returning({ id: everytimeFailures.id }),
     ]);
     // 지워진 사람의 지난 이벤트에 남은 연결 고리도 끊습니다
     await db
@@ -50,7 +53,7 @@ export async function GET(request: Request) {
       .where(sql`${analyticsEvents.visitorId} is not null and ${analyticsEvents.visitorId} not in (select visitor_id from user_profiles)`);
 
     return Response.json(
-      { removed: { events: events.length, profiles: profiles.length, feedback: feedback.length } },
+      { removed: { events: events.length, profiles: profiles.length, feedback: feedback.length, failures: failures.length } },
       { headers },
     );
   } catch {

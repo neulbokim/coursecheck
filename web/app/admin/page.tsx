@@ -31,6 +31,13 @@ type Overview = {
     journeys: Array<{ steps: string[]; people: number }>;
   };
   feedback: Array<{ status: string; total: number }>;
+  helpful: Array<{ vote: string; total: number }>;
+  everytimeFailures: {
+    byReason: Array<{ scope: string; reasonCode: string; total: number }>;
+    byStep: Array<{ step: string | null; total: number }>;
+    last24h: number;
+    ready: boolean;
+  };
   recent: Array<{
     id: number;
     event: string;
@@ -72,6 +79,26 @@ const BUCKET_LABEL = new Map<string, string>([
   ["all", "교양 전체"],
   ["core", "필수 교양만"],
   ["none", "교양 숨김"],
+]);
+
+/** 에브리타임 실패 사유 코드를 사람이 읽을 말로 (route.ts의 EverytimeFailure 코드와 짝) */
+const FAILURE_LABEL = new Map<string, string>([
+  ["not_everytime_link", "에브리타임 링크가 아님"],
+  ["bad_link", "링크 형식이 다름"],
+  ["not_public", "시간표가 안 열림"],
+  ["blocked", "에브리타임이 자동 확인 제한"],
+  ["too_big", "응답이 너무 큼"],
+  ["bad_identifier", "학기 식별자 이상"],
+  ["timeout", "15초 안에 응답 없음"],
+  ["unknown", "예상 못 한 오류"],
+]);
+
+/** 요청이 어디까지 갔다가 멈췄는지 */
+const FAILURE_STEP_LABEL = new Map<string, string>([
+  ["link", "링크 읽기"],
+  ["bootstrap", "공유 페이지 열기"],
+  ["first_table", "첫 시간표 받기"],
+  ["terms", "학기별 시간표 받기"],
 ]);
 
 /** 사람들이 대개 밟는 순서. 흐름을 이 차례로 세웁니다. */
@@ -268,6 +295,18 @@ export default function AdminPage() {
     return { columns, rows: [...rows.values()].sort((a, b) => b.total - a.total) };
   }, [overview, unit]);
 
+  /**
+   * 「도움이 됐나요」 응답. 답한 사람 중 몇 %가 도움이 됐다고 했는지가 보고 싶은 숫자라
+   * 답 없는 옛 기록(unknown)은 비율에서 뺍니다.
+   */
+  const helpful = useMemo(() => {
+    const votes = new Map((overview?.helpful ?? []).map((row) => [row.vote, row.total]));
+    const yes = votes.get("yes") ?? 0;
+    const no = votes.get("no") ?? 0;
+    const answered = yes + no;
+    return { yes, no, answered, rate: answered > 0 ? Math.round((yes / answered) * 100) : null };
+  }, [overview]);
+
   /** 알려진 차례대로 세우고, 그 밖의 이벤트는 사람 수 순으로 뒤에 붙인다 */
   const reach = useMemo(() => {
     if (!overview) return [] as Array<{ event: string; people: number; share: number; dropped: number }>;
@@ -398,6 +437,16 @@ export default function AdminPage() {
                 <strong>{overview.users.consented.toLocaleString("ko-KR")}</strong>
                 <em>{overview.users.total > 0 ? `${Math.round((overview.users.consented / overview.users.total) * 100)}%` : "–"}</em>
               </div>
+              <div className="stat-card">
+                <small>도움이 됐나요</small>
+                <strong>{helpful.rate === null ? "–" : `${helpful.rate}%`}</strong>
+                <em>{helpful.answered > 0 ? `${helpful.answered.toLocaleString("ko-KR")}명 답함` : "아직 응답 없음"}</em>
+              </div>
+              <div className="stat-card">
+                <small>에브리타임 실패</small>
+                <strong>{overview.everytimeFailures.byReason.reduce((sum, row) => sum + row.total, 0).toLocaleString("ko-KR")}</strong>
+                <em>{overview.everytimeFailures.ready ? `24시간 +${overview.everytimeFailures.last24h}` : "표 없음 · db:migrate 필요"}</em>
+              </div>
               <div className="stat-card"><small>지금 떠 있는 배포</small><strong>{process.env.NEXT_PUBLIC_BUILD_REV}</strong><em>v{process.env.NEXT_PUBLIC_APP_VERSION}</em></div>
               {overview.feedback.map((row) => (
                 <div className="stat-card" key={row.status}>
@@ -423,6 +472,69 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            <h2 className="admin-subhead">
+              도움이 됐나요 응답
+              <small>결과를 보고 답한 사람만 — 이벤트 합계로는 안 갈라지는 만족도</small>
+            </h2>
+            {helpful.answered === 0 ? (
+              <p className="admin-empty">아직 응답이 없어요.</p>
+            ) : (
+              <table className="admin-table">
+                <thead><tr><th>응답</th><th>수</th><th>비율</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>{BUCKET_LABEL.get("yes")}</strong><small>yes</small></td>
+                    <td className="num">{helpful.yes.toLocaleString("ko-KR")}</td>
+                    <td className="num">{Math.round((helpful.yes / helpful.answered) * 100)}%</td>
+                  </tr>
+                  <tr>
+                    <td><strong>{BUCKET_LABEL.get("no")}</strong><small>no</small></td>
+                    <td className="num">{helpful.no.toLocaleString("ko-KR")}</td>
+                    <td className="num">{Math.round((helpful.no / helpful.answered) * 100)}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+
+            <h2 className="admin-subhead">
+              에브리타임 실패
+              <small>화면에는 다듬은 문장만 나가서 사라지는 사유 — 배포에서도 사유 코드로 셉니다</small>
+            </h2>
+            {!overview.everytimeFailures.ready ? (
+              <p className="admin-empty">everytime_failures 표가 아직 없어요. <code>npm run db:migrate</code>를 돌리면 쌓입니다.</p>
+            ) : overview.everytimeFailures.byReason.length === 0 ? (
+              <p className="admin-empty">아직 기록된 실패가 없어요.</p>
+            ) : (
+              <div className="admin-split">
+                <table className="admin-table">
+                  <thead><tr><th>사유</th><th>어디</th><th>수</th></tr></thead>
+                  <tbody>
+                    {overview.everytimeFailures.byReason.map((row) => (
+                      <tr key={`${row.scope}-${row.reasonCode}`}>
+                        <td>
+                          <strong>{FAILURE_LABEL.get(row.reasonCode) ?? row.reasonCode}</strong>
+                          <small>{row.reasonCode}</small>
+                        </td>
+                        <td>{row.scope === "semester" ? "학기 하나" : "요청 전체"}</td>
+                        <td className="num">{row.total.toLocaleString("ko-KR")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <table className="admin-table">
+                  <thead><tr><th>멈춘 단계</th><th>수</th></tr></thead>
+                  <tbody>
+                    {overview.everytimeFailures.byStep.map((row) => (
+                      <tr key={row.step ?? "none"}>
+                        <td><strong>{row.step ? FAILURE_STEP_LABEL.get(row.step) ?? row.step : "단계 미상"}</strong></td>
+                        <td className="num">{row.total.toLocaleString("ko-KR")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             <h2 className="admin-subhead">

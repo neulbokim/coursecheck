@@ -79,7 +79,51 @@ curl -s https://<배포 URL>/api/health
 
 `GET /api/stats`는 **관리자 전용**입니다(세션 없으면 401). 사용자 수와 이벤트 이름별 합계를 반환합니다. 공개 통계 엔드포인트는 없고, 사용자 수를 화면에 표시하지도 않습니다.
 
+`/admin` 통계 탭은 여기에 「도움이 됐나요」 응답(만족도 %와 yes·no 수)과 에브리타임 실패(사유 코드별·멈춘 단계별)를 더해 보여줍니다. 만족도는 답한 사람만 분모로 세므로, 묶음 값이 없는 옛 기록은 비율에서 빠집니다.
+
 프로필 원본 행은 어디에도 공개하지 않습니다. 이름, 전체 학번, IP, 사용자 에이전트, 에브리타임 링크 또는 토큰은 앱 데이터베이스에 저장하지 않습니다.
+
+### 에브리타임 실패
+
+화면에는 다듬은 문장 하나만 나가고 사유가 사라지므로, 실패는 세 곳에 나눠 남깁니다.
+
+| 어디 | 무엇 | 언제 |
+| --- | --- | --- |
+| `everytime_failures` 표 | 사유 코드·단계·소요시간 (30일 보관) | 항상 — `/admin` 통계 탭에서 봅니다 |
+| Vercel 런타임 로그 | 예상 못 한 오류(`unknown`)의 원본 문구 | 코드가 `unknown`일 때만 |
+| `.local-logs/everytime-failures.jsonl` | 위와 같은 한 줄 | 개발 중에만 |
+
+사유는 `route.ts`의 `EverytimeFailure` 코드로만 셉니다 — 화면 문구는 언제든 다듬게 되고 그때마다 집계가 끊기면 안 되기 때문입니다. `not_everytime_link`·`bad_link`·`not_public`·`blocked`·`too_big`·`bad_identifier`·`timeout`·`unknown`이 있고, 한글 이름은 `/admin`의 `FAILURE_LABEL`과 짝을 이룹니다(새 코드를 만들면 양쪽을 함께 늘려야 테스트가 통과합니다).
+
+어느 쪽에도 공유 링크와 토큰, 방문자 ID는 넣지 않습니다. 표에 넣다가 실패해도 삼키므로, 마이그레이션을 아직 안 돌렸어도 앱은 그대로 돕니다(`/admin`에는 「표 없음」으로 뜹니다).
+
+### 로컬 로그
+
+`npm run dev`로 띄우면 서버가 두 파일을 `.local-logs/`에 남깁니다. 배포에서는 남기지 않습니다(Vercel 파일 시스템은 읽기 전용이고, 적어도 다음 요청에 사라집니다). 폴더는 `LOCAL_LOG_DIR`로 바꾸고, `off`로 두면 개발 중에도 끕니다.
+
+**`analytics-events.jsonl`** — `POST /api/events`가 데이터베이스에 넣는 것과 같은 한 줄입니다.
+
+```jsonl
+{"at":"2026-08-05T04:12:07.881Z","event":"everytime_import","bucket":"6+","stored":true,"hasVisitor":true}
+{"at":"2026-08-05T04:12:31.204Z","event":"made_up_event","bucket":null,"stored":false,"note":"not_allowed","hasVisitor":false}
+```
+
+`stored`는 데이터베이스에 실제로 들어갔는지, `note`는 못 들어간 이유입니다 — 허용 목록에 없는 이름(`not_allowed`), 1KB 초과(`too_large`), 데이터베이스 실패(`server_error`).
+
+**`everytime-failures.jsonl`** — `everytime_failures` 표에 들어가는 것과 같은 한 줄입니다.
+
+```jsonl
+{"at":"...","scope":"request","step":"bootstrap","reasonCode":"not_public","elapsedMs":812}
+{"at":"...","scope":"semester","reasonCode":"blocked","semester":"2025년 2학기"}
+```
+
+`scope: "request"`는 요청 전체가 실패한 것이고, `step`은 어디까지 갔는지입니다(`link`→`bootstrap`→`first_table`→`terms`). `scope: "semester"`는 학기 하나만 못 읽은 것으로, 화면에는 「가져오지 못한 학기」로만 뜨고 사라지는 사유입니다.
+
+두 파일 모두 사람과 이어지는 값은 넣지 않습니다. 방문자 쿠키가 있었는지만 `hasVisitor`로 남기고, 에브리타임 링크와 토큰은 적지 않습니다.
+
+```bash
+tail -f .local-logs/*.jsonl
+```
 
 ## 첫 방문 설정과 학번별 요람
 
@@ -163,7 +207,7 @@ openssl rand -base64 32
 
 ## 보유기간과 자동 파기
 
-`vercel.json`의 크론이 하루 한 번 `/api/cron/cleanup`을 불러 기한이 지난 것을 지웁니다 — 설정은 마지막 수정 후 1년, 이용 기록은 30일, 건의는 1년입니다. `CRON_SECRET` 환경 변수를 Vercel과 로컬에 넣어야 하고(없으면 401로 닫힘), 기간을 바꿀 때는 `/privacy` 문구와 설정 화면 동의 문구도 함께 고쳐야 합니다.
+`vercel.json`의 크론이 하루 한 번 `/api/cron/cleanup`을 불러 기한이 지난 것을 지웁니다 — 설정은 마지막 수정 후 1년, 이용 기록은 30일, 에브리타임 실패 기록은 30일, 건의는 1년입니다. `CRON_SECRET` 환경 변수를 Vercel과 로컬에 넣어야 하고(없으면 401로 닫힘), 기간을 바꿀 때는 `/privacy` 문구와 설정 화면 동의 문구도 함께 고쳐야 합니다.
 
 ```bash
 # 손으로 돌려볼 때

@@ -27,6 +27,31 @@ export const analyticsEvents = pgTable(
 );
 
 /**
+ * 에브리타임을 읽다가 실패한 사유. 화면에는 다듬은 문장 하나만 나가고 사유가 사라지므로,
+ * 배포에서도 무엇이 왜 안 됐는지 세어 볼 수 있게 남깁니다.
+ *
+ * 사유는 앱이 정해 둔 코드만 넣습니다. 던져진 오류 문구를 그대로 담으면 뜻밖의 값이
+ * 섞일 수 있어서, 예상 못 한 오류는 unknown으로 세고 원본은 Vercel 런타임 로그에만 남깁니다.
+ * 누가 무엇을 봤는지는 담지 않습니다 — 공유 링크와 토큰, 방문자 ID 모두 넣지 않습니다.
+ */
+export const everytimeFailures = pgTable(
+  "everytime_failures",
+  {
+    id: serial("id").primaryKey(),
+    /** request(요청 전체) 또는 semester(학기 하나만 못 읽음) */
+    scope: text("scope").notNull(),
+    /** 요청 전체가 실패했을 때 어디까지 갔는지: link·bootstrap·first_table·terms */
+    step: text("step"),
+    reasonCode: text("reason_code").notNull(),
+    /** 학기 하나만 실패했을 때 어느 학기인지 (예: 2025년 2학기) */
+    semester: text("semester"),
+    elapsedMs: integer("elapsed_ms"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("everytime_failures_created_at_idx").on(table.createdAt)],
+);
+
+/**
  * 관리 화면에서 올린 개설과목 데이터. 가장 최근 것을 씁니다.
  * 빌드에 포함된 courses.generated.json이 기본값이고, 이 표에 더 새 자료가 있으면 화면에서 갈아탑니다.
  */
