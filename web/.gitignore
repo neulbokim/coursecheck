@@ -45,3 +45,6 @@ tsconfig.tsbuildinfo
 
 # 요람 PDF 등 참고용 원본 (배포에 포함하지 않음)
 /tmp/
+
+# 로컬에만 남기는 이용 기록 사본과 실패 사유 (LOCAL_LOG_DIR)
+/.local-logs/

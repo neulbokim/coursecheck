@@ -27,3 +27,6 @@ web/.wrangler/
 web/.env*
 !web/.env.example
 .vercel
+
+# 로컬에만 남기는 이용 기록 사본
+web/.local-logs/
