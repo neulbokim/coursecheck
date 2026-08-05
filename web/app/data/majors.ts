@@ -1,3 +1,5 @@
+import designedMajorsJson from "./designed-majors.generated.json";
+
 export type LinkedMajor = {
   key: string;
   label: string;
@@ -84,9 +86,58 @@ export const linkedMajors: readonly LinkedMajor[] = [
   },
 ] as const;
 
+export type DesignedMajor = {
+  /** 과목이수표에 적힌 설계전공명 (예: 「영상서사창작」) */
+  name: string;
+  /** 선택 목록에 뜨는 이름. 학과·연계전공과 섞이지 않게 제도 이름을 붙인다 */
+  label: string;
+  /** 승인 시점 (「2026학년도1학기」처럼 안내 페이지 표기를 그대로 둔다) */
+  approvedAt: string;
+  /** 전공구성 — 어느 학과 과목을 모아 만든 전공인지 */
+  composition: string;
+  codes: readonly string[];
+};
+
+/**
+ * 학생설계전공. 학생이 여러 학과 과목을 모아 직접 설계해 승인받는 전공이라
+ * 연계전공과 마찬가지로 학과명으로는 과목을 찾을 수 없고 과목코드로만 묶입니다.
+ *
+ * 과목이수표는 요람이 아니라 「학생설계전공 승인 현황」 페이지의 전공별 첨부파일에 있어
+ * `scripts/import-designed-majors.py`가 그 파일들을 읽어 코드를 뽑습니다.
+ *
+ * 과목코드 열이 생기기 전(1998~2006 승인)의 과목표는 과목명만 적혀 있어 코드를 만들 수
+ * 없습니다. 그 5개는 여기서 걸러냅니다 — 아무 과목도 표시하지 못하는 선택지를 주는 쪽이
+ * 목록에서 빼는 쪽보다 나쁩니다. (해당 학번은 이미 졸업했습니다)
+ */
+export const designedMajors: readonly DesignedMajor[] = designedMajorsJson.majors
+  .filter((major) => major.codes.length > 0)
+  .map((major) => ({
+    name: major.name,
+    label: `${major.name} 학생설계전공`,
+    approvedAt: major.approvedAt,
+    composition: major.composition,
+    codes: major.codes,
+  }));
+
+export const designedMajorSource = {
+  label: "학생설계전공 승인 현황",
+  sourceUrl: designedMajorsJson.sourceUrl,
+  verifiedAt: "2026-08-05",
+};
+
+/**
+ * 과목코드로만 묶이는 전공(연계전공 + 학생설계전공).
+ * 학과는 개설과목의 「학과」 열로 찾지만 이 전공들은 그 열에 나오지 않아 코드로 찾아야 합니다.
+ */
+export const codeBasedMajors: readonly { label: string; codes: readonly string[] }[] = [
+  ...linkedMajors.map((major) => ({ label: major.label, codes: major.codes })),
+  ...designedMajors.map((major) => ({ label: major.label, codes: major.codes })),
+];
+
 export const officialSources = {
   bulletin: "https://www.sogang.ac.kr/ko/academic-support/college-bulletin",
   courses:
     "https://sis109.sogang.ac.kr/sap/bc/webdynpro/sap/zcmw9016?sap-language=KO#",
+  designedMajors: designedMajorsJson.sourceUrl,
 };
 

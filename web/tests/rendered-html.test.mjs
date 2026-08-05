@@ -350,6 +350,96 @@ test("ships normalized course and linked-major data", async () => {
   await access(new URL("../public/og.png", import.meta.url));
 });
 
+test("offers student-designed majors as 2·3전공 alongside linked majors", async () => {
+  const [rawText, majorsText, optionsText, pageText, coursesText] = await Promise.all([
+    readFile(new URL("../app/data/designed-majors.generated.json", import.meta.url), "utf8"),
+    readFile(new URL("../app/data/majors.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/data/major-options.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+  ]);
+  const raw = JSON.parse(rawText);
+
+  // 승인 현황 페이지의 169개를 전부 읽었고, 그중 과목코드가 있는 164개가 선택지가 된다
+  assert.equal(raw.majors.length, 169, "안내 페이지의 전공 수");
+  assert.equal(raw.majorCount, 169);
+  assert.equal(raw.withCodes, 164);
+  assert.match(raw.sourceUrl, /oneself\.sogang\.ac\.kr/);
+  // 과목코드 열이 생기기 전(1998~2006) 과목표는 과목명만 있어 코드를 만들 수 없다
+  assert.deepEqual(
+    raw.majors.filter((major) => major.codes.length === 0).map((major) => major.name),
+    ["비교문화", "인지과학", "언론·기호정보학", "신화학", "응용수학"],
+  );
+
+  const withCodes = raw.majors.filter((major) => major.codes.length > 0);
+  assert.equal(withCodes.length, 164);
+  assert.ok(
+    withCodes.every((major) => major.codes.every((code) => /^[A-Z]{3,5}[0-9]{3,4}$/.test(code))),
+    "과목코드 형식이 아닌 값이 섞이지 않았다",
+  );
+  assert.equal(
+    new Set(raw.majors.map((major) => major.name)).size,
+    raw.majors.length,
+    "설계전공명이 겹치지 않아 이름만으로 가릴 수 있다",
+  );
+  assert.ok(
+    raw.majors.every((major) => major.approvedAt && major.files.length > 0),
+    "전공마다 승인 시점과 출처 파일이 남아 있다",
+  );
+
+  // 과목이수표에서 읽은 코드가 실제 개설과목과 맞물린다
+  const offered = new Set(JSON.parse(coursesText).map((course) => course.code));
+  assert.ok(
+    withCodes.every((major) => major.codes.some((code) => offered.has(code))),
+    "설계전공마다 이번 학기에 짚을 과목이 최소 하나는 있다",
+  );
+  const narrative = raw.majors.find((major) => major.name === "영상서사창작");
+  assert.ok(narrative.codes.includes("MAS2001") && narrative.codes.includes("MAE3004"));
+  // 편집 잔재(`국어.xlsx`)를 이 전공 자료로 잘못 붙이면 국문과 코드가 섞여 들어온다
+  const tax = raw.majors.find((major) => major.name === "세무회계");
+  assert.deepEqual(tax.files, ["세무회계학.xlsx"], "칸에 섞인 다른 파일·로그인 링크를 걸러낸다");
+  assert.ok(tax.codes.some((code) => code.startsWith("MGT")) && !tax.codes.some((code) => code.startsWith("KOR")));
+
+  // 학과·연계전공과 섞이지 않게 제도 이름을 붙이고, 코드로 찾는 전공을 한 표에 모은다
+  assert.match(majorsText, /\$\{major\.name\} 학생설계전공/);
+  assert.match(majorsText, /designedMajorsJson\.majors[\s\S]*?codes\.length > 0/);
+  assert.match(majorsText, /codeBasedMajors[\s\S]*?linkedMajors[\s\S]*?designedMajors/);
+  assert.match(optionsText, /codeBasedMajors\.map/);
+  // majorRankIndex가 연계전공만 보면 설계전공 과목이 전공으로 잡히지 않는다
+  assert.match(pageText, /codeBasedMajors\.find\(\(item\) => item\.label === major\)/);
+  assert.doesNotMatch(pageText, /linkedMajors\.find/);
+});
+
+test("keeps major-credit courses visible after their GE area is done", async () => {
+  const [pageText, rawText, coursesText] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/data/designed-majors.generated.json", import.meta.url), "utf8"),
+    readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+  ]);
+  const { coreTracksFor, coreTrackCodeMap } = await import("../app/data/core-curriculum.mjs");
+
+  // 이수한 영역을 거르기 전에 전공 순번을 먼저 구해야 「전공이면 남긴다」를 판정할 수 있다
+  const filter = pageText.slice(pageText.indexOf("const filteredCourses"), pageText.indexOf("const timetableSlots"));
+  assert.ok(
+    filter.indexOf("ranks.byCode.get(course.code)") < filter.indexOf("completedTrackKeys.has(trackKey)"),
+    "전공 판정이 이수 영역 필터보다 앞에 온다",
+  );
+  assert.match(filter, /if \(!rank && trackKey && completedTrackKeys\.has\(trackKey\)\) return false;/);
+
+  // 이 동작이 실제로 걸리는 조합이 있다 — 없으면 위 가드는 죽은 코드다
+  const trackCodes = coreTrackCodeMap(coreTracksFor(2026));
+  const offered = new Set(JSON.parse(coursesText).map((course) => course.code));
+  const overlapping = JSON.parse(rawText).majors.filter((major) =>
+    major.codes.some((code) => trackCodes.has(code) && offered.has(code)),
+  );
+  assert.ok(overlapping.length >= 20, `교양 개설 과목을 전공으로 인정하는 설계전공 ${overlapping.length}개`);
+  const stsMajor = overlapping.find((major) => major.name === "과학기술사회학");
+  assert.ok(
+    stsMajor.codes.filter((code) => trackCodes.has(code) && offered.has(code)).length >= 5,
+    "「과학기술사회학」은 영역④ 과목 다섯 개를 전공으로 인정한다",
+  );
+});
+
 test("tracks required general-education areas per bulletin year", async () => {
   const { bulletinYearFor, coreTracksFor, coreTrackCodeMap, detectCompletedTrackKeys } = await import(
     "../app/data/core-curriculum.mjs"

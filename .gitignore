@@ -30,3 +30,6 @@ web/.env*
 
 # 로컬에만 남기는 이용 기록 사본
 web/.local-logs/
+
+# 학생설계전공 과목이수표 원본 (5MB · 내려받은 사본, 산출물은 JSON으로 커밋한다)
+web/.designed-majors-cache/

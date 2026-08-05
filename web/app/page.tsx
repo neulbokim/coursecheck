@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import bundledCourses from "./data/courses.generated.json";
 import bundledMeta from "./data/courses.generated.meta.json";
-import { linkedMajors, officialSources } from "./data/majors";
+import { codeBasedMajors, designedMajorSource, officialSources } from "./data/majors";
 import ProfileSetup, { type UserProfile } from "./components/ProfileSetup";
 import FeedbackLauncher from "./components/FeedbackLauncher";
 import { postEvent } from "./lib/track.mjs";
@@ -113,9 +113,10 @@ function majorRankIndex(majors: string[]) {
   const byDepartment = new Map<string, number>();
   majors.forEach((major, index) => {
     const rank = index + 1;
-    const linked = linkedMajors.find((item) => item.label === major);
-    if (linked) {
-      for (const code of linked.codes) if (!byCode.has(code)) byCode.set(code, rank);
+    // 연계전공·학생설계전공은 개설과목의 「학과」 열에 나오지 않아 과목코드로 찾는다
+    const byCodeMajor = codeBasedMajors.find((item) => item.label === major);
+    if (byCodeMajor) {
+      for (const code of byCodeMajor.codes) if (!byCode.has(code)) byCode.set(code, rank);
     } else if (!byDepartment.has(major)) {
       byDepartment.set(major, rank);
     }
@@ -317,13 +318,16 @@ export default function Home() {
 
     return courses.filter((course) => {
       const trackKey = trackByCode.get(course.code);
-      if (trackKey && completedTrackKeys.has(trackKey)) return false;
+      // 전공으로 듣는 과목이면 그 순번을, 아니면 교양 구분을 본다
+      const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
+      // 이수한 필수교양 영역의 과목은 뺀다 — 단 전공으로도 인정되는 과목은 남긴다.
+      // 연계·학생설계전공 과목표에는 교양으로 개설되는 과목이 들어 있어(문화비평학의 STU4011 등)
+      // 영역을 이미 채웠어도 그 과목으로 채울 전공 학점은 그대로 남아 있습니다.
+      if (!rank && trackKey && completedTrackKeys.has(trackKey)) return false;
       if (excludedNames.has(normalizeCourseName(course.name))) return false;
       // 소속 제한으로 신청할 수 없는 과목은 뺀다 (판정할 수 없으면 남긴다)
       if (!checkEligibility(course.note ?? "", affiliations).eligible) return false;
 
-      // 전공으로 듣는 과목이면 그 순번을, 아니면 교양 구분을 본다
-      const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
       if (rank) {
         if (excludedMajorRanks.includes(rank)) return false;
       } else if (trackKey) {
@@ -547,7 +551,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>나에게 남은 과목들로{" "}<br className="wide-break" />이번 학기 시간표를 그려보세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공 과목까지 요람 기준으로 모았습니다.{" "}<br className="wide-break" />들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
+        <div><p className="eyebrow">전공은 복잡해도, 시간표는 한눈에</p><h1>나에게 남은 과목들로{" "}<br className="wide-break" />이번 학기 시간표를 그려보세요.</h1><p className="hero-copy">학과 코드만으로 찾기 어려운 연계전공·학생설계전공 과목까지 과목이수표 기준으로 모았습니다.{" "}<br className="wide-break" />들었던 과목은 에브리타임 링크로 한 번에 제외할 수 있어요.</p></div>
       </section>
 
       <div className="workspace">
@@ -661,7 +665,7 @@ export default function Home() {
             <button className="show-results-button" type="button" onClick={revealResults}>개설 시간표 확인하기 <span>→</span></button>
           </section>
 
-          <section className="source-card"><strong>데이터 출처</strong><a href={officialSources.bulletin} target="_blank" rel="noreferrer">서강대학교 대학요람 <span>↗</span></a><a href={officialSources.courses} target="_blank" rel="noreferrer">개설교과목정보 <span>↗</span></a><small>{coreCurriculumSource.label} · {coreCurriculumSource.verifiedAt} 확인</small></section>
+          <section className="source-card"><strong>데이터 출처</strong><a href={officialSources.bulletin} target="_blank" rel="noreferrer">서강대학교 대학요람 <span>↗</span></a><a href={officialSources.courses} target="_blank" rel="noreferrer">개설교과목정보 <span>↗</span></a><a href={officialSources.designedMajors} target="_blank" rel="noreferrer">{designedMajorSource.label} <span>↗</span></a><small>{coreCurriculumSource.label} · {coreCurriculumSource.verifiedAt} 확인</small><small>{designedMajorSource.label} · {designedMajorSource.verifiedAt} 확인</small></section>
         </aside>
 
         <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
