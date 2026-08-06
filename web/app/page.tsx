@@ -11,7 +11,7 @@ import { postEvent } from "./lib/track.mjs";
 import { extractEverytimeUrl } from "./lib/everytime-link.mjs";
 import { groupTimetableEntries } from "./lib/timetable-layout.mjs";
 import { hourMarks, layoutCalendar } from "./lib/calendar-layout.mjs";
-import { normalizeCourseName } from "./lib/course-name.mjs";
+import { courseNameSize, normalizeCourseName } from "./lib/course-name.mjs";
 import { expandEquivalents, equivalentLabel } from "./data/equivalents.mjs";
 import { affiliationsOf, checkEligibility } from "./data/affiliations.mjs";
 import { majorsWithPreMajor, preMajorCodeMap, preMajorSource } from "./data/pre-major.mjs";
@@ -740,7 +740,7 @@ export default function Home() {
                         {slot.byDay[day].map(({ course, meeting }, index) => (
                           <div className={["course-line-wrap", pickedSet.has(course.id) ? "picked" : "", highlightEnglish && isEnglish(course) ? "english" : ""].filter(Boolean).join(" ")} key={`${course.id}-${index}`}>
                             <button
-                              className="course-line"
+                              className={["course-line", courseNameSize(course.name)].filter(Boolean).join(" ")}
                               type="button"
                               title={isEnglish(course) ? "영어강의" : undefined}
                               style={{ borderLeftColor: colorFor(course), background: `${colorFor(course)}12` }}
@@ -796,7 +796,7 @@ export default function Home() {
                     >
                       {myCalendar.byDay[day].blocks.map(({ entry, lane, conflict, rowStart, rowSpan }, index) => (
                         <button
-                          className={["calendar-block", conflict ? "clash" : "", highlightEnglish && isEnglish(entry.course) ? "english" : ""].filter(Boolean).join(" ")}
+                          className={["calendar-block", courseNameSize(entry.course.name), conflict ? "clash" : "", highlightEnglish && isEnglish(entry.course) ? "english" : ""].filter(Boolean).join(" ")}
                           type="button"
                           key={`${entry.course.id}-${index}`}
                           style={{

@@ -94,7 +94,7 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .step { width: 25px; height: 25px; border-radius: 8px; display: grid; place-items: center; color: #ffffff; background: var(--wine); font-size: 13px; font-weight: 800; }
 .section-heading strong, .section-heading small { display: block; }
 .section-heading strong { font-size: 15px; }
-.section-heading small { margin-top: 2px; color: #959595; font-size: 11px; }
+.section-heading small { margin-top: 2px; color: #959595; font-size: 12px; }
 .panel-profile {
   padding: 15px 24px; display: grid; grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: "meta action" "majors action"; align-items: center; gap: 6px 10px;
@@ -107,8 +107,8 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .panel-profile button:hover { background: var(--cardinal-tint); }
 
 .core-track-group + .core-track-group { margin-top: 15px; }
-.core-group-label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 7px; color: #605e5e; font-size: 11px; font-weight: 800; }
-.core-group-label span { color: #999; font-size: 10px; font-weight: 700; }
+.core-group-label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 7px; color: #605e5e; font-size: 12px; font-weight: 800; }
+.core-group-label span { color: #999; font-size: 11px; font-weight: 700; }
 .core-track-list { border: 1px solid #f1dedd; border-radius: 11px; overflow: hidden; }
 .core-track { min-height: 50px; padding: 9px 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; border-bottom: 1px solid #f6e9e8; cursor: pointer; }
 .core-track:last-child { border-bottom: 0; }
@@ -116,56 +116,58 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .core-track input { accent-color: var(--wine); }
 .core-track span { min-width: 0; }
 .core-track strong, .core-track small { display: block; min-width: 0; overflow-wrap: anywhere; }
-.core-track strong { font-size: 11px; line-height: 1.35; }
+.core-track strong { font-size: 12px; line-height: 1.35; }
 .core-track.completed strong { color: #8c8c8c; text-decoration: line-through; }
-.core-track small { margin-top: 2px; color: #949494; font-size: 10px; }
+/* 글씨를 키우면서 「이번 학기 41과목」이 낱글자로 끊기기 시작했다.
+   overflow-wrap은 한 낱말이 줄보다 길 때의 최후 수단으로만 남기고 띄어쓰기에서 끊는다 */
+.core-track small { margin-top: 2px; color: #949494; font-size: 11px; word-break: keep-all; }
 .core-track .core-pinned { margin-top: 3px; color: var(--cardinal); font-weight: 700; }
-.core-track em { flex: 0 0 auto; color: #868585; font-size: 10px; font-style: normal; font-weight: 700; }
+.core-track em { flex: 0 0 auto; color: #868585; font-size: 11px; font-style: normal; font-weight: 700; }
 .core-track em.auto { padding: 3px 5px; border-radius: 4px; color: #445b32; background: #ecf3e7; }
-.core-note { margin: 12px 0 0; color: #868585; font-size: 10px; line-height: 1.55; word-break: keep-all; }
+.core-note { margin: 12px 0 0; color: #868585; font-size: 11px; line-height: 1.55; word-break: keep-all; }
 .core-badge { margin-left: 6px; padding: 2px 5px; border-radius: 4px; background: #f1f1f1; color: #767575; font-size: 10px; font-style: normal; font-weight: 750; vertical-align: middle; }
 .core-badge.english { background: #fdf3dc; color: #8a6100; }
 .semester-help strong { font-weight: 800; }
 .source-card small { color: #999; font-size: 10px; line-height: 1.5; word-break: keep-all; }
-.semester-help { margin: -3px 0 15px; padding: 10px 11px; border-radius: 9px; background: #f1f1f1; color: #706f6f; font-size: 11px; line-height: 1.55; word-break: keep-all; }
+.semester-help { margin: -3px 0 15px; padding: 10px 11px; border-radius: 9px; background: #f1f1f1; color: #706f6f; font-size: 12px; line-height: 1.55; word-break: keep-all; }
 .import-form input, .manual-exclusion input, .search-box input {
   min-width: 0; border: 1px solid var(--line); background: #fafafa; outline: none; transition: border .15s, box-shadow .15s;
 }
 .import-form { display: grid; gap: 8px; }
-.import-form label { color: #605e5e; font-size: 11px; font-weight: 700; }
+.import-form label { color: #605e5e; font-size: 12px; font-weight: 700; }
 .import-form input { width: 100%; height: 42px; padding: 0 12px; border-radius: 10px; font-size: 12px; }
 .import-form input:focus, .manual-exclusion input:focus, .search-box input:focus { border-color: #c06f69; box-shadow: 0 0 0 3px #f6eae9; }
 .primary-button { height: 42px; border: 0; border-radius: 10px; background: var(--wine); color: #ffffff; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 7px 16px rgb(134 31 28 / 18%); }
 .primary-button:hover { background: var(--wine-dark); }
 .primary-button:disabled { opacity: .65; cursor: wait; }
-.import-message { margin: 11px 0 0; padding: 10px 11px; border-radius: 9px; font-size: 11px; line-height: 1.5; }
+.import-message { margin: 11px 0 0; padding: 10px 11px; border-radius: 9px; font-size: 12px; line-height: 1.5; }
 .import-message.done { color: #445b32; background: #ecf3e7; }
 .import-message.error { color: var(--cardinal); background: #f7ebea; }
 .semester-history { margin-top: 13px; border: 1px solid #f1dedd; border-radius: 11px; overflow: hidden; }
 .semester-tabs { display: flex; gap: 3px; padding: 6px; overflow-x: auto; border-bottom: 1px solid #f2e2e0; background: #faf3f2; }
-.semester-tabs button { flex: 0 0 auto; min-height: 31px; padding: 0 9px; border: 0; border-radius: 7px; background: transparent; color: #7c7c7c; font-size: 11px; font-weight: 750; cursor: pointer; }
-.semester-tabs button span { margin-left: 4px; color: #a4a5a5; font-size: 10px; }
+.semester-tabs button { flex: 0 0 auto; min-height: 31px; padding: 0 9px; border: 0; border-radius: 7px; background: transparent; color: #7c7c7c; font-size: 12px; font-weight: 750; cursor: pointer; }
+.semester-tabs button span { margin-left: 4px; color: #a4a5a5; font-size: 11px; }
 .semester-tabs button.active { background: #ffffff; color: var(--wine); box-shadow: 0 2px 8px rgb(55 35 42 / 9%); }
 .taken-course-list { max-height: 210px; overflow-y: auto; }
 .taken-course-list > label { min-height: 52px; padding: 9px 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; border-bottom: 1px solid #f6e9e8; cursor: pointer; }
 .taken-course-list > label:last-child { border-bottom: 0; }
 .taken-course-list input { accent-color: var(--wine); }
 .taken-course-list label span, .taken-course-list label strong, .taken-course-list label small { min-width: 0; display: block; }
-.taken-course-list label strong { overflow-wrap: anywhere; font-size: 11px; line-height: 1.35; }
-.taken-course-list label small { margin-top: 2px; color: #949494; font-size: 10px; }
-.taken-course-list em { color: #868686; font-size: 10px; font-style: normal; }
-.taken-course-list > p { margin: 0; padding: 18px 12px; color: #878787; font-size: 11px; text-align: center; }
+.taken-course-list label strong { overflow-wrap: anywhere; font-size: 12px; line-height: 1.35; }
+.taken-course-list label small { margin-top: 2px; color: #949494; font-size: 11px; }
+.taken-course-list em { color: #868686; font-size: 11px; font-style: normal; }
+.taken-course-list > p { margin: 0; padding: 18px 12px; color: #878787; font-size: 12px; text-align: center; }
 .manual-exclusion { margin-top: 17px; }
-.manual-exclusion > label { display: block; margin-bottom: 7px; color: #605e5e; font-size: 11px; font-weight: 750; }
+.manual-exclusion > label { display: block; margin-bottom: 7px; color: #605e5e; font-size: 12px; font-weight: 750; }
 .manual-exclusion form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
-.manual-exclusion input { width: 100%; height: 39px; padding: 0 10px; border-radius: 9px; font-size: 11px; }
-.manual-exclusion form button { padding: 0 11px; border: 1px solid #e6c9c6; border-radius: 9px; background: #fcf7f7; color: var(--wine); font-size: 11px; font-weight: 800; cursor: pointer; }
+.manual-exclusion input { width: 100%; height: 39px; padding: 0 10px; border-radius: 9px; font-size: 12px; }
+.manual-exclusion form button { padding: 0 11px; border: 1px solid #e6c9c6; border-radius: 9px; background: #fcf7f7; color: var(--wine); font-size: 12px; font-weight: 800; cursor: pointer; }
 .manual-course-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.manual-course-tags button { padding: 6px 8px; border: 0; border-radius: 7px; background: #f5e7e6; color: #595757; font-size: 10px; cursor: pointer; }
+.manual-course-tags button { padding: 6px 8px; border: 0; border-radius: 7px; background: #f5e7e6; color: #595757; font-size: 11px; cursor: pointer; }
 .manual-course-tags span { margin-left: 5px; color: #939393; }
-.privacy-note { margin: 12px 0 0; color: #878787; font-size: 11px; line-height: 1.5; }
-.privacy-note span { margin-right: 5px; padding: 2px 5px; border-radius: 4px; color: #54713f; background: #ebf2e5; font-size: 10px; font-weight: 800; }
-.show-results-button { width: 100%; min-height: 46px; margin-top: 14px; padding: 0 14px; display: flex; justify-content: space-between; align-items: center; border: 0; border-radius: 11px; background: var(--wine); color: #ffffff; font-size: 12px; font-weight: 850; box-shadow: 0 8px 18px rgb(134 31 28 / 20%); cursor: pointer; }
+.privacy-note { margin: 12px 0 0; color: #878787; font-size: 12px; line-height: 1.5; }
+.privacy-note span { margin-right: 5px; padding: 2px 5px; border-radius: 4px; color: #54713f; background: #ebf2e5; font-size: 11px; font-weight: 800; }
+.show-results-button { width: 100%; min-height: 46px; margin-top: 14px; padding: 0 14px; display: flex; justify-content: space-between; align-items: center; border: 0; border-radius: 11px; background: var(--wine); color: #ffffff; font-size: 13px; font-weight: 850; box-shadow: 0 8px 18px rgb(134 31 28 / 20%); cursor: pointer; }
 .show-results-button:hover { background: var(--wine-dark); }
 .show-results-button span { font-size: 17px; }
 .source-card { padding: 20px 24px; display: grid; gap: 10px; background: #f8f8f8; }
@@ -213,6 +215,11 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .course-line:hover, .course-line:focus-visible { z-index: 2; transform: translateY(-1px); box-shadow: 0 5px 12px rgb(39 25 30 / 12%); outline: none; }
 .course-line strong, .course-line small { display: inline; font-size: 10px; line-height: 1.45; }
 .course-line strong { font-weight: 750; }
+/* 과목명 길이에 따라 카드 글씨를 나눈다. 한 칸에 최대 32과목이 세로로 쌓이므로 크기를 하나로 두면
+   「세법」 같은 짧은 이름까지 작아지고, 반대로 키우면 긴 영문 과목명이 줄 수를 배로 먹는다.
+   등급은 `courseNameSize`가 정하고(전각 1·라틴 0.5로 센 폭 기준), 실제 크기만 여기서 정한다 */
+.course-line.name-short strong { font-size: 12px; }
+.course-line.name-long strong, .course-line.name-long small { font-size: 9px; }
 .course-line small { color: #6b6a6a; font-weight: 500; }
 .course-list { max-height: 760px; overflow: auto; }
 .course-list > button { width: 100%; min-height: 76px; padding: 14px 24px; display: grid; grid-template-columns: 4px minmax(0, 1fr) minmax(180px, .65fr) auto; align-items: center; gap: 14px; border: 0; border-bottom: 1px solid var(--line); background: #ffffff; text-align: left; cursor: pointer; }
@@ -343,6 +350,8 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
   /* 좁은 화면의 한 칸은 65px 남짓이라, 여기서만 본문보다 작게 둔다 —
      1px만 더 키워도 「신학적인간학(이진옥)」이 여섯 줄로 쪼개진다 */
   .course-line strong, .course-line small { font-size: 9px; line-height: 1.4; }
+  .course-line.name-short strong { font-size: 11px; }
+  .course-line.name-long strong, .course-line.name-long small { font-size: 8px; }
   .course-list > button { grid-template-columns: 4px minmax(0, 1fr) auto; }
   .course-list-time { grid-column: 2 / -1; text-align: left; }
   .security-strip { margin: 0 14px 38px; grid-template-columns: 1fr; }
@@ -495,8 +504,8 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .course-line-time { display: block; margin-top: 3px; color: #8c8c8c; font-size: 10px; font-weight: 700; }
 
 /* 요람 택1 묶음 안내 */
-.equivalent-note { margin: 12px 0 0; padding: 10px 11px; border-radius: 9px; background: #f6eae9; color: #7a4a45; font-size: 11px; line-height: 1.55; word-break: keep-all; }
-.equivalent-note strong { display: block; margin-bottom: 3px; color: var(--cardinal); font-size: 11px; }
+.equivalent-note { margin: 12px 0 0; padding: 10px 11px; border-radius: 9px; background: #f6eae9; color: #7a4a45; font-size: 12px; line-height: 1.55; word-break: keep-all; }
+.equivalent-note strong { display: block; margin-bottom: 3px; color: var(--cardinal); font-size: 12px; }
 
 @media (max-width: 680px) {
   .category-legend { order: 2; width: 100%; }
@@ -504,8 +513,8 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 
 /* 전공 단위 제외 */
 .major-exclusion { margin-top: 17px; }
-.major-exclusion-label { display: grid; gap: 3px; margin: 0 0 7px; color: #605e5e; font-size: 11px; font-weight: 800; }
-.major-exclusion-label small { color: #949494; font-size: 10px; font-weight: 600; }
+.major-exclusion-label { display: grid; gap: 3px; margin: 0 0 7px; color: #605e5e; font-size: 12px; font-weight: 800; }
+.major-exclusion-label small { color: #949494; font-size: 11px; font-weight: 600; }
 .major-exclusion-list { border: 1px solid #f1dedd; border-radius: 11px; overflow: hidden; }
 .major-exclusion-item { min-height: 46px; padding: 9px 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; border-bottom: 1px solid #f6e9e8; cursor: pointer; }
 .major-exclusion-item:last-child { border-bottom: 0; }
@@ -513,10 +522,10 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .major-exclusion-item input { accent-color: var(--wine); }
 .major-exclusion-item span { min-width: 0; }
 .major-exclusion-item strong, .major-exclusion-item small { display: block; min-width: 0; overflow-wrap: anywhere; }
-.major-exclusion-item strong { font-size: 11px; }
+.major-exclusion-item strong { font-size: 12px; }
 .major-exclusion-item.excluded strong { color: #8c8c8c; text-decoration: line-through; }
-.major-exclusion-item small { margin-top: 2px; color: #949494; font-size: 10px; }
-.major-exclusion-item em { color: #868585; font-size: 10px; font-style: normal; font-weight: 700; }
+.major-exclusion-item small { margin-top: 2px; color: #949494; font-size: 11px; }
+.major-exclusion-item em { color: #868585; font-size: 11px; font-style: normal; font-weight: 700; }
 
 /* 교양 표시 전환 */
 .ge-switch { display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: #f5f5f5; }
@@ -594,6 +603,10 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .calendar-block strong, .calendar-block small { display: block; min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
 .calendar-block strong { font-size: 10px; font-weight: 750; line-height: 1.3; }
 .calendar-block small { margin-top: 1px; color: #6f686b; font-size: 10px; }
+/* 담은 과목 캘린더도 같은 등급을 쓴다. 다만 블록 높이가 수업 길이로 고정이라 폭이 아니라 높이가
+   한계다 — 75분 블록(56px) 기준으로 12px는 2px 넘쳐서 짧은 이름도 11px까지만 키운다 */
+.calendar-block.name-short strong { font-size: 11px; }
+.calendar-block.name-long strong { font-size: 9px; }
 .calendar-untimed { margin: 12px 0 0; color: #868585; font-size: 11px; line-height: 1.5; }
 
 .view-toggle button.mine { width: auto; padding: 0 9px; font-size: 11px; font-weight: 800; }
