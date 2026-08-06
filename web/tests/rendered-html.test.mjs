@@ -247,15 +247,61 @@ test("excludes every course the bulletin groups as choose-one", async () => {
   // 코드로도 묶인다
   assert.ok(expandEquivalents([{ name: "아무이름", code: "ECO2004" }], offerings).groups.has("statistics"));
 
-  // 미적분학Ⅰ을 들었으면 경제수리기초·대학수학까지
-  const math = expandEquivalents([{ name: "미적분학I" }], offerings);
-  assert.ok(math.names.has(normalizeCourseName("경제수리기초")));
-  assert.ok(math.names.has(normalizeCourseName("대학수학")));
+  // 한 전공의 전공입문 규정인 묶음은 그 전공일 때만 건다.
+  // 경제학전공에게 미적분학Ⅰ은 경제수리기초와 택1이고, 경영학전공에게는 대학수학과도 택1이다.
+  const economics = expandEquivalents([{ name: "미적분학I" }], offerings, ["경제학과"]);
+  assert.ok(economics.names.has(normalizeCourseName("경제수리기초")));
+  const business = expandEquivalents([{ name: "미적분학I" }], offerings, ["경영학부(경영학전공)"]);
+  assert.ok(business.names.has(normalizeCourseName("대학수학")));
+  assert.ok(business.names.has(normalizeCourseName("미적분학Ⅱ")));
+
+  // 이과 학생에게 미적분학Ⅰ은 ④영역 필수선택이고 미적분학Ⅱ는 전공입문이라 둘 다 들어야 한다.
+  // 경영·경제 요람의 택1 규정을 그대로 걸면 전공입문 필수인 미적분학Ⅱ가 사라진다.
+  const science = expandEquivalents([{ name: "미적분학I" }], offerings, ["화학과"]);
+  assert.ok(!science.names.has(normalizeCourseName("미적분학Ⅱ")), "이과 학생의 미적분학Ⅱ까지 지우면 안 된다");
+  assert.ok(!science.names.has(normalizeCourseName("경제수리기초")));
+  assert.equal(science.groups.size, 0);
+
+  // 전공을 모르면 전공별 규정은 걸지 않는다 — 들을 수 있는 과목을 감추는 쪽이 더 나쁘다
+  assert.equal(expandEquivalents([{ name: "미적분학I" }], offerings).groups.size, 0);
 
   // 묶음에 없는 과목만 들었으면 아무것도 넓히지 않는다
   const none = expandEquivalents([{ name: "자료구조" }], offerings);
   assert.equal(none.groups.size, 0);
   assert.equal(none.names.size, 0);
+});
+
+test("keeps every pre-major (전공입문) course of the student's major visible", async () => {
+  const [{ preMajorPrograms, preMajorProgramFor, preMajorCodeMap }, coursesText] = await Promise.all([
+    import("../app/data/pre-major.mjs"),
+    readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+  ]);
+  const courses = JSON.parse(coursesText);
+  const departments = new Set(courses.map((course) => course.department));
+
+  // 전공 이름이 개설과목의 「학과」 열과 맞아야 프로필에서 고른 전공에 붙는다
+  for (const program of preMajorPrograms) {
+    assert.ok(departments.has(program.major), `${program.major}는 개설과목 학과 목록에 없습니다`);
+    assert.ok(program.groups.length > 0, `${program.major}에 전공입문 과목이 없습니다`);
+    for (const group of program.groups) {
+      assert.ok(group.rule.length > 0, `${program.major}의 묶음에 이수 조건이 없습니다`);
+      for (const code of group.codes) {
+        assert.match(code, /^[A-Z]{3}[0-9A-Z]{4}$/, `${program.major}의 ${code}는 과목번호 형태가 아닙니다`);
+      }
+    }
+  }
+
+  // 요람 표기(유럽문화전공)로도 개설과목 표기(유럽문화학과)로도 찾힌다
+  assert.ok(preMajorProgramFor("유럽문화전공"));
+  assert.ok(preMajorProgramFor("유럽문화학과"));
+  assert.equal(preMajorProgramFor("빅데이터사이언스 연계전공"), null);
+
+  // 미적분학Ⅱ는 전인교육원이 열어 「학과」 열로는 절대 안 잡힌다 — 코드로 1전공에 붙어야 한다
+  const chemistry = preMajorCodeMap(["화학과", "경제학과"]);
+  assert.equal(chemistry.get("STS2006").rank, 1);
+  assert.equal(chemistry.get("PHY1001").rank, 1, "화학전공의 일반물리Ⅰ은 물리학과가 열어도 1전공 전공입문이다");
+  assert.equal(chemistry.get("MGT2003").rank, 2, "2전공의 전공입문은 2전공 순번으로");
+  assert.equal(chemistry.get("CSE2003"), undefined);
 });
 
 test("keeps the timetable within the viewport and lists courses by time slot", async () => {

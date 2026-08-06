@@ -14,6 +14,7 @@ import { hourMarks, layoutCalendar } from "./lib/calendar-layout.mjs";
 import { normalizeCourseName } from "./lib/course-name.mjs";
 import { expandEquivalents, equivalentLabel } from "./data/equivalents.mjs";
 import { affiliationsOf, checkEligibility } from "./data/affiliations.mjs";
+import { majorsWithPreMajor, preMajorCodeMap, preMajorSource } from "./data/pre-major.mjs";
 import {
   LAST_BULLETIN_YEAR,
   bulletinYearFor,
@@ -121,7 +122,20 @@ function majorRankIndex(majors: string[]) {
       byDepartment.set(major, rank);
     }
   });
-  return { byCode, byDepartment };
+  // 전공입문교과는 남의 학과가 여는 경우가 많아(미적분학Ⅱ는 전인교육원, 화학전공의 일반물리는
+  // 물리학과) 학과 이름으로는 잡히지 않는다. 과목코드로 따로 찾고, 위 두 표가 못 잡은 것만 채운다.
+  const byPreMajorCode = preMajorCodeMap(majors) as Map<string, { rank: number; major: string; rule: string }>;
+  return { byCode, byDepartment, byPreMajorCode };
+}
+
+type MajorRanks = ReturnType<typeof majorRankIndex>;
+
+/** 이 과목을 무엇으로 듣는지 — 전공(1·2·3) 판정 한 곳. 전공입문이면 어떤 조건인지도 함께 준다 */
+function majorMatch(course: Course, ranks: MajorRanks) {
+  const direct = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
+  if (direct) return { rank: direct, preMajor: null };
+  const preMajor = ranks.byPreMajorCode.get(course.code);
+  return preMajor ? { rank: preMajor.rank, preMajor } : { rank: undefined, preMajor: null };
 }
 
 export default function Home() {
@@ -252,16 +266,22 @@ export default function Home() {
     );
     return [...fromImport, ...manualExcludedCourses.map((name) => ({ name }))];
   }, [allImportedCourses, includedTakenSet, manualExcludedCourses]);
-  // 요람이 「택1」로 묶은 과목은 하나만 들었어도 나머지까지 함께 제외한다
+  // 요람이 「택1」로 묶은 과목은 하나만 들었어도 나머지까지 함께 제외한다.
+  // 묶음 중에는 한 전공의 전공입문 규정인 것이 있어 내 전공을 함께 넘긴다.
   const equivalents = useMemo(
-    () => expandEquivalents(takenForExclusion, courses),
-    [takenForExclusion, courses],
+    () => expandEquivalents(takenForExclusion, courses, profileMajors),
+    [takenForExclusion, courses, profileMajors],
   );
-  const excludedNames = useMemo(() => {
-    const names = new Set(takenForExclusion.map((course) => normalizeCourseName(course.name)));
-    equivalents.names.forEach((name: string) => names.add(name));
-    return names;
-  }, [takenForExclusion, equivalents]);
+  /** 내가 실제로 들은(또는 직접 적은) 과목 */
+  const takenNames = useMemo(
+    () => new Set(takenForExclusion.map((course) => normalizeCourseName(course.name))),
+    [takenForExclusion],
+  );
+  /** 「택1」 묶음으로 넓힌 과목 — 추정이므로 전공입문 필수 과목까지 지우지는 않는다 */
+  const equivalentNames = useMemo(
+    () => new Set<string>([...equivalents.names].filter((name: string) => !takenNames.has(name))),
+    [equivalents, takenNames],
+  );
   const courseNameOptions = useMemo(
     () => [...new Set(courses.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "ko")),
     [courses],
@@ -319,12 +339,16 @@ export default function Home() {
     return courses.filter((course) => {
       const trackKey = trackByCode.get(course.code);
       // 전공으로 듣는 과목이면 그 순번을, 아니면 교양 구분을 본다
-      const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
+      const { rank, preMajor } = majorMatch(course, ranks);
       // 이수한 필수교양 영역의 과목은 뺀다 — 단 전공으로도 인정되는 과목은 남긴다.
       // 연계·학생설계전공 과목표에는 교양으로 개설되는 과목이 들어 있어(문화비평학의 STU4011 등)
       // 영역을 이미 채웠어도 그 과목으로 채울 전공 학점은 그대로 남아 있습니다.
       if (!rank && trackKey && completedTrackKeys.has(trackKey)) return false;
-      if (excludedNames.has(normalizeCourseName(course.name))) return false;
+      const name = normalizeCourseName(course.name);
+      if (takenNames.has(name)) return false;
+      // 「택1」 묶음 확장은 추정이라 전공입문 필수 과목에는 걸지 않는다 — 미적분학Ⅰ을 필수선택으로
+      // 들었다고 해서 전공입문인 미적분학Ⅱ까지 사라지면 안 된다
+      if (!preMajor && equivalentNames.has(name)) return false;
       // 소속 제한으로 신청할 수 없는 과목은 뺀다 (판정할 수 없으면 남긴다)
       if (!checkEligibility(course.note ?? "", affiliations).eligible) return false;
 
@@ -340,7 +364,7 @@ export default function Home() {
 
       return !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [courses, profileMajors, query, excludedNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
+  }, [courses, profileMajors, query, takenNames, equivalentNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
 
   const timetableSlots = useMemo(() => groupTimetableEntries(
     filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
@@ -350,16 +374,20 @@ export default function Home() {
     end: number;
     byDay: Record<string, Array<{ course: Course; meeting: Meeting }>>;
   }>, [filteredCourses]);
-  const hiddenTakenCount = useMemo(
-    () => courses.filter((course) => excludedNames.has(normalizeCourseName(course.name))).length,
-    [courses, excludedNames],
-  );
+  const hiddenTakenCount = useMemo(() => {
+    const ranks = majorRankIndex(profileMajors);
+    return courses.filter((course) => {
+      const name = normalizeCourseName(course.name);
+      if (takenNames.has(name)) return true;
+      return equivalentNames.has(name) && !majorMatch(course, ranks).preMajor;
+    }).length;
+  }, [courses, profileMajors, takenNames, equivalentNames]);
   // 범례에는 실제로 결과에 있는 구분만 보여준다
   const shownCategories = useMemo(() => {
     const ranks = majorRankIndex(profileMajors);
     const keys = new Set<string>();
     for (const course of filteredCourses) {
-      const rank = ranks.byCode.get(course.code) ?? ranks.byDepartment.get(course.department);
+      const { rank } = majorMatch(course, ranks);
       if (rank) keys.add(`major${rank}`);
       else if (trackByCode.has(course.code)) keys.add("coreGE");
       else if (GENERAL_EDUCATION_DEPARTMENTS.includes(course.department)) keys.add("freeGE");
@@ -405,11 +433,13 @@ export default function Home() {
   );
 
   const majorRanks = useMemo(() => majorRankIndex(profileMajors), [profileMajors]);
+  /** 전공입문교과가 요람에 실린 내 전공 (안내 문구에 쓴다) */
+  const preMajorMajors = useMemo(() => majorsWithPreMajor(profileMajors) as string[], [profileMajors]);
   /** 전공 순번별로 이번 학기 개설 과목이 몇 개인지 (제외 체크박스에 표시) */
   const majorCourseCounts = useMemo(() => {
     const counts = new Map<number, number>();
     for (const course of courses) {
-      const rank = majorRanks.byCode.get(course.code) ?? majorRanks.byDepartment.get(course.department);
+      const { rank } = majorMatch(course, majorRanks);
       if (rank) counts.set(rank, (counts.get(rank) ?? 0) + 1);
     }
     return counts;
@@ -417,11 +447,16 @@ export default function Home() {
 
   /** 이 과목을 무엇으로 듣는지 — 1·2·3전공 > 필수교양 > 자유교양 순으로 판정 */
   function categoryOf(course: Course) {
-    const rank = majorRanks.byCode.get(course.code) ?? majorRanks.byDepartment.get(course.department);
+    const { rank } = majorMatch(course, majorRanks);
     if (rank) return `major${rank}`;
     if (trackByCode.has(course.code)) return "coreGE";
     if (GENERAL_EDUCATION_DEPARTMENTS.includes(course.department)) return "freeGE";
     return "";
+  }
+
+  /** 전공입문으로 잡힌 과목이면 어느 전공의 어떤 조건인지 */
+  function preMajorOf(course: Course) {
+    return majorMatch(course, majorRanks).preMajor;
   }
 
   function colorFor(course: Course) {
@@ -434,6 +469,13 @@ export default function Home() {
 
   function trackLabelFor(course: Course) {
     return trackByKey.get(trackByCode.get(course.code) ?? "")?.label ?? "";
+  }
+
+  /** 카드에 붙는 「1전공 · 전공입문」류 꼬리표 */
+  function roleLabelFor(course: Course) {
+    return [categoryLabelFor(course), preMajorOf(course) ? "전공입문" : "", trackLabelFor(course)]
+      .filter(Boolean)
+      .join(" · ");
   }
 
   function togglePicked(course: Course) {
@@ -596,6 +638,13 @@ export default function Home() {
                     );
                   })}
                 </div>
+                {preMajorMajors.length > 0 && (
+                  <p className="equivalent-note">
+                    <strong>전공입문교과 반영</strong>
+                    {preMajorMajors.join(" · ")}의 전공입문(전공예비) 과목은 다른 학과가 열더라도
+                    그 전공 색으로 함께 보여드려요. {preMajorSource.bulletinYear}학년도 요람 기준입니다.
+                  </p>
+                )}
               </div>
             )}
 
@@ -718,7 +767,7 @@ export default function Home() {
               </div>
             </div>
           ) : view === "list" ? (
-            <div className="course-list">{filteredCourses.map((course) => <div key={course.id} className={["course-row", pickedSet.has(course.id) ? "picked" : "", highlightEnglish && isEnglish(course) ? "english" : ""].filter(Boolean).join(" ")}><button onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}{categoryLabelFor(course) && <em className="core-badge" style={{ color: colorFor(course), background: `${colorFor(course)}14` }}>{categoryLabelFor(course)}{trackLabelFor(course) && ` · ${trackLabelFor(course)}`}</em>}{highlightEnglish && isEnglish(course) && <em className="core-badge english">영어강의</em>}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button><button className="pick-button" type="button" aria-pressed={pickedSet.has(course.id)} aria-label={`${course.name} ${pickedSet.has(course.id) ? "담기 취소" : "담기"}`} onClick={() => togglePicked(course)}>{pickedSet.has(course.id) ? "✓ 담김" : "+ 담기"}</button></div>)}</div>
+            <div className="course-list">{filteredCourses.map((course) => <div key={course.id} className={["course-row", pickedSet.has(course.id) ? "picked" : "", highlightEnglish && isEnglish(course) ? "english" : ""].filter(Boolean).join(" ")}><button onClick={() => setSelectedCourse(course)}><span className="course-color" style={{ background: colorFor(course) }} /><span className="course-list-main"><strong>{course.name}{roleLabelFor(course) && <em className="core-badge" style={{ color: colorFor(course), background: `${colorFor(course)}14` }}>{roleLabelFor(course)}</em>}{highlightEnglish && isEnglish(course) && <em className="core-badge english">영어강의</em>}</strong><small>{course.code}-{course.section} · {course.department}</small></span><span className="course-list-time">{course.schedule || "시간 미정"}<small>{course.professor || "담당교수 미정"}</small></span><span aria-hidden="true">›</span></button><button className="pick-button" type="button" aria-pressed={pickedSet.has(course.id)} aria-label={`${course.name} ${pickedSet.has(course.id) ? "담기 취소" : "담기"}`} onClick={() => togglePicked(course)}>{pickedSet.has(course.id) ? "✓ 담김" : "+ 담기"}</button></div>)}</div>
           ) : view === "mine" ? (
             pickedCourses.length === 0 ? (
               <div className="empty-state"><span>▦</span><strong>담은 과목이 없어요</strong><p>교시별 후보나 목록에서 <b>+</b>를 눌러 담으면<br />여기에 시간표로 그려드려요.</p></div>
@@ -805,7 +854,7 @@ export default function Home() {
 
       {profileLoading && <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>}
       {!profileLoading && profileOpen && <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />}
-      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>{isEnglish(selectedCourse) && <div><dt>강의언어</dt><dd>영어강의</dd></div>}{trackLabelFor(selectedCourse) && <div><dt>필수 교양</dt><dd>{trackLabelFor(selectedCourse)} · {bulletinYear}학년도 요람</dd></div>}</dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<div className="modal-actions"><button className="primary-button" type="button" onClick={() => togglePicked(selectedCourse)}>{pickedSet.has(selectedCourse.id) ? "내 시간표에서 빼기" : "내 시간표에 담기"}</button><a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></div></article></div>}
+      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>{isEnglish(selectedCourse) && <div><dt>강의언어</dt><dd>영어강의</dd></div>}{preMajorOf(selectedCourse) && <div><dt>전공입문</dt><dd>{preMajorOf(selectedCourse)!.major} · {preMajorOf(selectedCourse)!.rule}<small> ({preMajorSource.bulletinYear}학년도 요람)</small></dd></div>}{trackLabelFor(selectedCourse) && <div><dt>필수 교양</dt><dd>{trackLabelFor(selectedCourse)} · {bulletinYear}학년도 요람</dd></div>}</dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<div className="modal-actions"><button className="primary-button" type="button" onClick={() => togglePicked(selectedCourse)}>{pickedSet.has(selectedCourse.id) ? "내 시간표에서 빼기" : "내 시간표에 담기"}</button><a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></div></article></div>}
     </main>
   );
 }
