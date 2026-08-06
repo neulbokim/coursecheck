@@ -28,6 +28,7 @@ npm audit --omit=dev
 - `app/data/pre-major.mjs`: 요람 〈전공입문교과〉 — 전공별 전공입문(전공예비) 과목
 - `app/data/equivalents.mjs`: 요람이 「택1」·「중복 수강 불가」로 묶은 동일 인정 과목
 - `app/data/affiliations.mjs`: 학과→대학 매핑과 소속별 수강 자격 판정
+- `app/lib/analytics-sink.mjs`: 집계용 표에 넣을지 정하는 스위치 — 기본은 배포에서만
 - `app/lib/sis-parse.mjs`: SIS `.xls`(실제로는 HTML 표) 파서 — CLI와 업로드가 공유
 - `scripts/import-sis.mjs`: 파일을 `courses.generated.json`으로 굽는 CLI
 - `db/schema.ts`: 최소 사용자 설정과 익명 운영 이벤트 스키마
@@ -102,6 +103,22 @@ curl -s https://<배포 URL>/api/health
 
 어느 쪽에도 공유 링크와 토큰, 방문자 ID는 넣지 않습니다. 표에 넣다가 실패해도 삼키므로, 마이그레이션을 아직 안 돌렸어도 앱은 그대로 돕니다(`/admin`에는 「표 없음」으로 뜹니다).
 
+### 개발 서버는 운영 집계에 넣지 않습니다
+
+개발 서버도 `.env.local`의 `DATABASE_URL`을 그대로 쓰기 때문에, 그냥 두면 **손으로 눌러 본 것까지 운영 집계에 섞입니다.** 게다가 되돌릴 수 없습니다 — 이용 기록은 선택 동의를 하지 않으면 방문자 ID도 속성도 붙지 않는 익명 행이라, 나중에 지우려 해도 같은 시간대 다른 사람의 기록과 구분되지 않습니다.
+
+그래서 `app/lib/analytics-sink.mjs`가 **배포에서만 넣도록** 기본을 잡습니다. 대상은 앱이 도는 데 필요 없고 관리 화면에서 세어 보기만 하는 두 표, `analytics_events`와 `everytime_failures`입니다.
+
+| `ANALYTICS_SINK` | 개발 | 배포 |
+| --- | --- | --- |
+| (비움, 기본) | 넣지 않음 | 넣음 |
+| `on` | 넣음 | 넣음 |
+| `off` | 넣지 않음 | 넣지 않음 |
+
+모르는 값은 기본값으로 돌아갑니다 — 오타 하나로 운영 집계가 켜지면 안 되기 때문입니다. 어느 쪽이든 `.local-logs/` 사본은 그대로 남으므로, 껐다고 개발 중에 무슨 일이 있었는지 못 보게 되지는 않습니다(안 넣은 줄은 `note: "sink_off"`로 찍힙니다).
+
+설정(`user_profiles`)과 건의(`feedback_messages`)는 끄지 않습니다. 설정은 저장한 값을 다시 읽어야 화면이 돌고, 건의는 사람이 직접 쓴 것이라 눌러서 실수로 생기지 않습니다. **개발 중에 저장한 프로필은 운영 표에 그대로 남으므로**, 그것까지 갈라 두려면 Neon 브랜치로 개발용 데이터베이스를 따로 두어야 합니다.
+
 ### 로컬 로그
 
 `npm run dev`로 띄우면 서버가 두 파일을 `.local-logs/`에 남깁니다. 배포에서는 남기지 않습니다(Vercel 파일 시스템은 읽기 전용이고, 적어도 다음 요청에 사라집니다). 폴더는 `LOCAL_LOG_DIR`로 바꾸고, `off`로 두면 개발 중에도 끕니다.
@@ -113,7 +130,7 @@ curl -s https://<배포 URL>/api/health
 {"at":"2026-08-05T04:12:31.204Z","event":"made_up_event","bucket":null,"stored":false,"note":"not_allowed","hasVisitor":false}
 ```
 
-`stored`는 데이터베이스에 실제로 들어갔는지, `note`는 못 들어간 이유입니다 — 허용 목록에 없는 이름(`not_allowed`), 1KB 초과(`too_large`), 데이터베이스 실패(`server_error`).
+`stored`는 데이터베이스에 실제로 들어갔는지, `note`는 못 들어간 이유입니다 — 허용 목록에 없는 이름(`not_allowed`), 1KB 초과(`too_large`), 데이터베이스 실패(`server_error`), 개발 서버라 넣지 않음(`sink_off`).
 
 **`everytime-failures.jsonl`** — `everytime_failures` 표에 들어가는 것과 같은 한 줄입니다.
 

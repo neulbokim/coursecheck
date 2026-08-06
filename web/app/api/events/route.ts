@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "../../../db";
+import { shouldStoreAnalytics } from "../../lib/analytics-sink.mjs";
 import { appendLocalLog } from "../../lib/local-event-log.mjs";
 
 /**
@@ -63,6 +64,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "허용되지 않은 이벤트입니다." }, { status: 400 });
     }
     const bucket = payload.resultBucket && ALLOWED_BUCKETS.has(payload.resultBucket) ? payload.resultBucket : null;
+
+    // 개발 서버는 기본으로 넣지 않습니다 — 눌러 본 것이 운영 집계에 섞이면 나중에 익명 행이라
+    // 골라 지울 수 없습니다. 사본은 그대로 남으니 개발 중에도 무슨 일이 있었는지 보입니다.
+    if (!shouldStoreAnalytics()) {
+      await mirror({ bucket, stored: false, note: "sink_off" });
+      return Response.json({ ok: true, stored: false }, { headers: { "cache-control": "no-store" } });
+    }
 
     /**
      * 누구인지는 브라우저 말이 아니라 서버가 정합니다. 방문자 쿠키는 HttpOnly라

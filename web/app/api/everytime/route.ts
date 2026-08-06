@@ -1,6 +1,7 @@
 import { getDb } from "../../../db";
 import { everytimeFailures } from "../../../db/schema";
 import { extractEverytimeUrl } from "../../lib/everytime-link.mjs";
+import { shouldStoreAnalytics } from "../../lib/analytics-sink.mjs";
 import { appendLocalLog } from "../../lib/local-event-log.mjs";
 import {
   extractCourses,
@@ -114,6 +115,8 @@ async function recordFailures(
   if (rows.length === 0) return;
   await Promise.all([
     (async () => {
+      // 개발 서버는 기본으로 넣지 않습니다 (analytics-sink.mjs). 사본은 그대로 남습니다.
+      if (!shouldStoreAnalytics()) return;
       try {
         await getDb().insert(everytimeFailures).values(rows);
       } catch {

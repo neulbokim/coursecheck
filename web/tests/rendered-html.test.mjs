@@ -924,6 +924,71 @@ test("splits the helpful-vote answers on the admin dashboard", async () => {
   assert.match(adminPage, /도움이 됐나요 응답/, "대시보드에 응답 표가 있어야 한다");
 });
 
+test("keeps the dev server out of the production analytics tables", async () => {
+  const { shouldStoreAnalytics } = await import("../app/lib/analytics-sink.mjs");
+  const [events, everytime] = await Promise.all([
+    readFile(new URL("../app/api/events/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/everytime/route.ts", import.meta.url), "utf8"),
+  ]);
+
+  const previousEnv = process.env.NODE_ENV;
+  const previousSink = process.env.ANALYTICS_SINK;
+  try {
+    // 비워두면 배포에서만 넣는다 — 개발 서버도 같은 DATABASE_URL을 쓰기 때문
+    delete process.env.ANALYTICS_SINK;
+    process.env.NODE_ENV = "development";
+    assert.equal(shouldStoreAnalytics(), false);
+    process.env.NODE_ENV = "production";
+    assert.equal(shouldStoreAnalytics(), true);
+
+    // 값을 주면 그쪽이 이긴다 (양쪽 방향 모두)
+    process.env.ANALYTICS_SINK = "off";
+    assert.equal(shouldStoreAnalytics(), false, "배포에서도 끌 수 있어야 한다");
+    process.env.NODE_ENV = "development";
+    process.env.ANALYTICS_SINK = "ON";
+    assert.equal(shouldStoreAnalytics(), true, "대소문자·공백을 가리지 않는다");
+    process.env.ANALYTICS_SINK = " on ";
+    assert.equal(shouldStoreAnalytics(), true);
+    // 모르는 값은 기본값으로 돌아간다 — 오타로 운영 집계가 켜지면 안 된다
+    process.env.ANALYTICS_SINK = "yes";
+    assert.equal(shouldStoreAnalytics(), false);
+  } finally {
+    process.env.NODE_ENV = previousEnv;
+    if (previousSink === undefined) delete process.env.ANALYTICS_SINK;
+    else process.env.ANALYTICS_SINK = previousSink;
+  }
+
+  // 집계 전용 두 표에만 건다. 켜지 않았으면 데이터베이스에 손대기 전에 빠져나가야 한다
+  assert.match(events, /if \(!shouldStoreAnalytics\(\)\)[\s\S]{0,200}?note: "sink_off"/);
+  assert.ok(
+    events.indexOf('note: "sink_off"') < events.indexOf("insert into analytics_events"),
+    "insert보다 먼저 빠져나가야 한다",
+  );
+  assert.match(everytime, /if \(!shouldStoreAnalytics\(\)\) return;/);
+  assert.ok(
+    everytime.indexOf("shouldStoreAnalytics()") < everytime.indexOf("insert(everytimeFailures)"),
+    "insert보다 먼저 빠져나가야 한다",
+  );
+
+  // 껐어도 사본은 남아야 개발 중에 무슨 일이 있었는지 보인다
+  assert.match(events, /mirror\(\{ bucket, stored: false, note: "sink_off" \}\)/);
+  assert.match(everytime, /appendLocalLog\(FAILURE_LOG/);
+
+  // 설정과 건의는 끄지 않는다 — 설정은 다시 읽어야 화면이 돌고, 건의는 사람이 직접 쓴다
+  for (const path of ["../app/api/profile/route.ts", "../app/api/feedback/route.ts"]) {
+    const source = await readFile(new URL(path, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /shouldStoreAnalytics/, `${path}에는 걸지 않는다`);
+  }
+
+  // 문서와 환경 변수 예시가 스위치를 알고 있어야 한다
+  const [envExample, readme] = await Promise.all([
+    readFile(new URL("../.env.example", import.meta.url), "utf8"),
+    readFile(new URL("../README.md", import.meta.url), "utf8"),
+  ]);
+  assert.match(envExample, /^ANALYTICS_SINK=/m);
+  assert.match(readme, /ANALYTICS_SINK/);
+});
+
 test("mirrors events to a local file while writing nothing in production", async () => {
   const { appendLocalLog } = await import("../app/lib/local-event-log.mjs");
   const { mkdtemp, readFile: read, rm } = await import("node:fs/promises");
