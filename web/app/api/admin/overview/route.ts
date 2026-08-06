@@ -34,7 +34,7 @@ export async function GET(request: Request) {
         .from(analyticsEvents)
         .where(gte(analyticsEvents.createdAt, since))
         .groupBy(analyticsEvents.eventName),
-      db.select({ total: count() }).from(userProfiles),
+      db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.excluded, false)),
       db
         .select({ status: feedbackMessages.status, total: count() })
         .from(feedbackMessages)
@@ -87,6 +87,7 @@ export async function GET(request: Request) {
       byMajor,
       [visiting],
       [consented],
+      [excluded],
       eventsByCollege,
       eventsByMajor,
       eventsByCohort,
@@ -95,20 +96,23 @@ export async function GET(request: Request) {
       journeyRows,
     ] =
       await Promise.all([
-        db.select({ total: count() }).from(userProfiles).where(and(gte(userProfiles.createdAt, since))),
+        db.select({ total: count() }).from(userProfiles).where(and(eq(userProfiles.excluded, false), gte(userProfiles.createdAt, since))),
         db
           .select({ college: userProfiles.college, total: count() })
           .from(userProfiles)
+          .where(eq(userProfiles.excluded, false))
           .groupBy(userProfiles.college)
           .orderBy(desc(count())),
         db
           .select({ cohortYear: userProfiles.cohortYear, total: count() })
           .from(userProfiles)
+          .where(eq(userProfiles.excluded, false))
           .groupBy(userProfiles.cohortYear)
           .orderBy(desc(userProfiles.cohortYear)),
         db
           .select({ semesters: userProfiles.completedSemesters, total: count() })
           .from(userProfiles)
+          .where(eq(userProfiles.excluded, false))
           .groupBy(userProfiles.completedSemesters)
           .orderBy(userProfiles.completedSemesters),
         // 1·2·3전공을 한 줄로 펼쳐 전공별로 몇 명이 어느 순번으로 두고 있는지 셉니다
@@ -119,15 +123,17 @@ export async function GET(request: Request) {
                  count(*) filter (where rank = 3)::int as third,
                  count(*)::int as total
           from (
-            select major_1 as major, 1 as rank from user_profiles
-            union all select major_2, 2 from user_profiles where major_2 is not null
-            union all select major_3, 3 from user_profiles where major_3 is not null
+            select major_1 as major, 1 as rank from user_profiles where not excluded
+            union all select major_2, 2 from user_profiles where major_2 is not null and not excluded
+            union all select major_3, 3 from user_profiles where major_3 is not null and not excluded
           ) as spread
           group by major
           order by count(*) desc, major
         `),
-        db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.enrolled, false)),
-        db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.analyticsConsent, true)),
+        db.select({ total: count() }).from(userProfiles).where(and(eq(userProfiles.excluded, false), eq(userProfiles.enrolled, false))),
+        db.select({ total: count() }).from(userProfiles).where(and(eq(userProfiles.excluded, false), eq(userProfiles.analyticsConsent, true))),
+        // 만드는 사람이 관리자로 로그인한 채 눌러 본 설정. 위 분포에서는 이미 빠져 있고, 몇 개인지만 보여줍니다.
+        db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.excluded, true)),
         db
           .select({ key: analyticsEvents.college, event: analyticsEvents.eventName, total: count() })
           .from(analyticsEvents)
@@ -181,6 +187,8 @@ export async function GET(request: Request) {
           visiting: visiting.total,
           // 소속·전공·학번을 이용 기록에 남겨도 된다고 한 사람. 아래 단위별 표는 이 사람들만 담습니다.
           consented: consented.total,
+          // 관리자로 로그인한 채 저장한 내 설정. 위 숫자와 아래 분포에는 이미 들어 있지 않습니다.
+          excluded: excluded.total,
         },
         events: totals.map((row) => ({ ...row, last24h: recentByEvent.get(row.event) ?? 0 })),
         profiles: { byCollege, byCohort, bySemesters, byMajor: byMajor.rows ?? byMajor },

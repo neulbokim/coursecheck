@@ -1,7 +1,7 @@
 import { getDb } from "../../../db";
 import { everytimeFailures } from "../../../db/schema";
 import { extractEverytimeUrl } from "../../lib/everytime-link.mjs";
-import { shouldStoreAnalytics } from "../../lib/analytics-sink.mjs";
+import { isAdminBrowser, shouldStoreAnalytics } from "../../lib/analytics-sink.mjs";
 import { appendLocalLog } from "../../lib/local-event-log.mjs";
 import {
   extractCourses,
@@ -104,6 +104,7 @@ async function fetchFriendTable(
  * 마이그레이션을 아직 안 돌렸을 때도 앱은 그대로 돌아야 합니다.
  */
 async function recordFailures(
+  request: Request,
   rows: Array<{
     scope: "request" | "semester";
     step?: string;
@@ -115,8 +116,8 @@ async function recordFailures(
   if (rows.length === 0) return;
   await Promise.all([
     (async () => {
-      // 개발 서버는 기본으로 넣지 않습니다 (analytics-sink.mjs). 사본은 그대로 남습니다.
-      if (!shouldStoreAnalytics()) return;
+      // 개발 서버와 관리자 브라우저는 넣지 않습니다 (analytics-sink.mjs). 사본은 그대로 남습니다.
+      if (!shouldStoreAnalytics() || (await isAdminBrowser(request))) return;
       try {
         await getDb().insert(everytimeFailures).values(rows);
       } catch {
@@ -219,7 +220,7 @@ export async function POST(request: Request) {
       userAgent,
       controller.signal,
     );
-    await recordFailures(failures);
+    await recordFailures(request, failures);
     const first = terms[0] ?? { courses: [], semester: "" };
     return Response.json(
       { terms, courses: first.courses, semester: first.semester },
@@ -250,7 +251,7 @@ export async function POST(request: Request) {
         cause: cause?.code,
       });
     }
-    await recordFailures([{ scope: "request", step, reasonCode, elapsedMs: Date.now() - startedAt }]);
+    await recordFailures(request, [{ scope: "request", step, reasonCode, elapsedMs: Date.now() - startedAt }]);
     return Response.json({ error: message }, { status: 400, headers: { "cache-control": "no-store", "referrer-policy": "no-referrer" } });
   } finally {
     clearTimeout(timeout);

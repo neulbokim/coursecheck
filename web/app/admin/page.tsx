@@ -17,7 +17,7 @@ type Message = {
 type Dataset = { id: number; semester: string; courseCount: number; uploadedAt: string };
 
 type Overview = {
-  users: { total: number; last24h: number; visiting: number; consented: number };
+  users: { total: number; last24h: number; visiting: number; consented: number; excluded: number };
   events: Array<{ event: string; total: number; last24h: number }>;
   profiles: {
     byCollege: Array<{ college: string | null; total: number }>;
@@ -485,6 +485,13 @@ export default function AdminPage() {
                 <em>재학생 · 24시간 +{overview.users.last24h}</em>
               </div>
               <div className="stat-card"><small>둘러보기</small><strong>{overview.users.visiting.toLocaleString("ko-KR")}</strong><em>졸업·외부</em></div>
+              {overview.users.excluded > 0 && (
+                <div className="stat-card" title="관리자로 로그인한 채 저장한 설정. 왼쪽 숫자와 아래 분포에는 들어 있지 않습니다.">
+                  <small>집계 제외</small>
+                  <strong>{overview.users.excluded.toLocaleString("ko-KR")}</strong>
+                  <em>내 브라우저</em>
+                </div>
+              )}
               <div className="stat-card">
                 <small>이용 기록 동의</small>
                 <strong>{overview.users.consented.toLocaleString("ko-KR")}</strong>

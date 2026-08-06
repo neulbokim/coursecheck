@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { shouldStoreAnalytics } from "../../lib/analytics-sink.mjs";
+import { isAdminBrowser, shouldStoreAnalytics } from "../../lib/analytics-sink.mjs";
 import { appendLocalLog } from "../../lib/local-event-log.mjs";
 
 /**
@@ -69,6 +69,11 @@ export async function POST(request: Request) {
     // 골라 지울 수 없습니다. 사본은 그대로 남으니 개발 중에도 무슨 일이 있었는지 보입니다.
     if (!shouldStoreAnalytics()) {
       await mirror({ bucket, stored: false, note: "sink_off" });
+      return Response.json({ ok: true, stored: false }, { headers: { "cache-control": "no-store" } });
+    }
+    // 관리자로 로그인한 브라우저는 만드는 사람이므로 세지 않습니다 (analytics-sink.mjs)
+    if (await isAdminBrowser(request)) {
+      await mirror({ bucket, stored: false, note: "admin" });
       return Response.json({ ok: true, stored: false }, { headers: { "cache-control": "no-store" } });
     }
 

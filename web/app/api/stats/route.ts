@@ -1,4 +1,4 @@
-import { count, desc } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { analyticsEvents, userProfiles } from "../../../db/schema";
 import { verifyAdminSession } from "../../lib/admin-session.mjs";
@@ -23,7 +23,8 @@ export async function GET(request: Request) {
       .from(analyticsEvents)
       .groupBy(analyticsEvents.eventName)
       .orderBy(desc(count()));
-    const [users] = await db.select({ total: count() }).from(userProfiles);
+    // 만드는 사람이 관리자로 로그인한 채 저장한 설정은 빼고 셉니다 (analytics-sink.mjs)
+    const [users] = await db.select({ total: count() }).from(userProfiles).where(eq(userProfiles.excluded, false));
     return Response.json(
       { users: { total: users.total }, events: rows, privacy: "개인을 식별할 수 없는 합계만 제공됩니다." },
       { headers },

@@ -105,6 +105,15 @@ export const userProfiles = pgTable("user_profiles", {
    * 기존 행은 이 문구로 동의를 받은 적이 없으므로 false에서 시작합니다.
    */
   analyticsConsent: boolean("analytics_consent").notNull().default(false),
+  /**
+   * 만드는 사람이 직접 눌러 본 설정인지. 관리자로 로그인한 브라우저에서 저장하면 켜지고,
+   * 관리 화면의 사람 수·소속·전공·학번 분포에서 빠집니다.
+   *
+   * 한 번 켜지면 스스로 꺼지지 않습니다 — 관리자 세션은 8시간이면 끝나는데 그 뒤에 설정을
+   * 한 번 더 저장했다고 내 브라우저가 갑자기 남의 것으로 세어지면 안 되기 때문입니다.
+   * 되돌리려면 그 행을 지웁니다.
+   */
+  excluded: boolean("excluded").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -30,3 +30,28 @@ export function shouldStoreAnalytics() {
   if (configured === "off") return false;
   return process.env.NODE_ENV === "production";
 }
+
+/**
+ * 배포된 화면을 만드는 사람이 직접 눌러 볼 때도 집계에 섞이지 않게, **관리자로 로그인한
+ * 브라우저**는 세지 않습니다.
+ *
+ * 진입화면에 비밀번호 칸을 따로 두지 않은 이유가 있습니다. `/admin` 로그인이 이미
+ * 시도 제한(10분 5회 → 15분 잠금)과 서명·만료가 든 `HttpOnly` 쿠키를 갖추고 있어서,
+ * 가장 많이 열리는 페이지에 인증면을 하나 더 여는 것은 지킬 것을 늘리기만 합니다.
+ * 여기서는 그 쿠키가 있는지만 확인하므로 새 비밀번호도, 새 입력 칸도 필요 없습니다.
+ *
+ * 판정은 서버가 합니다 — 쿠키가 `HttpOnly`라 화면 코드가 읽지도 지어내지도 못하고,
+ * 서명에 만료시각이 들어 있어 복사해 둔 값도 8시간 뒤에는 통하지 않습니다.
+ *
+ * `ADMIN_TOKEN`이 없으면(로컬에서 관리 기능을 끄고 띄운 경우) 아무도 관리자가 아니므로
+ * 그냥 셉니다.
+ *
+ * @param {Request} request
+ * @returns {Promise<boolean>}
+ */
+export async function isAdminBrowser(request) {
+  const token = process.env.ADMIN_TOKEN;
+  if (!token) return false;
+  const { verifyAdminSession } = await import("./admin-session.mjs");
+  return verifyAdminSession(request, token);
+}

@@ -964,7 +964,7 @@ test("keeps the dev server out of the production analytics tables", async () => 
     events.indexOf('note: "sink_off"') < events.indexOf("insert into analytics_events"),
     "insert보다 먼저 빠져나가야 한다",
   );
-  assert.match(everytime, /if \(!shouldStoreAnalytics\(\)\) return;/);
+  assert.match(everytime, /if \(!shouldStoreAnalytics\(\)[\s\S]{0,60}?\) return;/);
   assert.ok(
     everytime.indexOf("shouldStoreAnalytics()") < everytime.indexOf("insert(everytimeFailures)"),
     "insert보다 먼저 빠져나가야 한다",
@@ -987,6 +987,85 @@ test("keeps the dev server out of the production analytics tables", async () => 
   ]);
   assert.match(envExample, /^ANALYTICS_SINK=/m);
   assert.match(readme, /ANALYTICS_SINK/);
+});
+
+test("leaves the maker's own visits out of the numbers", async () => {
+  const { isAdminBrowser } = await import("../app/lib/analytics-sink.mjs");
+  const { ADMIN_COOKIE_NAME, createAdminSession } = await import("../app/lib/admin-session.mjs");
+
+  const previousToken = process.env.ADMIN_TOKEN;
+  try {
+    const token = "test-admin-token";
+    process.env.ADMIN_TOKEN = token;
+    const now = Date.now();
+    const withCookie = (value) =>
+      new Request("https://example.test/api/events", { headers: { cookie: `${ADMIN_COOKIE_NAME}=${value}` } });
+
+    // 관리자 세션이 있으면 만드는 사람으로 본다
+    assert.equal(await isAdminBrowser(withCookie(await createAdminSession(token, now))), true);
+    // 쿠키가 없거나 서명이 틀리면 아니다 — 브라우저가 지어낼 수 없어야 한다
+    assert.equal(await isAdminBrowser(new Request("https://example.test/api/events")), false);
+    assert.equal(await isAdminBrowser(withCookie(`${now + 60_000}.deadbeef`)), false);
+    // 다른 키로 서명한 쿠키도 통하지 않는다
+    assert.equal(await isAdminBrowser(withCookie(await createAdminSession("other-token", now))), false);
+    // 만료된 세션은 통하지 않는다 (만료시각이 서명 안에 있어 값을 고쳐도 소용없다)
+    const expired = await createAdminSession(token, now - 9 * 60 * 60 * 1000);
+    assert.equal(await isAdminBrowser(withCookie(expired)), false);
+
+    // ADMIN_TOKEN이 없으면 아무도 관리자가 아니므로 그냥 센다
+    delete process.env.ADMIN_TOKEN;
+    assert.equal(await isAdminBrowser(withCookie(await createAdminSession(token, now))), false);
+  } finally {
+    if (previousToken === undefined) delete process.env.ADMIN_TOKEN;
+    else process.env.ADMIN_TOKEN = previousToken;
+  }
+
+  const [events, everytime, profile, overview, stats, schema] = await Promise.all(
+    [
+      "../app/api/events/route.ts",
+      "../app/api/everytime/route.ts",
+      "../app/api/profile/route.ts",
+      "../app/api/admin/overview/route.ts",
+      "../app/api/stats/route.ts",
+      "../db/schema.ts",
+    ].map((path) => readFile(new URL(path, import.meta.url), "utf8")),
+  );
+
+  // 이벤트와 실패 기록은 넣기 전에 빠져나간다
+  assert.match(events, /if \(await isAdminBrowser\(request\)\)[\s\S]{0,160}?note: "admin"/);
+  assert.ok(
+    events.indexOf('note: "admin"') < events.indexOf("insert into analytics_events"),
+    "insert보다 먼저 빠져나가야 한다",
+  );
+  assert.match(everytime, /shouldStoreAnalytics\(\) \|\| \(await isAdminBrowser\(request\)\)/);
+
+  // 프로필에는 표시를 남기고, 한 번 켜지면 스스로 꺼지지 않는다 (세션은 8시간이면 끝난다)
+  assert.match(schema, /excluded: boolean\("excluded"\)\.notNull\(\)\.default\(false\)/);
+  assert.match(profile, /const excluded = await isAdminBrowser\(request\)/);
+  assert.match(profile, /excluded: sql`\$\{userProfiles\.excluded\} or \$\{values\.excluded\}`/);
+
+  // 관리 화면의 사람 수·분포는 제외한 사람을 빼고 센다
+  const counted = overview.match(/eq\(userProfiles\.excluded, false\)/g) ?? [];
+  assert.ok(counted.length >= 7, `분포 질의마다 걸려야 한다 (지금 ${counted.length}곳)`);
+  assert.match(overview, /select major_1 as major, 1 as rank from user_profiles where not excluded/);
+  assert.match(overview, /major_2 is not null and not excluded/);
+  assert.match(overview, /major_3 is not null and not excluded/);
+  assert.match(stats, /\.from\(userProfiles\)\.where\(eq\(userProfiles\.excluded, false\)\)/);
+  // 몇 개를 뺐는지는 보여 준다 — 조용히 사라지면 숫자를 믿을 수 없다
+  assert.match(overview, /excluded: excluded\.total/);
+
+  // 마이그레이션이 함께 있어야 한다 (스키마만 고치고 빠뜨리면 배포에서 컬럼이 없다)
+  const migrations = await readFile(new URL("../drizzle/meta/_journal.json", import.meta.url), "utf8");
+  const { readdir } = await import("node:fs/promises");
+  const files = (await readdir(new URL("../drizzle", import.meta.url))).filter((name) => name.endsWith(".sql"));
+  assert.equal(files.length, JSON.parse(migrations).entries.length, "마이그레이션 파일과 기록 수가 같아야 한다");
+  const added = await Promise.all(
+    files.map((name) => readFile(new URL(`../drizzle/${name}`, import.meta.url), "utf8")),
+  );
+  assert.ok(
+    added.some((text) => /alter table "user_profiles" add column "excluded"/i.test(text)),
+    "excluded 컬럼 마이그레이션이 있어야 한다",
+  );
 });
 
 test("mirrors events to a local file while writing nothing in production", async () => {

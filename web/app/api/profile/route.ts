@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { analyticsEvents, userProfiles } from "../../../db/schema";
+import { isAdminBrowser } from "../../lib/analytics-sink.mjs";
 import { majorOptions } from "../../data/major-options";
 import { LAST_BULLETIN_YEAR, colleges } from "../../data/core-curriculum.mjs";
 
@@ -100,6 +101,11 @@ export async function POST(request: Request) {
     }
 
     const visitorId = visitorIdFrom(request) ?? crypto.randomUUID();
+    /**
+     * 관리자로 로그인한 브라우저에서 저장한 설정은 만드는 사람의 것이므로 집계에서 뺍니다.
+     * 화면 동작은 그대로고, 관리 화면의 사람 수·소속·전공·학번 분포에서만 빠집니다.
+     */
+    const excluded = await isAdminBrowser(request);
     const values = {
       visitorId,
       cohortYear,
@@ -112,6 +118,7 @@ export async function POST(request: Request) {
       major3Approved,
       enrolled,
       analyticsConsent,
+      excluded,
       updatedAt: new Date(),
     };
     await getDb()
@@ -130,6 +137,9 @@ export async function POST(request: Request) {
           major3Approved: values.major3Approved,
           enrolled: values.enrolled,
           analyticsConsent: values.analyticsConsent,
+          // 한 번 켜지면 스스로 꺼지지 않습니다 — 관리자 세션은 8시간이면 끝나는데,
+          // 그 뒤에 설정을 한 번 더 저장했다고 내 브라우저가 남의 것으로 세어지면 안 됩니다.
+          excluded: sql`${userProfiles.excluded} or ${values.excluded}`,
           updatedAt: values.updatedAt,
         },
       });
