@@ -51,7 +51,7 @@
     "name": "중국의 미술과 문화",
     "credits": 3,
     "schedule": "수,금 15:00~16:15",
-    "professor": "",
+    "professor": "김영",
     "english": true,
     "note": ""
   },
@@ -78,10 +78,10 @@
     "section": "01",
     "name": "Intro to Digital Arts",
     "credits": 3,
-    "schedule": "월,수 16:30~17:45",
+    "schedule": "월 13:30~16:15",
     "professor": "이형기",
     "english": true,
-    "note": "아트&테크놀로지학과(가능),스타트업연계전공(가능),아트&테크놀로지학과(가능) · 스타트업연계전공 가능,"
+    "note": "아트&테크놀로지학과(가능),스타트업연계전공(가능),아트&테크놀로지학과(가능) · 스타트업연계전공 가능"
   },
   {
     "id": "AAT2004-01",
@@ -190,7 +190,7 @@
     "section": "01",
     "name": "Sound Production",
     "credits": 3,
-    "schedule": "수,금 13:30~14:45",
+    "schedule": "금 10:30~13:15",
     "professor": "오예민",
     "english": true,
     "note": "아트&테크놀로지학과(가능),아트&테크놀로지학과(가능)"
@@ -260,7 +260,7 @@
     "section": "01",
     "name": "3D Animation",
     "credits": 3,
-    "schedule": "월 13:30~16:15",
+    "schedule": "금 10:30~13:15",
     "professor": "이형기",
     "english": true,
     "note": "아트&테크놀로지학과(가능),아트&테크놀로지학과(가능)"
@@ -286,7 +286,7 @@
     "department": "아트&테크놀로지학과",
     "code": "AATG001",
     "section": "01",
-    "name": "Metaverse: Design & Development(캡스톤디자인)",
+    "name": "Game Engine Graphics(캡스톤디자인)",
     "credits": 3,
     "schedule": "수,금 15:00~16:15",
     "professor": "김하연",
@@ -305,7 +305,7 @@
     "schedule": "수 13:30~16:15",
     "professor": "정해동",
     "english": false,
-    "note": "아트&테크놀로지학과(가능),아트&테크놀로지학과(가능) · 학석사 과목"
+    "note": "아트&테크놀로지학과(가능),아트&테크놀로지학과(가능),인공지능연계전공(가능) · 학석사 과목, 인공지능연계전공 가능"
   },
   {
     "id": "AATG106-01",
@@ -320,20 +320,6 @@
     "professor": "오예민",
     "english": false,
     "note": "아트&테크놀로지학과(가능),아트&테크놀로지학과(가능) · 학석사 과목"
-  },
-  {
-    "id": "AATG800-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "아트&테크놀로지학과",
-    "code": "AATG800",
-    "section": "01",
-    "name": "Art,Technology,and Social Impact(캡스톤디자인)",
-    "credits": 3,
-    "schedule": "목 13:30~16:15",
-    "professor": "김주섭",
-    "english": true,
-    "note": "아트&테크놀로지학과(가능),아트&테크놀로지학과(가능),가상융합연계전공(가능) · 학석사 과목,가상융합연계전공 가능"
   },
   {
     "id": "AIE2051-01",
@@ -402,7 +388,7 @@
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
     "professor": "이영민",
-    "english": false,
+    "english": true,
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -486,7 +472,7 @@
     "credits": 3,
     "schedule": "수,금 15:00~16:15",
     "professor": "김주호",
-    "english": false,
+    "english": true,
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -849,7 +835,7 @@
     "name": "미국학입문",
     "credits": 3,
     "schedule": "수,금 09:00~10:15",
-    "professor": "",
+    "professor": "김소연",
     "english": true,
     "note": ""
   },
@@ -877,7 +863,7 @@
     "name": "시각예술",
     "credits": 3,
     "schedule": "수,금 13:30~14:45",
-    "professor": "",
+    "professor": "김소연",
     "english": true,
     "note": ""
   },
@@ -907,7 +893,7 @@
     "schedule": "화,목 10:30~11:45",
     "professor": "부경숙",
     "english": true,
-    "note": ""
+    "note": "부제:Hawaii"
   },
   {
     "id": "AMC3080-01",
@@ -919,7 +905,7 @@
     "name": "미국의다문화주의",
     "credits": 3,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "PARK, EDWARD JANG-WOO",
     "english": true,
     "note": ""
   },
@@ -961,7 +947,7 @@
     "name": "문화와정치",
     "credits": 3,
     "schedule": "월,수 16:30~17:45",
-    "professor": "",
+    "professor": "김소연",
     "english": true,
     "note": ""
   },
@@ -3508,7 +3494,7 @@
     "section": "01",
     "name": "성찰과성장",
     "credits": 1,
-    "schedule": "토 10:00~17:40",
+    "schedule": "금 19:30~21:30 / 토 10:00~17:40",
     "professor": "박미숙",
     "english": false,
     "note": "10/30(금)-10/31(토), ※혼합형(평가:S/U)"
@@ -3522,7 +3508,7 @@
     "section": "02",
     "name": "성찰과성장",
     "credits": 1,
-    "schedule": "토 10:00~17:40",
+    "schedule": "금 19:30~21:30 / 토 10:00~17:40",
     "professor": "박미숙",
     "english": false,
     "note": "11/06(금)-11/07(토), ※혼합형(평가:S/U)"
@@ -3536,7 +3522,7 @@
     "section": "03",
     "name": "성찰과성장",
     "credits": 1,
-    "schedule": "토 10:00~17:40",
+    "schedule": "금 19:30~21:30 / 토 10:00~17:40",
     "professor": "박미숙",
     "english": false,
     "note": "11/06(금)-11/07(토), ※혼합형(평가:S/U)"
@@ -3550,7 +3536,7 @@
     "section": "04",
     "name": "성찰과성장",
     "credits": 1,
-    "schedule": "토 10:00~17:40",
+    "schedule": "금 19:30~21:30 / 토 10:00~17:40",
     "professor": "박미숙",
     "english": false,
     "note": "11/13(금)-11/14(토), ※혼합형(평가:S/U)"
@@ -3564,7 +3550,7 @@
     "section": "05",
     "name": "성찰과성장",
     "credits": 1,
-    "schedule": "토 10:00~17:40",
+    "schedule": "금 19:30~21:30 / 토 10:00~17:40",
     "professor": "박미숙",
     "english": false,
     "note": "11/13(금)-11/14(토), ※혼합형(평가:S/U)"
@@ -3578,7 +3564,7 @@
     "section": "06",
     "name": "성찰과성장",
     "credits": 1,
-    "schedule": "토 10:00~17:40",
+    "schedule": "토 10:00~22:00 / 일 10:00~15:30",
     "professor": "박미숙",
     "english": false,
     "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
@@ -3598,34 +3584,6 @@
     "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
   },
   {
-    "id": "COR1007-08",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "COR1007",
-    "section": "08",
-    "name": "성찰과성장",
-    "credits": 1,
-    "schedule": "토 10:00~22:00 / 일 10:00~15:30",
-    "professor": "최윤희, 김민회, 박미숙",
-    "english": false,
-    "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
-  },
-  {
-    "id": "COR1007-09",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "COR1007",
-    "section": "09",
-    "name": "성찰과성장",
-    "credits": 1,
-    "schedule": "토 10:00~22:00 / 일 10:00~15:30",
-    "professor": "박미숙, 최윤희, 김민회",
-    "english": false,
-    "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
-  },
-  {
     "id": "COR1010-01",
     "year": 2026,
     "term": "2학기",
@@ -3637,7 +3595,7 @@
     "schedule": "월,수 10:30~11:45",
     "professor": "SutherlandIan",
     "english": true,
-    "note": "인문대학(가능),사회과학대학(가능),커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),로욜라국제대학(가능) · 인문대학,사회과학대학,지식융합미디어대학,로욜라국제대학"
+    "note": "인문대학(가능),사회과학대학(가능),커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),로욜라국제대학(가능)"
   },
   {
     "id": "COR1010-02",
@@ -3859,7 +3817,7 @@
     "name": "인문사회글쓰기",
     "credits": 3,
     "schedule": "화,목 09:00~10:15",
-    "professor": "",
+    "professor": "이유진",
     "english": false,
     "note": ""
   },
@@ -3873,7 +3831,7 @@
     "name": "인문사회글쓰기",
     "credits": 3,
     "schedule": "화,목 10:30~11:45",
-    "professor": "",
+    "professor": "이유진",
     "english": false,
     "note": ""
   },
@@ -3887,7 +3845,7 @@
     "name": "인문사회글쓰기",
     "credits": 3,
     "schedule": "월,수 12:00~13:15",
-    "professor": "",
+    "professor": "이소연",
     "english": false,
     "note": ""
   },
@@ -3970,8 +3928,8 @@
     "section": "11",
     "name": "인문사회글쓰기",
     "credits": 3,
-    "schedule": "월,수 16:30~17:45",
-    "professor": "",
+    "schedule": "화,목 15:00~16:15",
+    "professor": "이소연",
     "english": false,
     "note": ""
   },
@@ -3985,7 +3943,7 @@
     "name": "인문사회글쓰기",
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "염수민",
     "english": false,
     "note": ""
   },
@@ -4055,7 +4013,7 @@
     "name": "인문사회글쓰기",
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "염수민",
     "english": false,
     "note": ""
   },
@@ -4068,8 +4026,8 @@
     "section": "01",
     "name": "자연계글쓰기",
     "credits": 3,
-    "schedule": "화,목 09:00~10:15",
-    "professor": "조문형",
+    "schedule": "화,목 12:00~13:15",
+    "professor": "이유진",
     "english": false,
     "note": ""
   },
@@ -4125,7 +4083,7 @@
     "name": "자연계글쓰기",
     "credits": 3,
     "schedule": "수,금 13:30~14:45",
-    "professor": "",
+    "professor": "김송의",
     "english": false,
     "note": ""
   },
@@ -4153,7 +4111,7 @@
     "name": "자연계글쓰기",
     "credits": 3,
     "schedule": "수,금 15:00~16:15",
-    "professor": "",
+    "professor": "김송의",
     "english": false,
     "note": ""
   },
@@ -4308,7 +4266,7 @@
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
     "professor": "이영민",
-    "english": false,
+    "english": true,
     "note": "인공지능학과(불가능),인공지능학과(불가능) · 인공지능학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -5516,6 +5474,118 @@
     "note": ""
   },
   {
+    "id": "DUM1001-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1001",
+    "section": "01",
+    "name": "교환학기",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1002-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1002",
+    "section": "01",
+    "name": "자비유학",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1003-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1003",
+    "section": "01",
+    "name": "현장실습",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1004-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1004",
+    "section": "01",
+    "name": "해외인턴십",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1006-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1006",
+    "section": "01",
+    "name": "계절학기 현장실습",
+    "credits": 3,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1007-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1007",
+    "section": "01",
+    "name": "계절학기 국내교류",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1008-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1008",
+    "section": "01",
+    "name": "HUSS",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "DUM1009-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1009",
+    "section": "01",
+    "name": "국내교류",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "note": ""
+  },
+  {
     "id": "ECO2001-01",
     "year": 2026,
     "term": "2학기",
@@ -5779,7 +5849,7 @@
     "schedule": "화,목 12:00~13:15",
     "professor": "곽노선",
     "english": false,
-    "note": "경제대학(가능) · HONORS CLASS: CGPA3.3이상 & 경제학원론 I,II 경제수리기초, 경제통계학 중 3과목에서 B+이상 선수과목 꼭 확인"
+    "note": "HONORS CLASS: CGPA3.3이상 & 경제학원론 I,II 경제수리기초, 경제통계학 중 3과목에서 B+이상 선수과목 꼭 확인"
   },
   {
     "id": "ECO2007-02",
@@ -6031,20 +6101,6 @@
     "schedule": "화,목 13:30~14:45",
     "professor": "손성빈",
     "english": true,
-    "note": "경제대학(가능) · 경제전공자 우선수강(전학년수강신청일에 비경제전공자 수강신청 가능)"
-  },
-  {
-    "id": "ECO4041-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "경제학과",
-    "code": "ECO4041",
-    "section": "01",
-    "name": "통화정책론(캡스톤디자인)",
-    "credits": 3,
-    "schedule": "월 13:30~16:15",
-    "professor": "유상대",
-    "english": false,
     "note": "경제대학(가능) · 경제전공자 우선수강(전학년수강신청일에 비경제전공자 수강신청 가능)"
   },
   {
@@ -6336,10 +6392,10 @@
     "section": "01",
     "name": "과학교과교재연구및지도",
     "credits": 3,
-    "schedule": "화 16:30~19:15",
+    "schedule": "목 16:30~19:15",
     "professor": "이성은",
     "english": false,
-    "note": ""
+    "note": "교직이수자만 전공학점으로 인정"
   },
   {
     "id": "EEE1002-01",
@@ -7280,6 +7336,20 @@
     "note": ""
   },
   {
+    "id": "ENG4099-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "영미어문전공",
+    "code": "ENG4099",
+    "section": "01",
+    "name": "개별연구논문",
+    "credits": 3,
+    "schedule": "",
+    "professor": "장기윤",
+    "english": false,
+    "note": "Honors Program 이수중인 학생만 수강 가능"
+  },
+  {
     "id": "ENGG003-01",
     "year": 2026,
     "term": "2학기",
@@ -7458,6 +7528,20 @@
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
     "professor": "이상헌",
+    "english": false,
+    "note": ""
+  },
+  {
+    "id": "ETU4001-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "전인교육원",
+    "code": "ETU4001",
+    "section": "01",
+    "name": "환경윤리",
+    "credits": 3,
+    "schedule": "화,목 09:00~10:15",
+    "professor": "",
     "english": false,
     "note": ""
   },
@@ -7891,7 +7975,7 @@
     "name": "글로벌융합기초한국어: 읽기1",
     "credits": 2,
     "schedule": "월,수 13:30~14:45",
-    "professor": "",
+    "professor": "김은정",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -7933,7 +8017,7 @@
     "name": "글로벌융합기초한국어: 읽기1",
     "credits": 2,
     "schedule": "월,수 13:30~14:45",
-    "professor": "",
+    "professor": "왕서령",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -7989,7 +8073,7 @@
     "name": "글로벌융합기초한국어: 읽기2",
     "credits": 2,
     "schedule": "월,수 15:00~16:15",
-    "professor": "",
+    "professor": "김은정",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8031,7 +8115,7 @@
     "name": "글로벌융합기초한국어: 읽기2",
     "credits": 2,
     "schedule": "월,수 15:00~16:15",
-    "professor": "",
+    "professor": "왕서령",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8087,7 +8171,7 @@
     "name": "글로벌융합기초한국어: 듣기1",
     "credits": 2,
     "schedule": "월,수 16:30~17:45",
-    "professor": "",
+    "professor": "김은정",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8129,7 +8213,7 @@
     "name": "글로벌융합기초한국어: 듣기1",
     "credits": 2,
     "schedule": "월,수 16:30~17:45",
-    "professor": "",
+    "professor": "왕서령",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8171,7 +8255,7 @@
     "name": "글로벌융합기초한국어: 쓰기1",
     "credits": 2,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "류재원",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8185,7 +8269,7 @@
     "name": "글로벌융합기초한국어: 쓰기1",
     "credits": 2,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "박수경",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8199,7 +8283,7 @@
     "name": "글로벌융합기초한국어: 쓰기1",
     "credits": 2,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "최재현",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8269,7 +8353,7 @@
     "name": "글로벌융합기초한국어: 쓰기2",
     "credits": 2,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "류재원",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8283,7 +8367,7 @@
     "name": "글로벌융합기초한국어: 쓰기2",
     "credits": 2,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "박수경",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8297,7 +8381,7 @@
     "name": "글로벌융합기초한국어: 쓰기2",
     "credits": 2,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "최재현",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8367,7 +8451,7 @@
     "name": "글로벌융합기초한국어: 말하기1",
     "credits": 2,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "류재원",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8381,7 +8465,7 @@
     "name": "글로벌융합기초한국어: 말하기1",
     "credits": 2,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "박수경",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8395,7 +8479,7 @@
     "name": "글로벌융합기초한국어: 말하기1",
     "credits": 2,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "최재현",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8983,7 +9067,7 @@
     "name": "The Art of Storytelling",
     "credits": 3,
     "schedule": "수,금 09:00~10:15",
-    "professor": "",
+    "professor": "신홍주",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -8997,7 +9081,7 @@
     "name": "The Art of Storytelling",
     "credits": 3,
     "schedule": "수,금 13:30~14:45",
-    "professor": "",
+    "professor": "신홍주",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9011,7 +9095,7 @@
     "name": "인공지능 리터러시와 활용",
     "credits": 3,
     "schedule": "화,목 12:00~13:15",
-    "professor": "",
+    "professor": "이영란",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9025,7 +9109,7 @@
     "name": "인공지능 리터러시와 활용",
     "credits": 3,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "이영란",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9167,7 +9251,7 @@
     "schedule": "수,금 13:30~14:45",
     "professor": "백종완",
     "english": true,
-    "note": "커뮤니케이션대학(가능),아트&테크놀로지학과(가능),신문방송학과(가능),미디어&엔터테인먼트학과(가능),아트&테크놀로지학과(가능),글로벌한국학과(가능),지식융합미디어학부(가능) · 지융 아트&테크놀로지학과(가능), 지융미 지융학부,아텍,미엔,신방(가능),지융미 글로벌한국학(가능),커뮤니케이션학부(가능), 지융 국제한국학과"
+    "note": "커뮤니케이션대학(가능),국제한국학과(가능),아트&테크놀로지학과(가능),신문방송학과(가능),미디어&엔터테인먼트학과(가능),아트&테크놀로지학과(가능),글로벌한국학과(가능),지식융합미디어학부(가능) · 지융 아트&테크놀로지학과(가능), 지융미 지융학부,아텍,미엔,신방(가능),지융미 글로벌한국학(가능),커뮤니케이션학부(가능), 지융 국제한국학과"
   },
   {
     "id": "GKS1002-01",
@@ -9403,7 +9487,7 @@
     "name": "영상 스토리텔링과 연출",
     "credits": 3,
     "schedule": "화,목 10:30~11:45",
-    "professor": "",
+    "professor": "고한벌",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9417,7 +9501,7 @@
     "name": "UI/UX 디자인과 사용자 경험",
     "credits": 3,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "문정원",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9431,7 +9515,7 @@
     "name": "영상제작심화",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "백승훈",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9529,7 +9613,7 @@
     "name": "조직행동",
     "credits": 3,
     "schedule": "월,수 13:30~14:45",
-    "professor": "",
+    "professor": "권민정",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9543,7 +9627,7 @@
     "name": "생산운영",
     "credits": 3,
     "schedule": "화,목 10:30~11:45",
-    "professor": "",
+    "professor": "김민경",
     "english": false,
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
@@ -9809,7 +9893,7 @@
     "name": "과학과종교",
     "credits": 3,
     "schedule": "화,목 09:00~10:15",
-    "professor": "",
+    "professor": "박병훈",
     "english": false,
     "note": ""
   },
@@ -10369,7 +10453,7 @@
     "name": "춤 그리고 명상",
     "credits": 1,
     "schedule": "수 15:00~16:50",
-    "professor": "",
+    "professor": "한혜주",
     "english": false,
     "note": "실기수업(체육관 방음실 이용)"
   },
@@ -10508,10 +10592,10 @@
     "section": "01",
     "name": "진로탐색입문",
     "credits": 1,
-    "schedule": "목 13:30~16:20",
+    "schedule": "목 13:30~14:20",
     "professor": "김경아",
     "english": false,
-    "note": "전체 수강신청 기간에도 1,2,3학년 학년제한 유지(S/U 과목)"
+    "note": "\"전체 수강신청 기간에도 1,2,3학년 학년제한 유지(S/U 과목)\""
   },
   {
     "id": "HSS3016-02",
@@ -10662,7 +10746,7 @@
     "section": "01",
     "name": "민·관·학 협력 지속가능사회(캡스톤디자인)",
     "credits": 3,
-    "schedule": "목 13:30~16:15",
+    "schedule": "목 09:00~11:45",
     "professor": "최윤희",
     "english": false,
     "note": "\"[사전선발] 대학연합, 지자체 현장활동(PBL) 지역사회 연계활동 포함, 절대평가\""
@@ -10733,7 +10817,7 @@
     "name": "재즈와 현대 사회(탐구공동체)",
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "김효경",
     "english": false,
     "note": ""
   },
@@ -10747,7 +10831,7 @@
     "name": "몽상가 클럽: 새로 쓰는 대안문화(탐구공동체)",
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "김효경",
     "english": false,
     "note": ""
   },
@@ -11052,7 +11136,7 @@
     "department": "포용사회연계전공",
     "code": "IIS3406",
     "section": "01",
-    "name": "포용사회와 서비스러닝",
+    "name": "포용적 스포츠 서비스러닝",
     "credits": 2,
     "schedule": "",
     "professor": "",
@@ -11094,7 +11178,7 @@
     "department": "포용사회연계전공",
     "code": "IIS3508",
     "section": "01",
-    "name": "법의이해",
+    "name": "이민사회와 다문화포용법제의 이해",
     "credits": 3,
     "schedule": "",
     "professor": "",
@@ -11108,7 +11192,7 @@
     "department": "포용사회연계전공",
     "code": "IIS3511",
     "section": "01",
-    "name": "고전으로 보는 포용사회",
+    "name": "포용사회와 재활",
     "credits": 3,
     "schedule": "",
     "professor": "",
@@ -11126,20 +11210,6 @@
     "credits": 3,
     "schedule": "",
     "professor": "",
-    "english": false,
-    "note": "HUSS 공유대학, 포용사회"
-  },
-  {
-    "id": "IIS4103-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "포용사회연계전공",
-    "code": "IIS4103",
-    "section": "01",
-    "name": "포용사회 문화중개(캡스톤 디자인)",
-    "credits": 3,
-    "schedule": "월 13:30~16:15",
-    "professor": "이규태",
     "english": false,
     "note": "HUSS 공유대학, 포용사회"
   },
@@ -11262,7 +11332,7 @@
     "department": "포용사회연계전공",
     "code": "IIS4408",
     "section": "01",
-    "name": "글로벌비즈니스캡스톤디자인",
+    "name": "글로벌비즈니스캡스톤디자인2",
     "credits": 3,
     "schedule": "수 10:30~11:45 / 목 09:00~10:15",
     "professor": "",
@@ -12068,20 +12138,6 @@
     "note": ""
   },
   {
-    "id": "KOR3020-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "국어국문학과",
-    "code": "KOR3020",
-    "section": "01",
-    "name": "국어어휘론",
-    "credits": 3,
-    "schedule": "월,수 10:30~11:45",
-    "professor": "황화상",
-    "english": false,
-    "note": ""
-  },
-  {
     "id": "KOR3203-01",
     "year": 2026,
     "term": "2학기",
@@ -12208,20 +12264,6 @@
     "note": ""
   },
   {
-    "id": "KOR4501-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "국어국문학과",
-    "code": "KOR4501",
-    "section": "01",
-    "name": "언어와컴퓨터",
-    "credits": 3,
-    "schedule": "월,수 12:00~13:15",
-    "professor": "황화상",
-    "english": false,
-    "note": ""
-  },
-  {
     "id": "KOR4503-01",
     "year": 2026,
     "term": "2학기",
@@ -12314,8 +12356,8 @@
     "section": "01",
     "name": "문학과판타지",
     "credits": 3,
-    "schedule": "화,목 10:30~11:45",
-    "professor": "조문형",
+    "schedule": "월,수 10:30~11:45",
+    "professor": "이소연",
     "english": false,
     "note": ""
   },
@@ -12357,7 +12399,7 @@
     "name": "대중음악의이해",
     "credits": 3,
     "schedule": "월 13:30~16:15",
-    "professor": "",
+    "professor": "김효경",
     "english": false,
     "note": ""
   },
@@ -12469,7 +12511,7 @@
     "name": "음악과 자기돌봄",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "박소영",
     "english": false,
     "note": ""
   },
@@ -12763,7 +12805,7 @@
     "name": "일본언어와문화I",
     "credits": 3,
     "schedule": "화,목 09:00~10:15",
-    "professor": "황윤실",
+    "professor": "정수진",
     "english": false,
     "note": ""
   },
@@ -13070,7 +13112,7 @@
     "section": "01",
     "name": "K-pop and Cultural Studies",
     "credits": 3,
-    "schedule": "수 16:30~19:30",
+    "schedule": "화 16:30~19:30",
     "professor": "오세일",
     "english": true,
     "note": "특별수강생, 교환학생 대상 강의"
@@ -13098,7 +13140,7 @@
     "section": "02",
     "name": "Korean Language for exchange&visiting s",
     "credits": 3,
-    "schedule": "화,목 16:30~17:45",
+    "schedule": "화,목 15:00~16:15",
     "professor": "안혜인",
     "english": true,
     "note": "특별수강생, 교환학생 대상 강의"
@@ -13210,7 +13252,7 @@
     "section": "01",
     "name": "Korean Language for Exchange & Visiting Students Intermediate",
     "credits": 3,
-    "schedule": "화,목 15:00~16:15",
+    "schedule": "화,목 13:30~14:45",
     "professor": "안혜인",
     "english": true,
     "note": "특별수강생, 교환학생 대상 강의"
@@ -13378,7 +13420,7 @@
     "section": "01",
     "name": "K 콘텐츠와 미디어",
     "credits": 3,
-    "schedule": "화,목 12:00~13:15",
+    "schedule": "월 09:00~11:45",
     "professor": "",
     "english": false,
     "note": "커뮤니케이션대학(가능),신문방송학과(가능),미디어&엔터테인먼트학과(가능),지식융합미디어학부(가능)"
@@ -13407,7 +13449,7 @@
     "name": "설득과미디어",
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "호규현",
     "english": false,
     "note": "커뮤니케이션대학(가능),신문방송학과(가능),미디어&엔터테인먼트학과(가능),지식융합미디어학부(가능)"
   },
@@ -13757,7 +13799,7 @@
     "name": "전략커뮤니케이션",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "김수진",
     "english": false,
     "note": "커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),인문학기반자유전공학부(가능),SCIENCE기반자유전(가능),AI기반자유전공학부(가능) · 자유전공생 수강 가능"
   },
@@ -13801,7 +13843,7 @@
     "schedule": "수,금 13:30~14:45",
     "professor": "나은영",
     "english": false,
-    "note": "커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),인문학기반자유전공학부(가능),SCIENCE기반자유전(가능),AI기반자유전공학부(가능) · 자유전공생 수강 가능, 스타트업 연계전공 수강 가능"
+    "note": "커뮤니케이션대학(가능),지식융합대학(가능),스타트업연계전공(가능),지식융합미디어(가능),인문학기반자유전공학부(가능),SCIENCE기반자유전(가능),AI기반자유전공학부(가능) · 자유전공생 수강 가능, 스타트업 연계전공 수강 가능"
   },
   {
     "id": "MAS2005-01",
@@ -13841,7 +13883,7 @@
     "name": "공연예술의이해",
     "credits": 3,
     "schedule": "월,수 10:30~11:45",
-    "professor": "",
+    "professor": "이성구",
     "english": false,
     "note": "커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),인문학기반자유전공학부(가능),SCIENCE기반자유전(가능),AI기반자유전공학부(가능) · 자유전공생 수강 가능"
   },
@@ -13899,7 +13941,7 @@
     "schedule": "수,금 13:30~14:45",
     "professor": "조은경",
     "english": true,
-    "note": "커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능)"
+    "note": "커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),빅데이터사이언스연계전공(가능) · 학부 선택 과목, 빅데이터사이언스연계전공 가능"
   },
   {
     "id": "MAS2011-01",
@@ -14416,7 +14458,7 @@
     "credits": 3,
     "schedule": "월,수 10:30~11:45",
     "professor": "강성민",
-    "english": true,
+    "english": false,
     "note": "기계공학과(가능) · 짝수학번"
   },
   {
@@ -14680,10 +14722,10 @@
     "section": "01",
     "name": "연구프로젝트Ⅰ",
     "credits": 3,
-    "schedule": "토 09:00~11:45",
+    "schedule": "목 18:00~20:45",
     "professor": "강성원",
     "english": false,
-    "note": ""
+    "note": "담당교수와 이메일로 상담하여 선 승인 후에 수강신청"
   },
   {
     "id": "MEE3301-02",
@@ -14694,10 +14736,10 @@
     "section": "02",
     "name": "연구프로젝트Ⅰ",
     "credits": 3,
-    "schedule": "토 09:00~11:45",
+    "schedule": "목 18:00~20:45",
     "professor": "박정열",
     "english": false,
-    "note": ""
+    "note": "담당교수와 이메일로 상담하여 선 승인 후에 수강신청"
   },
   {
     "id": "MEE3301-03",
@@ -14808,7 +14850,7 @@
     "credits": 3,
     "schedule": "화,목 12:00~13:15",
     "professor": "김남중",
-    "english": false,
+    "english": true,
     "note": "구)유한요소해석"
   },
   {
@@ -15552,20 +15594,6 @@
     "professor": "김범수",
     "english": true,
     "note": "경영대학(가능) · 경영대학(가능)"
-  },
-  {
-    "id": "MGT4202-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "경영학부(경영학전공)",
-    "code": "MGT4202",
-    "section": "01",
-    "name": "통계자료분석",
-    "credits": 3,
-    "schedule": "화,목 12:00~13:15",
-    "professor": "이군희",
-    "english": false,
-    "note": "경영대학(가능),빅데이터사이언스연계전공(가능) · 경영대학,빅데이터사이언스연계전공(가능)"
   },
   {
     "id": "MGT4203-01",
@@ -16319,7 +16347,7 @@
     "name": "개별연구논문",
     "credits": 3,
     "schedule": "",
-    "professor": "김준걸",
+    "professor": "서동욱",
     "english": false,
     "note": "3, 4학년 개별논문 지도를 위한 교과목."
   },
@@ -16754,7 +16782,7 @@
     "credits": 1,
     "schedule": "목 15:30~17:20",
     "professor": "Scopel Stefano",
-    "english": false,
+    "english": true,
     "note": ""
   },
   {
@@ -16782,7 +16810,7 @@
     "credits": 1,
     "schedule": "목 17:30~19:20",
     "professor": "Scopel Stefano",
-    "english": false,
+    "english": true,
     "note": ""
   },
   {
@@ -17118,7 +17146,7 @@
     "credits": 3,
     "schedule": "화 16:30~18:00",
     "professor": "Scopel Stefano",
-    "english": false,
+    "english": true,
     "note": "전공학점으로 인정되지 않음.(총학점에는 포함됨), 매주 화 16:30 콜로키움 수강"
   },
   {
@@ -17146,7 +17174,7 @@
     "credits": 3,
     "schedule": "화 16:30~18:00",
     "professor": "Scopel Stefano",
-    "english": false,
+    "english": true,
     "note": "전공학점으로 인정되지 않음.(총학점에는 포함됨), 매주 화 16:30 콜로키움 수강"
   },
   {
@@ -17243,7 +17271,7 @@
     "name": "정치사상특강",
     "credits": 3,
     "schedule": "화,목 09:00~10:15",
-    "professor": "",
+    "professor": "한유동",
     "english": false,
     "note": ""
   },
@@ -17481,7 +17509,7 @@
     "name": "적응심리학",
     "credits": 3,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "김효진",
     "english": false,
     "note": ""
   },
@@ -17551,7 +17579,7 @@
     "name": "광고및소비자심리학",
     "credits": 3,
     "schedule": "화,목 10:30~11:45",
-    "professor": "",
+    "professor": "서희영",
     "english": false,
     "note": "권장 학년: 2-4학년"
   },
@@ -17986,7 +18014,7 @@
     "credits": 3,
     "schedule": "월,수 10:30~11:45",
     "professor": "이주현",
-    "english": false,
+    "english": true,
     "note": "시스템반도체공학과(가능),반도체공학과(가능) · 시스템반도체공학과 및 반도체공학과 전용분반"
   },
   {
@@ -18042,7 +18070,7 @@
     "credits": 3,
     "schedule": "월,수 10:30~11:45",
     "professor": "Kim, Youngwook",
-    "english": false,
+    "english": true,
     "note": "시스템반도체공학과(가능),반도체공학과(가능) · 시스템반도체공학과 및 반도체공학과 전용분반"
   },
   {
@@ -18348,7 +18376,7 @@
     "section": "01",
     "name": "통합화학",
     "credits": 3,
-    "schedule": "화,목 10:30~11:45",
+    "schedule": "화,목 09:00~10:15",
     "professor": "이현수",
     "english": false,
     "note": "SCIENCE기반자유전(가능) · SCIENCE기반 자유전공학부만 수강가능"
@@ -18606,6 +18634,20 @@
     "note": ""
   },
   {
+    "id": "SHU4001-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "전인교육원",
+    "code": "SHU4001",
+    "section": "01",
+    "name": "북한의이해와통일후한국",
+    "credits": 3,
+    "schedule": "화,목 10:30~11:45",
+    "professor": "정영철",
+    "english": false,
+    "note": ""
+  },
+  {
     "id": "SHU4016-01",
     "year": 2026,
     "term": "2학기",
@@ -18755,7 +18797,7 @@
     "name": "사회학개론",
     "credits": 3,
     "schedule": "수,금 09:00~10:15",
-    "professor": "",
+    "professor": "이용승",
     "english": false,
     "note": ""
   },
@@ -18797,7 +18839,7 @@
     "name": "도시사회학",
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "PARK, EDWARD JANG-WOO",
     "english": true,
     "note": ""
   },
@@ -18811,7 +18853,7 @@
     "name": "건강과 질병의 사회학",
     "credits": 3,
     "schedule": "수,금 09:00~10:15",
-    "professor": "",
+    "professor": "오지민",
     "english": false,
     "note": ""
   },
@@ -19205,7 +19247,7 @@
     "schedule": "일 09:00~11:45",
     "professor": "",
     "english": false,
-    "note": "HUSS 공유대학, 사회구조"
+    "note": "HUSS 공유대학, 사회구조, 포용사회 연계전공인정 과목"
   },
   {
     "id": "SSC2009-01",
@@ -19343,9 +19385,9 @@
     "name": "뉴미디어와 사회",
     "credits": 3,
     "schedule": "수 11:00~13:45",
-    "professor": "김정현",
+    "professor": "",
     "english": false,
-    "note": "HUSS 공유대학, 사회구조, 미디어&엔터테인먼트학과 전공인정 과목"
+    "note": "HUSS 공유대학, 사회구조, 미디어&엔터테인먼트학과 전공 및 포용사회 연계전공인정 과목"
   },
   {
     "id": "SSC2022-01",
@@ -19569,7 +19611,7 @@
     "schedule": "월 17:00~19:45",
     "professor": "",
     "english": false,
-    "note": "HUSS 공유대학, 사회구조"
+    "note": "HUSS 공유대학, 사회구조, 심리학과 전공 및 포용사회 연계전공인정 과목"
   },
   {
     "id": "SSC3004-01",
@@ -19597,7 +19639,7 @@
     "schedule": "월 18:00~20:40",
     "professor": "",
     "english": false,
-    "note": "HUSS 공유대학, 사회구조"
+    "note": "HUSS 공유대학, 사회구조, 사회학과 전공인정 과목"
   },
   {
     "id": "SSC3007-01",
@@ -19779,7 +19821,7 @@
     "schedule": "화 20:30~23:25",
     "professor": "",
     "english": false,
-    "note": "HUSS 공유대학, 사회구조, 화요일 20:45~23:25"
+    "note": "HUSS 공유대학, 사회구조, 심리학과 전공 및 포용사회 연계전공인정 과목, 화요일 20:45~23:25"
   },
   {
     "id": "SSC4007-01",
@@ -19807,7 +19849,7 @@
     "schedule": "토 12:00~14:45",
     "professor": "",
     "english": false,
-    "note": "HUSS 공유대학, 사회구조"
+    "note": "HUSS 공유대학, 사회구조, 심리학과 전공인정 과목"
   },
   {
     "id": "SSC4009-01",
@@ -19947,7 +19989,7 @@
     "schedule": "화,목 09:00~10:15",
     "professor": "현재우",
     "english": false,
-    "note": "자연과학대학(불가능),공과대학(불가능),소프트웨어융합대학(불가능)"
+    "note": "자연과학대학(불가능),공과대학(불가능),소프트웨어융합대학(불가능) · 자연과학대학(불가능),공과대학(불가능),소프트웨어융합대학(불가능)"
   },
   {
     "id": "STS2002-01",
@@ -19973,7 +20015,7 @@
     "name": "생명과환경",
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "이정하",
     "english": false,
     "note": "자연과학대학(불가능),공과대학(불가능),소프트웨어융합대학(불가능)"
   },
@@ -20412,6 +20454,20 @@
     "note": ""
   },
   {
+    "id": "STS2020-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "전인교육원",
+    "code": "STS2020",
+    "section": "01",
+    "name": "드론 산업 개론 및 실습",
+    "credits": 3,
+    "schedule": "월,목 12:00~13:50",
+    "professor": "",
+    "english": false,
+    "note": "강의장소: 체육관 메인코트(실습), 강의실(이론) 병행 운영 예정"
+  },
+  {
     "id": "STS2021-01",
     "year": 2026,
     "term": "2학기",
@@ -20426,6 +20482,20 @@
     "note": ""
   },
   {
+    "id": "STS2022-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "전인교육원",
+    "code": "STS2022",
+    "section": "01",
+    "name": "실전 AI 에이전트 시스템 설계·구축",
+    "credits": 3,
+    "schedule": "수,금 09:00~10:15",
+    "professor": "정병선",
+    "english": false,
+    "note": ""
+  },
+  {
     "id": "STS3000-01",
     "year": 2026,
     "term": "2학기",
@@ -20435,9 +20505,23 @@
     "name": "AX 융합 세미나",
     "credits": 3,
     "schedule": "금 13:30~16:15",
-    "professor": "",
+    "professor": "임응준",
     "english": false,
-    "note": "강의장소 : 판교캠퍼스"
+    "note": "성적평가:S/U, 강의장소: 판교캠퍼스"
+  },
+  {
+    "id": "STS3001-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "전인교육원",
+    "code": "STS3001",
+    "section": "01",
+    "name": "AI 오케스트레이션 스튜디오",
+    "credits": 3,
+    "schedule": "화,목 13:30~14:45",
+    "professor": "이군희",
+    "english": false,
+    "note": ""
   },
   {
     "id": "STU4011-01",
@@ -20631,7 +20715,7 @@
     "name": "투자분석",
     "credits": 3,
     "schedule": "수,금 13:30~14:45",
-    "professor": "",
+    "professor": "WU,HAN",
     "english": true,
     "note": "국제통상전공 전공필수선택 (International Commerce Program Major Core)"
   },
@@ -20729,7 +20813,7 @@
     "name": "중국외교정책",
     "credits": 3,
     "schedule": "화,목 12:00~13:15",
-    "professor": "",
+    "professor": "이유정",
     "english": true,
     "note": ""
   },
@@ -20742,8 +20826,8 @@
     "section": "01",
     "name": "연구방법론",
     "credits": 3,
-    "schedule": "화,목 09:00~10:15",
-    "professor": "김태심",
+    "schedule": "화,목 10:30~11:45",
+    "professor": "Kim, Hannah June",
     "english": true,
     "note": "국제관계전공 전공필수선택 (International Relations Program Major Core)"
   },
@@ -20757,7 +20841,7 @@
     "name": "한반도국제관계",
     "credits": 3,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "이성원",
     "english": true,
     "note": ""
   },
