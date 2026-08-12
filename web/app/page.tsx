@@ -103,7 +103,7 @@ function parseMeetings(schedule: string): Meeting[] {
 }
 
 /**
- * 영어강의인지. 관리 화면에서 이 열이 생기기 전에 올린 자료에는 값이 없으므로 true만 영어강의로 본다.
+ * 영어강의인지. SIS가 「영어강의」 열에 O만 찍으므로 true만 영어강의로 본다.
  */
 function isEnglish(course: Course) {
   return course.english === true;
@@ -143,8 +143,6 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"timetable" | "list" | "mine">("timetable");
   const [pickedIds, setPickedIds] = useState<string[]>([]);
-  /** 관리 화면에서 올린 자료가 있으면 그것을 쓰고, 없으면 빌드에 포함된 기본 자료를 쓴다 */
-  const [uploaded, setUploaded] = useState<{ semester: string; courses: Course[]; uploadedAt?: string } | null>(null);
   const [everytimeUrl, setEverytimeUrl] = useState("");
   const [importedTerms, setImportedTerms] = useState<ImportedTerm[]>([]);
   const [activeImportedTerm, setActiveImportedTerm] = useState("");
@@ -218,18 +216,6 @@ export default function Home() {
   }, [pickedIds]);
 
   useEffect(() => {
-    let cancelled = false;
-    void fetch("/api/courses")
-      .then((response) => (response.status === 204 ? null : response.json()))
-      .then((data) => {
-        if (cancelled || !data?.courses?.length) return;
-        setUploaded({ semester: data.semester, courses: data.courses as Course[], uploadedAt: data.uploadedAt });
-      })
-      .catch(() => undefined);
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
     void fetch("/api/profile", { cache: "no-store" })
       .then((response) => response.json())
       .then((profileData) => {
@@ -249,9 +235,9 @@ export default function Home() {
     postEvent("profile_saved");
   }
 
-  const courses: Course[] = uploaded?.courses ?? bundledCourses;
-  const semesterLabel = uploaded?.semester ?? bundledMeta.semester;
-  const dataDate = dataDateLabel(uploaded?.uploadedAt ?? bundledMeta.generatedAt);
+  const courses: Course[] = bundledCourses;
+  const semesterLabel = bundledMeta.semester;
+  const dataDate = dataDateLabel(bundledMeta.generatedAt);
 
   const profileMajors = useMemo(
     () => profile ? [profile.major1, profile.major2, profile.major3].filter(Boolean) as string[] : [],
@@ -401,11 +387,6 @@ export default function Home() {
     return keys;
   }, [filteredCourses, profileMajors, trackByCode]);
 
-  /**
-   * 관리 화면에 영어강의 열이 생기기 전에 올린 자료로 보고 있으면 켤 것이 없다.
-   * 그때는 「영어강의 강조 0」을 띄우지 않고 스위치 자체를 감춘다.
-   */
-  const hasEnglishData = useMemo(() => courses.some(isEnglish), [courses]);
   /** 결과에 영어강의가 몇 개인지 — 강조를 켜기 전에도 켤 만한지 보이게 스위치에 함께 적는다 */
   const englishCount = useMemo(() => filteredCourses.filter(isEnglish).length, [filteredCourses]);
 
@@ -726,7 +707,7 @@ export default function Home() {
         <section className="result-panel" aria-label="개설 과목 시간표" ref={resultsRef}>
           <div className="result-toolbar">
             <div><p className="semester-label">3 · {semesterLabel.replace("-", "학년도 ")}학기</p><h2>내 조건에 맞는 개설 시간표 {showResults && <span>{filteredCourses.length}과목</span>}</h2>{showResults && <small>{[hiddenTakenCount > 0 ? `${hiddenTakenCount}개 수강·추가 과목 제외됨` : "", remainingTrackCount > 0 ? `남은 필수 교양 ${remainingTrackCount}개 영역 포함` : "필수 교양 모두 이수"].filter(Boolean).join(" · ")}</small>}</div>
-            {showResults && <div className="toolbar-actions"><div className="ge-switch" role="group" aria-label="교양 표시"><span className="ge-switch-label" aria-hidden="true">교양</span>{GE_MODES.map((mode) => <button key={mode.key} type="button" title={mode.hint} aria-pressed={geMode === mode.key} className={geMode === mode.key ? "active" : ""} onClick={() => changeGeMode(mode.key)}>{mode.label}</button>)}</div>{hasEnglishData && <label className={highlightEnglish ? "english-switch on" : "english-switch"} title="영어강의를 노란 윤곽선으로 표시합니다"><input type="checkbox" checked={highlightEnglish} onChange={(event) => changeEnglishHighlight(event.target.checked)} />영어강의 강조<em>{englishCount}</em></label>}<div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="교시별 후보 보기" title="교시별 후보">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기" title="목록">☷</button><button type="button" className={view === "mine" ? "active mine" : "mine"} onClick={() => setView("mine")} aria-label="내 시간표 보기" title="내 시간표">내 시간표{pickedIds.length > 0 && <em>{pickedIds.length}</em>}</button></div></div>}
+            {showResults && <div className="toolbar-actions"><div className="ge-switch" role="group" aria-label="교양 표시"><span className="ge-switch-label" aria-hidden="true">교양</span>{GE_MODES.map((mode) => <button key={mode.key} type="button" title={mode.hint} aria-pressed={geMode === mode.key} className={geMode === mode.key ? "active" : ""} onClick={() => changeGeMode(mode.key)}>{mode.label}</button>)}</div><label className={highlightEnglish ? "english-switch on" : "english-switch"} title="영어강의를 노란 윤곽선으로 표시합니다"><input type="checkbox" checked={highlightEnglish} onChange={(event) => changeEnglishHighlight(event.target.checked)} />영어강의 강조<em>{englishCount}</em></label><div className="category-legend" aria-label="색 구분">{CATEGORIES.filter((item) => shownCategories.has(item.key)).map((item) => <span key={item.key}><i style={{ background: item.color }} aria-hidden="true" />{item.label}</span>)}</div><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="과목 검색" placeholder="과목명·교수·코드 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="view-toggle" aria-label="보기 방식"><button type="button" className={view === "timetable" ? "active" : ""} onClick={() => setView("timetable")} aria-label="교시별 후보 보기" title="교시별 후보">▦</button><button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="목록 보기" title="목록">☷</button><button type="button" className={view === "mine" ? "active mine" : "mine"} onClick={() => setView("mine")} aria-label="내 시간표 보기" title="내 시간표">내 시간표{pickedIds.length > 0 && <em>{pickedIds.length}</em>}</button></div></div>}
           </div>
 
           {!showResults ? (

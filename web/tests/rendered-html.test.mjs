@@ -46,7 +46,7 @@ test("groups timetable entries by start time so one period is one row", () => {
   assert.ok(slots[0].start < slots[1].start, "시작 시각 순으로 정렬된다");
 });
 
-test("parses SIS course files the same way for CLI and upload", async () => {
+test("parses SIS course files for the bundled dataset", async () => {
   const { parseSisCourses } = await import("../app/lib/sis-parse.mjs");
 
   const table = (rows) => `<html><body><table>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
@@ -94,16 +94,12 @@ test("parses SIS course files the same way for CLI and upload", async () => {
   assert.equal(withTarget[0].target, "2,3,4학년");
   assert.equal(withTarget[1].target, "전학년");
 
-  // CLI 스크립트와 업로드 API가 같은 파서를 쓴다
-  const [cli, upload] = await Promise.all([
-    readFile(new URL("../scripts/import-sis.mjs", import.meta.url), "utf8"),
-    readFile(new URL("../app/api/admin/courses/route.ts", import.meta.url), "utf8"),
-  ]);
+  // 개설과목 갱신은 CLI(npm run data:import) → 커밋 → 배포 한 길뿐이다.
+  // 관리 화면 업로드 경로는 제거했다 — 다시 생기면 이 파서와 어긋난 자료가 화면에 실릴 수 있다.
+  const cli = await readFile(new URL("../scripts/import-sis.mjs", import.meta.url), "utf8");
   assert.match(cli, /parseSisCourses/);
-  assert.match(upload, /parseSisCourses/);
-  assert.match(upload, /verifyAdminSession/);
-  assert.match(upload, /status: 401/);
-  assert.match(upload, /MAX_UPLOAD_BYTES/);
+  await assert.rejects(access(new URL("../app/api/admin/courses/route.ts", import.meta.url)), "업로드 API는 제거했다");
+  await assert.rejects(access(new URL("../app/api/courses/route.ts", import.meta.url)), "업로드 자료를 주던 공개 API도 제거했다");
 });
 
 test("filters courses the student cannot register for", async () => {

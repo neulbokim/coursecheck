@@ -106,6 +106,13 @@
       "when": 1786006615240,
       "tag": "0014_silent_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1786507600764,
+      "tag": "0015_easy_network",
+      "breakpoints": true
     }
   ]
 }

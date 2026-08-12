@@ -1,4 +1,4 @@
-import { boolean, index, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const analyticsEvents = pgTable(
   "analytics_events",
@@ -50,18 +50,6 @@ export const everytimeFailures = pgTable(
   },
   (table) => [index("everytime_failures_created_at_idx").on(table.createdAt)],
 );
-
-/**
- * 관리 화면에서 올린 개설과목 데이터. 가장 최근 것을 씁니다.
- * 빌드에 포함된 courses.generated.json이 기본값이고, 이 표에 더 새 자료가 있으면 화면에서 갈아탑니다.
- */
-export const courseDatasets = pgTable("course_datasets", {
-  id: serial("id").primaryKey(),
-  semester: text("semester").notNull(),
-  courseCount: integer("course_count").notNull(),
-  courses: jsonb("courses").notNull(),
-  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
-});
 
 /**
  * 관리자 로그인 시도 제한. 원본 IP는 저장하지 않고 ADMIN_TOKEN으로 서명해

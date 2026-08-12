@@ -14,7 +14,6 @@ type Message = {
   college: string | null;
 };
 
-type Dataset = { id: number; semester: string; courseCount: number; uploadedAt: string };
 
 type Overview = {
   users: { total: number; last24h: number; visiting: number; consented: number; excluded: number };
@@ -122,10 +121,7 @@ export default function AdminPage() {
   const [token, setToken] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
-  const [tab, setTab] = useState<"feedback" | "stats" | "courses">("feedback");
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
-  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "done" | "error">("idle");
-  const [uploadMessage, setUploadMessage] = useState("");
+  const [tab, setTab] = useState<"feedback" | "stats">("feedback");
   const [filter, setFilter] = useState("all");
   const [unit, setUnit] = useState<Unit>("college");
   const [error, setError] = useState("");
@@ -138,10 +134,9 @@ export default function AdminPage() {
   const [logBusy, setLogBusy] = useState(false);
 
   const fetchAll = useCallback(async () => {
-    const [feedbackResponse, overviewResponse, coursesResponse, logResponse] = await Promise.all([
+    const [feedbackResponse, overviewResponse, logResponse] = await Promise.all([
       fetch("/api/admin/feedback", { cache: "no-store" }),
       fetch("/api/admin/overview", { cache: "no-store" }),
-      fetch("/api/admin/courses", { cache: "no-store" }),
       fetch("/api/admin/events", { cache: "no-store" }),
     ]);
     if (feedbackResponse.status === 401 || overviewResponse.status === 401) {
@@ -149,7 +144,6 @@ export default function AdminPage() {
         signedIn: false,
         messages: [] as Message[],
         overview: null,
-        datasets: [] as Dataset[],
         log: [] as LogEntry[],
         logTotal: 0,
         logHasMore: false,
@@ -158,7 +152,6 @@ export default function AdminPage() {
     const feedbackData = (await feedbackResponse.json()) as { messages?: Message[]; error?: string };
     if (!feedbackResponse.ok) throw new Error(feedbackData.error || "불러오지 못했어요.");
     const overviewData = overviewResponse.ok ? ((await overviewResponse.json()) as Overview) : null;
-    const coursesData = coursesResponse.ok ? ((await coursesResponse.json()) as { datasets?: Dataset[] }) : null;
     const logData = logResponse.ok
       ? ((await logResponse.json()) as { events?: LogEntry[]; hasMore?: boolean; total?: number })
       : null;
@@ -166,7 +159,6 @@ export default function AdminPage() {
       signedIn: true,
       messages: feedbackData.messages ?? [],
       overview: overviewData,
-      datasets: coursesData?.datasets ?? [],
       log: logData?.events ?? [],
       logTotal: logData?.total ?? 0,
       logHasMore: logData?.hasMore ?? false,
@@ -180,7 +172,6 @@ export default function AdminPage() {
       setSignedIn(result.signedIn);
       setMessages(result.messages);
       setOverview(result.overview);
-      setDatasets(result.datasets);
       setLog(result.log);
       setLogTotal(result.logTotal);
       setLogHasMore(result.logHasMore);
@@ -201,7 +192,6 @@ export default function AdminPage() {
         setSignedIn(result.signedIn);
         setMessages(result.messages);
         setOverview(result.overview);
-        setDatasets(result.datasets);
         setLog(result.log);
         setLogTotal(result.logTotal);
         setLogHasMore(result.logHasMore);
@@ -237,34 +227,6 @@ export default function AdminPage() {
     setSignedIn(false);
     setMessages([]);
     setOverview(null);
-    setDatasets([]);
-  }
-
-  async function uploadCourses(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const input = form.elements.namedItem("file") as HTMLInputElement | null;
-    if (!input?.files?.[0]) {
-      setUploadState("error");
-      setUploadMessage("파일을 선택해 주세요.");
-      return;
-    }
-    setUploadState("uploading");
-    setUploadMessage("");
-    try {
-      const body = new FormData();
-      body.append("file", input.files[0]);
-      const response = await fetch("/api/admin/courses", { method: "POST", body });
-      const data = (await response.json()) as { ok?: boolean; semester?: string; courseCount?: number; error?: string };
-      if (!response.ok || !data.ok) throw new Error(data.error || "올리지 못했어요.");
-      setUploadState("done");
-      setUploadMessage(`${data.semester} 개설과목 ${data.courseCount?.toLocaleString("ko-KR")}과목을 반영했어요.`);
-      form.reset();
-      await load();
-    } catch (caught) {
-      setUploadState("error");
-      setUploadMessage(caught instanceof Error ? caught.message : "올리지 못했어요.");
-    }
   }
 
   async function purgeEvents(scope: "old" | "all") {
@@ -430,50 +392,11 @@ export default function AdminPage() {
         <button type="button" role="tab" aria-selected={tab === "stats"} className={tab === "stats" ? "active" : ""} onClick={() => setTab("stats")}>
           집계·로그{logTotal > 0 && <span>{logTotal.toLocaleString("ko-KR")}</span>}
         </button>
-        <button type="button" role="tab" aria-selected={tab === "courses"} className={tab === "courses" ? "active" : ""} onClick={() => setTab("courses")}>
-          개설과목{datasets.length > 0 && <span>{datasets.length}</span>}
-        </button>
       </div>
 
       {error && <p className="feedback-error" role="alert">{error}</p>}
 
-      {tab === "courses" ? (
-        <>
-          <form className="upload-form" onSubmit={uploadCourses}>
-            <label htmlFor="course-file">SIS 개설교과목정보 파일</label>
-            <p className="upload-hint">
-              <a href="https://sis109.sogang.ac.kr/sap/bc/webdynpro/sap/zcmw9016?sap-language=KO" target="_blank" rel="noreferrer">개설교과목정보 ↗</a>
-              에서 학년도·학기를 골라 조회한 뒤 엑셀로 내려받아 그대로 올리세요.
-              확장자는 <code>.xls</code>지만 실제로는 HTML 표라서 변환 없이 읽습니다.
-            </p>
-            <div className="upload-row">
-              <input id="course-file" name="file" type="file" accept=".xls,.xlsx,.html,text/html" required />
-              <button className="primary-button" disabled={uploadState === "uploading"}>
-                {uploadState === "uploading" ? "읽는 중…" : "올리기"}
-              </button>
-            </div>
-            {uploadMessage && <p className={`import-message ${uploadState}`} role="status">{uploadMessage}</p>}
-          </form>
-
-          <h2 className="admin-subhead">올린 자료<small>가장 최근 것을 화면에 씁니다</small></h2>
-          {datasets.length === 0 ? (
-            <p className="admin-empty">아직 올린 자료가 없어요. 빌드에 포함된 기본 자료를 쓰고 있습니다.</p>
-          ) : (
-            <table className="admin-table">
-              <thead><tr><th>학기</th><th>과목 수</th><th>올린 시각</th></tr></thead>
-              <tbody>
-                {datasets.map((row, index) => (
-                  <tr key={row.id}>
-                    <td><strong>{row.semester}</strong>{index === 0 && <small>사용 중</small>}</td>
-                    <td className="num">{row.courseCount.toLocaleString("ko-KR")}</td>
-                    <td className="num">{new Date(row.uploadedAt).toLocaleString("ko-KR")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </>
-      ) : tab === "stats" ? (
+      {tab === "stats" ? (
         !overview ? (
           <p className="admin-empty">집계를 불러오지 못했어요.</p>
         ) : (
