@@ -14,6 +14,7 @@ import { hourMarks, layoutCalendar } from "./lib/calendar-layout.mjs";
 import { courseNameSize, normalizeCourseName } from "./lib/course-name.mjs";
 import { expandEquivalents, equivalentLabel } from "./data/equivalents.mjs";
 import { affiliationsOf, checkEligibility } from "./data/affiliations.mjs";
+import { checkGradeEligibility, gradeOfSemesters } from "./lib/target-grade.mjs";
 import { majorsWithPreMajor, preMajorCodeMap, preMajorSource } from "./data/pre-major.mjs";
 import {
   LAST_BULLETIN_YEAR,
@@ -332,6 +333,9 @@ export default function Home() {
     })),
   }, college?.label ?? null) as { any: Set<string>; firstMajor: Set<string> }, [profile, profileMajors, college]);
 
+  /** 이수학기 수로 센 다음 학기의 학년 — 「수강대상」 판정이 본다 */
+  const studentGrade = gradeOfSemesters(profile?.completedSemesters);
+
   const filteredCourses = useMemo(() => {
     const ranks = majorRankIndex(profileMajors);
     const normalizedQuery = query.trim().toLowerCase();
@@ -351,6 +355,8 @@ export default function Home() {
       if (!preMajor && equivalentNames.has(name)) return false;
       // 소속 제한으로 신청할 수 없는 과목은 뺀다 (판정할 수 없으면 남긴다)
       if (!checkEligibility(course.note ?? "", affiliations).eligible) return false;
+      // 「수강대상」 학년이 아닌 과목도 뺀다 — 권장학년과 달리 실제 신청 제한이다
+      if (!checkGradeEligibility(course.target, studentGrade).eligible) return false;
 
       if (rank) {
         if (excludedMajorRanks.includes(rank)) return false;
@@ -364,7 +370,7 @@ export default function Home() {
 
       return !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [courses, profileMajors, query, takenNames, equivalentNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
+  }, [courses, profileMajors, query, takenNames, equivalentNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations, studentGrade]);
 
   const timetableSlots = useMemo(() => groupTimetableEntries(
     filteredCourses.flatMap((course) => parseMeetings(course.schedule).map((meeting) => ({ course, meeting }))),
@@ -854,7 +860,7 @@ export default function Home() {
 
       {profileLoading && <div className="profile-backdrop"><div className="profile-loading" role="status"><span className="brand-mark">C</span><p>내 설정을 확인하고 있어요…</p></div></div>}
       {!profileLoading && profileOpen && <ProfileSetup initialProfile={profile} onClose={profile ? () => setProfileOpen(false) : undefined} onSaved={profileSaved} />}
-      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>{isEnglish(selectedCourse) && <div><dt>강의언어</dt><dd>영어강의</dd></div>}{preMajorOf(selectedCourse) && <div><dt>전공입문</dt><dd>{preMajorOf(selectedCourse)!.major} · {preMajorOf(selectedCourse)!.rule}<small> ({preMajorSource.bulletinYear}학년도 요람)</small></dd></div>}{trackLabelFor(selectedCourse) && <div><dt>필수 교양</dt><dd>{trackLabelFor(selectedCourse)} · {bulletinYear}학년도 요람</dd></div>}</dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<div className="modal-actions"><button className="primary-button" type="button" onClick={() => togglePicked(selectedCourse)}>{pickedSet.has(selectedCourse.id) ? "내 시간표에서 빼기" : "내 시간표에 담기"}</button><a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></div></article></div>}
+      {selectedCourse && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCourse(null)}><article className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedCourse(null)} aria-label="닫기">×</button><span className="modal-code">{selectedCourse.code}-{selectedCourse.section}</span><h3 id="course-title">{selectedCourse.name}</h3><dl><div><dt>시간</dt><dd>{selectedCourse.schedule || "미정"}</dd></div><div><dt>교수진</dt><dd>{selectedCourse.professor || "미정"}</dd></div><div><dt>학점</dt><dd>{selectedCourse.credits}학점</dd></div><div><dt>개설학과</dt><dd>{selectedCourse.department}</dd></div>{selectedCourse.target && <div><dt>수강대상</dt><dd>{selectedCourse.target}</dd></div>}{isEnglish(selectedCourse) && <div><dt>강의언어</dt><dd>영어강의</dd></div>}{preMajorOf(selectedCourse) && <div><dt>전공입문</dt><dd>{preMajorOf(selectedCourse)!.major} · {preMajorOf(selectedCourse)!.rule}<small> ({preMajorSource.bulletinYear}학년도 요람)</small></dd></div>}{trackLabelFor(selectedCourse) && <div><dt>필수 교양</dt><dd>{trackLabelFor(selectedCourse)} · {bulletinYear}학년도 요람</dd></div>}</dl>{selectedCourse.note && <p className="course-note">{selectedCourse.note}</p>}<div className="modal-actions"><button className="primary-button" type="button" onClick={() => togglePicked(selectedCourse)}>{pickedSet.has(selectedCourse.id) ? "내 시간표에서 빼기" : "내 시간표에 담기"}</button><a href={officialSources.courses} target="_blank" rel="noreferrer">공식 개설교과목정보에서 확인 ↗</a></div></article></div>}
     </main>
   );
 }

@@ -61,6 +61,8 @@ export function parseSisCourses(html) {
       professor: take(row, "교수진"),
       // SIS는 「영어강의」 열에 O만 찍는다. 영어강의 요건이 남은 학생이 찾아야 하는 값이라 남긴다
       english: /^[oO○]$/.test(take(row, "영어강의")),
+      // 학년 자격 판정이 보는 값 — 「권장학년」은 권장일 뿐이라 쓰지 않고, 실제 제한인 「수강대상」만 남긴다
+      target: take(row, "수강대상"),
       // 수강 자격 판정이 이 필드를 본다 — 「경영대학(가능)」 표기가 수강신청 참조사항에 있다
       note: [take(row, "수강신청 참조사항"), take(row, "비고")]
         .filter(Boolean)

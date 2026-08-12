@@ -83,6 +83,17 @@ test("parses SIS course files the same way for CLI and upload", async () => {
   assert.equal(withEnglish[1].english, false);
   assert.equal(withEnglish.filter((course) => course.english).length, 30);
 
+  // 「수강대상」은 학년 자격 판정이 본다 — 열이 없던 옛 파일은 빈 값으로 두어 막지 않는다
+  assert.equal(courses[0].target, "");
+  const targetHeaders = [...headers, "수강대상"];
+  const targetRow = (code, value) => [...row(code, `과목${code}`), value];
+  const { courses: withTarget } = parseSisCourses(table([
+    targetHeaders,
+    ...Array.from({ length: 60 }, (_, i) => targetRow(`MGT${4000 + i}`, i % 2 === 0 ? "2,3,4학년" : "전학년")),
+  ]));
+  assert.equal(withTarget[0].target, "2,3,4학년");
+  assert.equal(withTarget[1].target, "전학년");
+
   // CLI 스크립트와 업로드 API가 같은 파서를 쓴다
   const [cli, upload] = await Promise.all([
     readFile(new URL("../scripts/import-sis.mjs", import.meta.url), "utf8"),
@@ -171,6 +182,47 @@ test("filters courses the student cannot register for", async () => {
 
   assert.equal(checkEligibility("", after).eligible, true);
   assert.equal(checkEligibility("전학년 수강 가능", after).eligible, true);
+});
+
+test("hides courses whose 수강대상 excludes the student's grade", async () => {
+  const { gradeOfSemesters, parseTargetGrades, checkGradeEligibility } = await import(
+    "../app/lib/target-grade.mjs"
+  );
+
+  // 이수학기 수 → 다음 학기의 학년
+  assert.equal(gradeOfSemesters(0), 1);
+  assert.equal(gradeOfSemesters(1), 1, "2학기째인 학생은 아직 1학년");
+  assert.equal(gradeOfSemesters(2), 2);
+  assert.equal(gradeOfSemesters(7), 4);
+  assert.equal(gradeOfSemesters(16), 4, "초과학기도 4학년으로 본다");
+  assert.equal(gradeOfSemesters(undefined), null, "프로필이 없으면 판정하지 않는다");
+
+  // 「수강대상」 표기 → 학년 집합
+  assert.deepEqual([...parseTargetGrades("2,3,4학년")], [2, 3, 4]);
+  assert.deepEqual([...parseTargetGrades("1,4학년")], [1, 4], "연속 구간이 아닐 수 있어 집합으로 본다");
+  assert.deepEqual([...parseTargetGrades("1-4학년")], [1, 2, 3, 4], "구간 표기도 읽는다");
+  assert.equal(parseTargetGrades("전학년"), null);
+  assert.equal(parseTargetGrades(""), null);
+  assert.equal(parseTargetGrades(undefined), null, "열이 없던 옛 자료는 막지 않는다");
+
+  // 건의된 사례: 권장학년이 전학년(1-4학년)이어도 수강대상이 2,3,4학년이면 1학년은 신청 불가
+  assert.equal(checkGradeEligibility("2,3,4학년", 1).eligible, false);
+  assert.match(checkGradeEligibility("2,3,4학년", 1).reason, /2·3·4학년/);
+  assert.equal(checkGradeEligibility("2,3,4학년", 2).eligible, true);
+  assert.equal(checkGradeEligibility("3,4학년", 1).eligible, false, "실험·캡스톤디자인은 1학년에게 안 보인다");
+  assert.equal(checkGradeEligibility("전학년", 1).eligible, true);
+  assert.equal(checkGradeEligibility("", 1).eligible, true);
+  assert.equal(checkGradeEligibility("2,3,4학년", null).eligible, true, "학년을 모르면 막지 않는다");
+
+  // 실제 자료에 「수강대상」이 실려 있고, 화면 필터가 그 값을 본다
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /checkGradeEligibility\(course\.target, studentGrade\)/);
+  assert.match(page, /gradeOfSemesters\(profile\?\.completedSemesters\)/);
+  const courses = JSON.parse(
+    await readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+  );
+  assert.equal(courses.find((course) => course.code === "AAT2004").target, "2,3,4학년");
+  assert.ok(courses.filter((course) => course.target === "전학년").length > 500);
 });
 
 test("lays picked courses on a time-proportional calendar with lanes", async () => {
@@ -387,7 +439,7 @@ test("ships normalized course and linked-major data", async () => {
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
   const courses = JSON.parse(coursesText);
-  assert.equal(courses.length, 1494);
+  assert.equal(courses.length, 1500);
   assert.ok(courses.some((course) => course.code === "BDS4010"));
   assert.match(majorsText, /빅데이터사이언스 연계전공/);
   assert.match(majorsText, /sourceUrl/);
