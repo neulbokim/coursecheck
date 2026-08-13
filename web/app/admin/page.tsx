@@ -69,6 +69,7 @@ const EVENT_LABEL = new Map<string, string>([
   ["everytime_import_error", "에브리타임 실패"],
   ["course_pick", "과목 담기"],
   ["ge_mode", "교양 표시 전환"],
+  ["grade_scope", "수강대상 범위 전환"],
   ["english_highlight", "영어강의 강조 전환"],
   ["feedback_open", "건의 창 열기"],
   ["helpful_vote", "도움이 됐나요 응답"],

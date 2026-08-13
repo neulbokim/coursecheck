@@ -214,6 +214,10 @@ test("hides courses whose 수강대상 excludes the student's grade", async () =
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   assert.match(page, /checkGradeEligibility\(course\.target, studentGrade\)/);
   assert.match(page, /gradeOfSemesters\(profile\?\.completedSemesters\)/);
+  // 기본은 수강대상 학년만 보이고, 스위치를 켜면 교수님 승인을 받아볼 과목까지 함께 본다
+  assert.match(page, /useState\(false\);\n\s*\/\*\* 수강대상 학년이 아닌 과목까지 볼지|const \[showAllGrades, setShowAllGrades\] = useState\(false\)/);
+  assert.match(page, /showAllGrades\s*\n?\s*\? matchedCourses/);
+  assert.match(page, /grade-switch/);
   const courses = JSON.parse(
     await readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
   );
@@ -513,7 +517,7 @@ test("keeps major-credit courses visible after their GE area is done", async () 
   const { coreTracksFor, coreTrackCodeMap } = await import("../app/data/core-curriculum.mjs");
 
   // 이수한 영역을 거르기 전에 전공 순번을 먼저 구해야 「전공이면 남긴다」를 판정할 수 있다
-  const filter = pageText.slice(pageText.indexOf("const filteredCourses"), pageText.indexOf("const timetableSlots"));
+  const filter = pageText.slice(pageText.indexOf("const matchedCourses"), pageText.indexOf("const timetableSlots"));
   assert.ok(
     filter.indexOf("ranks.byCode.get(course.code)") < filter.indexOf("completedTrackKeys.has(trackKey)"),
     "전공 판정이 이수 영역 필터보다 앞에 온다",

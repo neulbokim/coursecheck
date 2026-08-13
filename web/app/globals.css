@@ -24,6 +24,8 @@
   --cream: #f0f1f1;
   /* 영어강의 강조용 골드. 서강 UI 팔레트에 노랑이 없어 서브 앰버(#e0803a) 옆에 서는 값으로 골랐습니다 */
   --english: #d9990a;
+  /* 수강대상 학년이 아닌 과목 표시용 슬레이트 — 「신청 불가」를 전공·교양 색과 헷갈리지 않게 무채색 계열로 */
+  --restricted: #64748b;
 }
 
 * { box-sizing: border-box; }
@@ -127,6 +129,7 @@ body:has(.profile-backdrop) { overflow: hidden; }
 .core-note { margin: 12px 0 0; color: #868585; font-size: 11px; line-height: 1.55; word-break: keep-all; }
 .core-badge { margin-left: 6px; padding: 2px 5px; border-radius: 4px; background: #f1f1f1; color: #767575; font-size: 10px; font-style: normal; font-weight: 750; vertical-align: middle; }
 .core-badge.english { background: #fdf3dc; color: #8a6100; }
+.core-badge.grade-limited { background: #e9edf3; color: #44566c; }
 .semester-help strong { font-weight: 800; }
 .source-card small { color: #999; font-size: 10px; line-height: 1.5; word-break: keep-all; }
 .semester-help { margin: -3px 0 15px; padding: 10px 11px; border-radius: 9px; background: #f1f1f1; color: #706f6f; font-size: 12px; line-height: 1.55; word-break: keep-all; }
@@ -540,6 +543,11 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 .english-switch em { padding: 1px 5px; border-radius: 4px; background: #e9e9e9; color: #7c7c7c; font-size: 10px; font-style: normal; font-weight: 800; }
 .english-switch.on { border-color: var(--english); background: #fff8e6; color: #8a6100; }
 .english-switch.on em { background: var(--english); color: #ffffff; }
+.grade-switch { min-height: 38px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: #f5f5f5; color: #7c7c7c; font-size: 11px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.grade-switch input { margin: 0; accent-color: var(--restricted); }
+.grade-switch em { padding: 1px 5px; border-radius: 4px; background: #e9e9e9; color: #7c7c7c; font-size: 10px; font-style: normal; font-weight: 800; }
+.grade-switch.on { border-color: var(--restricted); background: #eef2f7; color: #44566c; }
+.grade-switch.on em { background: var(--restricted); color: #ffffff; }
 
 /* 담기 버튼 */
 .course-line-wrap { position: relative; }
@@ -555,6 +563,10 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 /* 영어강의 강조 — 과목 색(전공·교양 구분)은 그대로 두고 바깥에 골드 윤곽선만 두른다 */
 .course-line-wrap.english .course-line { box-shadow: 0 0 0 1.5px var(--english), 0 0 8px rgb(217 153 10 / 45%); }
 .course-line-wrap.english.picked .course-line { box-shadow: 0 0 0 1.5px var(--english), 0 0 8px rgb(217 153 10 / 45%), inset 0 0 0 1px var(--cardinal); }
+/* 수강대상 학년이 아닌 과목(전체 보기에서만 등장) — 점선 왼선과 옅은 톤으로 「신청 불가」를 알린다 */
+.course-line-wrap.grade-limited .course-line { border-left-style: dashed; opacity: .72; }
+.course-row.grade-limited > button:first-child { opacity: .78; }
+.course-row.grade-limited .course-color { opacity: .55; }
 
 .course-row { position: relative; display: grid; }
 .course-row > button:first-child { width: 100%; min-height: 76px; padding: 14px 96px 14px 24px; display: grid; grid-template-columns: 4px minmax(0, 1fr) minmax(150px, .6fr) auto; align-items: center; gap: 14px; border: 0; border-bottom: 1px solid var(--line); background: #fff; text-align: left; cursor: pointer; }
@@ -600,6 +612,8 @@ footer .build-stamp { font-variant-numeric: tabular-nums; letter-spacing: .02em;
 /* 담은 과목 시간표에서도 영어강의를 그대로 알아보게. 겹침 표시(안쪽 선)와 함께 쓸 수 있다 */
 .calendar-block.english { box-shadow: 0 0 0 1.5px var(--english), 0 0 7px rgb(217 153 10 / 45%); }
 .calendar-block.english.clash { box-shadow: 0 0 0 1.5px var(--english), 0 0 7px rgb(217 153 10 / 45%), inset 0 0 0 1.5px var(--cardinal); }
+/* 담은 과목 중 수강대상 학년이 아닌 과목도 같은 점선 표시를 유지한다 */
+.calendar-block.grade-limited { border-left-style: dashed; opacity: .82; }
 .calendar-block strong, .calendar-block small { display: block; min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
 .calendar-block strong { font-size: 10px; font-weight: 750; line-height: 1.3; }
 .calendar-block small { margin-top: 1px; color: #6f686b; font-size: 10px; }

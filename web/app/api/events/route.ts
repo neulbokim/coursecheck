@@ -15,6 +15,7 @@ const ALLOWED_EVENTS = new Set([
   "everytime_import_error",
   "course_pick",
   "ge_mode",
+  "grade_scope",
   "english_highlight",
   "feedback_open",
   "helpful_vote",
@@ -23,7 +24,7 @@ const ALLOWED_EVENTS = new Set([
  * 이벤트마다 뜻이 다른 묶음 값입니다.
  * results_view는 결과 과목 수(0·1-25·26+), everytime_import는 가져온 과목 수(0·1-5·6+),
  * ge_mode는 고른 교양 표시(all·core·none), english_highlight는 강조를 켰는지(on·off),
- * helpful_vote는 도움이 됐는지(yes·no)를 담습니다.
+ * grade_scope는 수강대상 아닌 과목까지 보기를 켰는지(on·off), helpful_vote는 도움이 됐는지(yes·no)를 담습니다.
  */
 const ALLOWED_BUCKETS = new Set(["0", "1-5", "6+", "1-25", "26+", "all", "core", "none", "on", "off", "yes", "no"]);
 
