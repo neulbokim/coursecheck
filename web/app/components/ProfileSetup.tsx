@@ -2,7 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useId, useMemo, useState } from "react";
 import Link from "next/link";
-import { majorOptions, normalizeMajorSearch } from "../data/major-options";
+import { normalizeMajorSearch, searchMajors } from "../data/major-options";
 import { FIRST_BULLETIN_YEAR, LAST_BULLETIN_YEAR, collegesFor } from "../data/core-curriculum.mjs";
 
 export type UserProfile = {
@@ -43,11 +43,7 @@ function MajorCombobox({
 
   // 아무것도 치지 않았으면 목록을 띄우지 않는다 — 전공이 320개라 첫 7개를 보여줘야 도움이 안 된다
   const normalizedQuery = normalizeMajorSearch(query);
-  const matches = useMemo(() => {
-    const normalized = normalizeMajorSearch(query);
-    if (!normalized) return [];
-    return majorOptions.filter((major) => normalizeMajorSearch(major).includes(normalized)).slice(0, 7);
-  }, [query]);
+  const matches = useMemo(() => searchMajors(query), [query]);
 
   function choose(major: string) {
     setQuery(major);
