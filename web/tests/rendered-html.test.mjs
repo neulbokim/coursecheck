@@ -398,6 +398,22 @@ test("filters pre-major groups by track (단일·다전공) and cohort", async (
   assert.ok(eeSecond.get("EEE1002"), "공통 필수는 남는다");
   // 미적분학Ⅰ은 아텍(1전공) 전공입문이기도 해 앞선 전공이 이긴다 — 어느 쪽이든 보이기만 하면 된다
   assert.ok(eeSecond.get("STS2005"), "타전공 다전공은 미적분학Ⅰ도 이수");
+
+  // 수학과: 제1전공이 타전공인 다전공은 미적분학Ⅱ·미적분학실습 5학점만 (자연과학 기초·실험 면제)
+  const atecMath = preMajorCodeMap(["아트&테크놀로지학과", "수학과"]);
+  assert.equal(atecMath.get("MAT1050").rank, 2);
+  assert.equal(atecMath.get("CHM1001"), undefined, "자연과학 기초는 타전공 1전공 다전공에게 면제");
+  assert.equal(atecMath.get("PHY1101"), undefined, "실험 묶음도 면제");
+  const mathFirst = preMajorCodeMap(["수학과", "심리학과"]);
+  assert.ok(mathFirst.get("CHM1001"), "수학 1전공 다전공은 자연과학 기초 택2가 남는다");
+
+  // 인문대 전공입문(인문세미나)은 요람상 다전공(2·3전공생)에게도 그대로 적용된다
+  const csKorean = preMajorCodeMap(["컴퓨터공학과", "국어국문학과"]);
+  assert.equal(csKorean.get("HSS3013").rank, 2);
+
+  // 게페르트 국제통상수리기초는 단일전공 전용이 아니다 — 경제·경영 외 다전공자에게도 필수
+  const atecGic = preMajorCodeMap(["아트&테크놀로지학과", "게페르트국제학부"]);
+  assert.equal(atecGic.get("TIS1005").rank, 2);
 });
 
 test("keeps the timetable within the viewport and lists courses by time slot", async () => {

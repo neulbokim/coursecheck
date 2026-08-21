@@ -96,12 +96,17 @@ export const preMajorPrograms = [
   {
     major: "수학과",
     groups: [
-      { rule: "미적분학Ⅱ·미적분학실습 필수 (5학점)", codes: ["STS2006", "MAT1050", "MAT1060"] },
+      { rule: "미적분학Ⅱ·미적분학실습 필수 (5학점, 모든 이수유형 공통)", codes: ["STS2006", "MAT1050", "MAT1060"] },
       {
-        rule: "자연과학 기초 6과목 중 단일전공 택4 · 다전공 택2",
+        rule: "자연과학 기초 6과목 중 단일전공 택4 · 수학 1전공 다전공 택2 (제1전공이 타전공이면 면제)",
         codes: ["PHY1001", "PHY1002", "CHM1001", "CHM1002", "BIO1001", "BIO1002", "BIO1101", "BIO1102"],
+        appliesTo: ["single", "multiFirst"],
       },
-      { rule: "실험 6과목 중 단일전공 택2 · 다전공 택1", codes: SCIENCE_LAB_CODES },
+      {
+        rule: "실험 6과목 중 단일전공 택2 · 수학 1전공 다전공 택1 (제1전공이 타전공이면 면제)",
+        codes: SCIENCE_LAB_CODES,
+        appliesTo: ["single", "multiFirst"],
+      },
     ],
   },
   {
@@ -270,7 +275,7 @@ export const preMajorPrograms = [
     major: "게페르트국제학부",
     groups: [
       { rule: "국제관계개론·국제통상입문·아시아학개론 (9학점)", codes: ["TIS1001", "TIS1002", "AAS1001"] },
-      { rule: "국제통상전공 단일전공은 국제통상수리기초도 이수", codes: ["TIS1005"], appliesTo: ["single"] },
+      { rule: "국제통상전공은 국제통상수리기초도 이수 (경제·경영 다전공자는 면제)", codes: ["TIS1005"] },
     ],
   },
   {
