@@ -215,17 +215,23 @@ export const preMajorPrograms = [
   {
     major: "컴퓨터공학과",
     groups: [
-      { rule: "미적분학Ⅱ·일반물리Ⅰ·응용수학Ⅰ·Ⅱ (심화 단일전공 12학점)", codes: ["STS2006", "PHY1001", "MAT2410", "MAT2420"] },
-      { rule: "집합론·선형대수학·정수론 택1 (심화 단일전공)", codes: ["MAT2010", "MAT2110", "MAT2120"] },
-      { rule: "교직과정은 일반물리실험Ⅰ도 이수", codes: ["PHY1101"] },
-      { rule: "제1전공이 타전공이면 C 과목 택1", codes: ["STS2008", "AIE2050", "CSW2010", "EEE1002", "MEE1005", "SSE1002"] },
+      { rule: "응용수학Ⅰ·Ⅱ (단일전공과 컴퓨터공학 1전공 다전공 · 다전공은 이 6학점만)", codes: ["MAT2410", "MAT2420"], appliesTo: ["single", "multiFirst"] },
+      { rule: "미적분학Ⅱ·일반물리Ⅰ (심화 단일전공)", codes: ["STS2006", "PHY1001"], appliesTo: ["single"] },
+      { rule: "집합론·선형대수학·정수론 택1 (심화 단일전공)", codes: ["MAT2010", "MAT2110", "MAT2120"], appliesTo: ["single"] },
+      { rule: "교직과정은 일반물리실험Ⅰ도 이수", codes: ["PHY1101"], appliesTo: ["single"] },
+      {
+        rule: "제1전공이 타전공이면 C 과목 택1 (3학점)",
+        codes: ["STS2008", "AIE2050", "CSW2010", "EEE1002", "MEE1005", "SSE1002", "SCE1002"],
+        appliesTo: ["multiOther"],
+      },
     ],
   },
   {
     major: "인공지능학과",
     groups: [
-      { rule: "미적분학Ⅱ·응용수학Ⅰ·Ⅱ·선형대수학 (12학점)", codes: ["STS2006", "MAT2410", "MAT2420", "MAT2110"] },
-      { rule: "타전공생은 컴퓨터프로그래밍Ⅱ 대신 고급응용C프로그래밍 수강 가능", codes: ["STS2008"] },
+      { rule: "미적분학Ⅱ·응용수학Ⅰ·Ⅱ·선형대수학 (12학점, 모든 이수유형 공통)", codes: ["STS2006", "MAT2410", "MAT2420", "MAT2110"] },
+      { rule: "제1전공이 타전공이면 미적분학Ⅰ 포함 15학점 (미적분학Ⅰ 미이수자만)", codes: ["STS2005"], appliesTo: ["multiOther"] },
+      { rule: "타전공생은 컴퓨터프로그래밍Ⅱ 대신 고급응용C프로그래밍 수강 가능", codes: ["STS2008"], appliesTo: ["multiOther"] },
     ],
   },
 

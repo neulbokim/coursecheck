@@ -359,6 +359,28 @@ test("keeps every pre-major (전공입문) course of the student's major visible
 test("filters pre-major groups by track (단일·다전공) and cohort", async () => {
   const { preMajorCodeMap } = await import("../app/data/pre-major.mjs");
 
+  // 컴퓨터공학 단일전공: 심화 단일전공 15학점 구성이 전부 보인다
+  const csSingle = preMajorCodeMap(["컴퓨터공학과"]);
+  assert.equal(csSingle.get("STS2006").rank, 1);
+  assert.ok(csSingle.get("PHY1001"));
+  assert.ok(csSingle.get("MAT2410"));
+  assert.ok(csSingle.get("MAT2010"), "집합론 택1 묶음은 단일전공에 보인다");
+  assert.equal(csSingle.get("STS2008"), undefined, "타전공 C 택1은 단일전공에게 안 보인다");
+
+  // 아트&테크놀로지 1전공 + 컴퓨터공학 2전공: 요람 「다전공(제1전공이 타전공)」 3학점만 남는다
+  const atecCs = preMajorCodeMap(["아트&테크놀로지학과", "컴퓨터공학과"]);
+  assert.equal(atecCs.get("STS2006"), undefined, "심화 단일전공용 미적분학Ⅱ는 타전공 다전공에게 안 보인다");
+  assert.equal(atecCs.get("MAT2410"), undefined, "응용수학은 컴공이 1전공일 때만");
+  assert.equal(atecCs.get("MAT2010"), undefined);
+  assert.equal(atecCs.get("STS2008").rank, 2, "C 과목 택1(3학점)은 남는다");
+
+  // 컴퓨터공학 1전공 + 타전공 2전공: 다전공(컴공)은 응용수학Ⅰ·Ⅱ 6학점만
+  // (2전공은 전공입문에 미적분학이 없는 심리학과로 — 경제학과라면 그쪽 묶음으로 STS2006이 살아난다)
+  const csFirst = preMajorCodeMap(["컴퓨터공학과", "심리학과"]);
+  assert.ok(csFirst.get("MAT2410"));
+  assert.equal(csFirst.get("STS2006"), undefined);
+  assert.equal(csFirst.get("PHY1001"), undefined);
+
   // 화공생명공학: 일반화학Ⅰ·Ⅱ 대체는 23학번까지만 — 25학번에게는 안 보인다
   const cbe25 = preMajorCodeMap(["화공생명공학과"], 2025);
   assert.equal(cbe25.get("CHM1001"), undefined, "24학번부터는 화공기초화학이 필수라 일반화학Ⅰ은 안 보인다");
