@@ -128,6 +128,13 @@ async function recordFailures(
   ]);
 }
 
+/** 에타 학기 표기(1·여름·2·겨울)를 최신 학기가 크게 나오는 숫자로 */
+const TERM_ORDER: Record<string, number> = { "1": 1, "여름": 2, "2": 3, "겨울": 4 };
+
+function referenceRecency(reference: { year: string; semester: string }) {
+  return Number(reference.year) * 10 + (TERM_ORDER[reference.semester] ?? 0);
+}
+
 async function fetchAllTerms(
   references: Array<{ identifier: string; year: string; semester: string }>,
   initialXml: string,
@@ -150,19 +157,24 @@ async function fetchAllTerms(
           ? initialXml
           : await fetchFriendTable(reference.identifier, false, cookie, userAgent, signal);
         const table = extractCurrentTable(xml);
+        const available = table?.status !== "-2";
         results[index] = {
           semester,
           courses: extractCourses(xml),
-          available: table?.status !== "-2",
+          available,
+          // 사유 코드는 화면 문구와 분리해 둡니다 — 문구는 클라이언트가 코드를 보고 고릅니다
+          ...(available ? {} : { reason: "not_public" }),
         };
+        if (!available) failures.push({ scope: "semester", reasonCode: "not_public", semester });
       } catch (error) {
         if (signal.aborted) throw error;
         /**
-         * 학기 하나가 안 열려도 나머지는 그대로 보여줍니다. 화면에는 「가져오지 못한 학기」로만
-         * 뜨고 사유가 사라지므로, 그 사유를 여기서 모읍니다.
+         * 학기 하나가 안 열려도 나머지는 그대로 보여줍니다. 사유 코드를 응답에도 실어
+         * 사용자가 학기 탭에서 왜 안 됐는지(비공개·제한 등) 볼 수 있게 합니다.
          */
-        failures.push({ scope: "semester", reasonCode: failureCode(error), semester });
-        results[index] = { semester, courses: [], available: false };
+        const reasonCode = failureCode(error);
+        failures.push({ scope: "semester", reasonCode, semester });
+        results[index] = { semester, courses: [], available: false, reason: reasonCode };
       }
     }
   });
@@ -201,16 +213,47 @@ export async function POST(request: Request) {
     step = "first_table";
     const initialXml = await fetchFriendTable(token, true, cookie, userAgent, controller.signal);
     const currentTable = extractCurrentTable(initialXml);
-    const discovered = extractSemesterReferences(initialXml)
+    const rawReferences = extractSemesterReferences(initialXml);
+    /**
+     * 식별자가 이상한 학기는 조용히 버리지 않습니다 — 그러면 탭 자체가 사라져 사용자는
+     * 그 학기가 있었는지도 모릅니다. 「가져오지 못한 학기」로 남기고 사유를 셉니다.
+     */
+    const unsupported = rawReferences
+      .filter((reference) => !TOKEN_PATTERN.test(reference.identifier))
+      .map((reference) => ({
+        semester: `${reference.year}년 ${reference.semester}학기`,
+        courses: [],
+        available: false,
+        reason: "bad_identifier",
+      }));
+    // 최신 학기부터 남긴다 — 상한에 걸려 잘려도 옛 학기부터 빠지게
+    const discovered = rawReferences
       .filter((reference) => TOKEN_PATTERN.test(reference.identifier))
+      .sort((a, b) => referenceRecency(b) - referenceRecency(a))
       .slice(0, MAX_SEMESTERS);
-    const references = discovered.length > 0
-      ? discovered
-      : [{
-          identifier: currentTable?.identifier || token,
-          year: currentTable?.year || "",
-          semester: currentTable?.semester || "",
-        }];
+    /**
+     * 공유 링크가 가리키는 시간표 본체는 대표 시간표 목록에 없을 수 있습니다(한 학기에 여러 표를
+     * 두고 대표가 아닌 표를 공유한 경우). 그 학기의 대표 표 대신 **사용자가 공유한 표**를 씁니다 —
+     * 대표 표는 비공개일 수 있고, 사용자가 보여주려던 것도 공유한 그 표입니다.
+     */
+    const shared = currentTable?.identifier && TOKEN_PATTERN.test(currentTable.identifier)
+      ? { identifier: currentTable.identifier, year: currentTable.year, semester: currentTable.semester }
+      : null;
+    let references = discovered;
+    if (shared && !references.some((reference) => reference.identifier === shared.identifier)) {
+      const sameTerm = (reference: { year: string; semester: string }) =>
+        reference.year === shared.year && reference.semester === shared.semester;
+      references = references.some(sameTerm)
+        ? references.map((reference) => (sameTerm(reference) ? shared : reference))
+        : [shared, ...references];
+    }
+    if (references.length === 0) {
+      references = [{
+        identifier: currentTable?.identifier || token,
+        year: currentTable?.year || "",
+        semester: currentTable?.semester || "",
+      }];
+    }
     step = "terms";
     const { terms, failures } = await fetchAllTerms(
       references,
@@ -220,7 +263,11 @@ export async function POST(request: Request) {
       userAgent,
       controller.signal,
     );
-    await recordFailures(request, failures);
+    terms.push(...unsupported);
+    await recordFailures(request, [
+      ...failures,
+      ...unsupported.map((term) => ({ scope: "semester" as const, reasonCode: "bad_identifier", semester: term.semester })),
+    ]);
     const first = terms[0] ?? { courses: [], semester: "" };
     return Response.json(
       { terms, courses: first.courses, semester: first.semester },

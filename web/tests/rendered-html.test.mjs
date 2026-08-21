@@ -900,7 +900,9 @@ test("writes down why an Everytime read failed, without the link or token", asyn
   const recorded = [...everytime.matchAll(/await recordFailures\(/g)];
   assert.equal(recorded.length, 2, "요청 전체 실패와 학기별 실패를 모두 남겨야 한다");
   assert.match(everytime, /scope: "request", step, reasonCode, elapsedMs/);
-  assert.match(everytime, /failures\.push\(\{ scope: "semester", reasonCode: failureCode\(error\), semester \}\)/);
+  assert.match(everytime, /failures\.push\(\{ scope: "semester", reasonCode, semester \}\)/);
+  // 학기별 실패 사유는 응답에도 실어 사용자 안내 문구를 고를 수 있게 한다
+  assert.match(everytime, /available: false, reason: reasonCode/);
   for (const step of ["link", "bootstrap", "first_table", "terms"]) {
     assert.match(everytime, new RegExp(`"${step}"`), `${step} 단계를 표시하지 않는다`);
   }

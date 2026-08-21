@@ -29,7 +29,7 @@ import {
 
 type Course = (typeof bundledCourses)[number];
 type ImportedCourse = { name: string; professor: string; room: string };
-type ImportedTerm = { semester: string; courses: ImportedCourse[]; available?: boolean };
+type ImportedTerm = { semester: string; courses: ImportedCourse[]; available?: boolean; reason?: string };
 type Meeting = { day: string; start: number; end: number };
 type CoreTrack = ReturnType<typeof coreTracksFor>[number];
 
@@ -80,6 +80,19 @@ type GeMode = (typeof GE_MODES)[number]["key"];
 function compactSemester(value: string) {
   const match = value.match(/(\d{4}).*?(1|2|여름|겨울)\s*학기/);
   return match ? `${match[1]}-${match[2]}` : value || "가져온 시간표";
+}
+
+/** 학기 하나를 못 가져온 사유(서버의 reason 코드)를 해결 방법이 담긴 문장으로 */
+const TERM_ISSUE_MESSAGES: Record<string, string> = {
+  not_public: "이 학기 시간표가 에브리타임에서 비공개예요. 에브리타임 앱 → 시간표 → 이 학기에서 「공개」로 바꾼 뒤 다시 가져와 주세요.",
+  blocked: "에브리타임이 자동 확인을 잠시 제한했어요. 1~2분 뒤 「수강 내역 다시 가져오기」를 눌러 주세요.",
+  timeout: "응답이 늦어 이 학기는 가져오지 못했어요. 잠시 후 다시 시도해 주세요.",
+  bad_identifier: "이 학기 시간표 주소를 읽지 못했어요. 에브리타임에서 이 학기 시간표를 대표 시간표로 다시 지정한 뒤 시도해 주세요.",
+  too_big: "이 학기 시간표 응답이 너무 커서 가져오지 못했어요.",
+};
+
+function termIssueMessage(reason: string | undefined) {
+  return (reason && TERM_ISSUE_MESSAGES[reason]) || "공개되지 않았거나 가져오지 못한 학기예요.";
 }
 
 function semesterOrder(value: string) {
@@ -557,12 +570,14 @@ export default function Home() {
       const importedTermsFromLink = (data.terms?.length
         ? data.terms
         : [{ semester: data.semester ?? "", courses: data.courses ?? [], available: true }])
-        .map((term) => ({ ...term, semester: compactSemester(term.semester) }));
+        .map((term) => ({ ...term, semester: compactSemester(term.semester) }))
+        .sort((a, b) => semesterOrder(b.semester) - semesterOrder(a.semester));
       setImportedTerms((current) => {
         const bySemester = new Map(current.map((term) => [term.semester, term]));
         importedTermsFromLink.forEach((term) => bySemester.set(term.semester, term));
         return [...bySemester.values()].sort((a, b) => semesterOrder(b.semester) - semesterOrder(a.semester));
       });
+      // 최신 학기 탭을 먼저 연다 — 에타가 옛 학기부터 내려줘도 방금 학기가 보이게
       setActiveImportedTerm(importedTermsFromLink[0]?.semester ?? "");
       setEverytimeUrl("");
       setShowResults(false);
@@ -687,8 +702,9 @@ export default function Home() {
                   {activeTerm?.courses.length ? activeTerm.courses.map((course, index) => {
                     const excluded = !includedTakenSet.has(normalizeCourseName(course.name));
                     return <label key={`${course.name}-${course.professor}-${index}`}><input type="checkbox" checked={excluded} onChange={(event) => toggleImportedCourse(course.name, event.target.checked)} /><span><strong>{course.name}</strong><small>{course.professor || course.room || "상세 정보 없음"}</small></span><em>{excluded ? "제외" : "다시 표시"}</em></label>;
-                  }) : <p>{activeTerm?.available === false ? "공개되지 않았거나 가져오지 못한 학기예요." : "이 학기에는 등록된 과목이 없어요."}</p>}
+                  }) : <p>{activeTerm?.available === false ? termIssueMessage(activeTerm.reason) : "이 학기에는 등록된 과목이 없어요."}</p>}
                 </div>
+                <p className="semester-help">찾는 학기가 목록에 없다면, 에브리타임에서 그 학기 시간표를 <strong>대표 시간표</strong>로 지정하고 <strong>공개</strong>로 설정한 뒤 다시 가져와 주세요.</p>
               </div>
             )}
 
