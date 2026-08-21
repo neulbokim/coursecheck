@@ -357,7 +357,7 @@
     "professor": "서양진",
     "english": false,
     "target": "전학년",
-    "note": "인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
+    "note": "인공지능학과(1전공 가능),인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
   },
   {
     "id": "AIE2051-02",
@@ -372,7 +372,7 @@
     "professor": "TianYuan",
     "english": true,
     "target": "전학년",
-    "note": "인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
+    "note": "인공지능학과(1전공 가능),인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
   },
   {
     "id": "AIE2051-03",
@@ -387,7 +387,7 @@
     "professor": "TianYuan",
     "english": true,
     "target": "전학년",
-    "note": "인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
+    "note": "인공지능학과(1전공 가능),인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
   },
   {
     "id": "AIE2070-01",
@@ -432,7 +432,7 @@
     "professor": "TianYuan",
     "english": true,
     "target": "전학년",
-    "note": "인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
+    "note": "인공지능학과(1전공 가능),인공지능학과(1전공 가능),인문학기반자유전공학부(1전공 가능),SCIENCE기반자유전(1전공 가능),AI기반자유전공학부(1전공 가능) · 인공지능학과, AI기반자유전공학부, 인문학기반자유전공학부, SCIENCE기반자유전공학부 제 1전공자만 가능"
   },
   {
     "id": "AIE3050-01",
@@ -461,7 +461,7 @@
     "schedule": "화,목 10:30~11:45",
     "professor": "임인성",
     "english": false,
-    "target": "2학년",
+    "target": "2,3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -476,7 +476,7 @@
     "schedule": "화,목 13:30~14:45",
     "professor": "김세준",
     "english": false,
-    "target": "2학년",
+    "target": "2,3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -491,7 +491,7 @@
     "schedule": "수,금 09:00~10:15",
     "professor": "장형수",
     "english": false,
-    "target": "2학년",
+    "target": "2,3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -521,7 +521,7 @@
     "schedule": "월,수 16:30~17:45",
     "professor": "장나은",
     "english": false,
-    "target": "2학년",
+    "target": "2,3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -536,7 +536,7 @@
     "schedule": "수,금 13:30~14:45",
     "professor": "김주호",
     "english": false,
-    "target": "2학년",
+    "target": "2,3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -551,7 +551,7 @@
     "schedule": "월,수 12:00~13:15",
     "professor": "신성복",
     "english": false,
-    "target": "2학년",
+    "target": "2,3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -566,7 +566,7 @@
     "schedule": "화,목 15:00~16:15",
     "professor": "조성인",
     "english": false,
-    "target": "3,4학년",
+    "target": "2,3,4학년",
     "note": ""
   },
   {
@@ -581,7 +581,7 @@
     "schedule": "목 15:00~20:50",
     "professor": "이화란",
     "english": true,
-    "target": "3,4학년",
+    "target": "2,3,4학년",
     "note": "인공지능학과(1전공 가능),인공지능학과(1전공 가능) · 인공지능학과 제1전공자만 수강 가능"
   },
   {
@@ -609,7 +609,7 @@
     "name": "컴퓨터공학실험II",
     "credits": 3,
     "schedule": "월 15:00~20:50",
-    "professor": "김주호",
+    "professor": "최재승",
     "english": false,
     "target": "2학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
@@ -639,7 +639,7 @@
     "name": "컴퓨터공학실험II",
     "credits": 3,
     "schedule": "수 15:00~20:50",
-    "professor": "최재승",
+    "professor": "임인성",
     "english": false,
     "target": "2학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
@@ -654,7 +654,7 @@
     "name": "컴퓨터공학실험II",
     "credits": 3,
     "schedule": "목 15:00~20:50",
-    "professor": "임인성",
+    "professor": "김주호",
     "english": false,
     "target": "2학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
@@ -701,7 +701,7 @@
     "schedule": "화,목 13:30~14:45",
     "professor": "문의현",
     "english": true,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -731,7 +731,7 @@
     "schedule": "화,목 09:00~10:15",
     "professor": "김영재",
     "english": false,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -746,7 +746,7 @@
     "schedule": "화,목 10:30~11:45",
     "professor": "박성용",
     "english": false,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -761,7 +761,7 @@
     "schedule": "화,목 16:30~17:45",
     "professor": "김세준",
     "english": true,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -821,7 +821,7 @@
     "schedule": "화,목 16:30~17:45",
     "professor": "소정민",
     "english": false,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 학석사연계과목 / 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -836,7 +836,7 @@
     "schedule": "화,목 12:00~13:15",
     "professor": "박운상",
     "english": true,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 학석사연계과목 / 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -851,7 +851,7 @@
     "schedule": "월,수 12:00~13:15",
     "professor": "김지환",
     "english": false,
-    "target": "3학년",
+    "target": "3,4학년",
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 학석사연계과목 / 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
@@ -3690,21 +3690,6 @@
     "note": "수강 대상 전학년, 권장 학년 1학년, 모든 계열 수강 가능, 절대평가"
   },
   {
-    "id": "COR1003-17",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "COR1003",
-    "section": "17",
-    "name": "영어글로벌의사소통I",
-    "credits": 3,
-    "schedule": "화,목 13:30~14:45",
-    "professor": "이영인",
-    "english": false,
-    "target": "전학년",
-    "note": "수강 대상 전학년, 권장 학년 1학년, 모든 계열 수강 가능, 절대평가"
-  },
-  {
     "id": "COR1005-01",
     "year": 2026,
     "term": "2학기",
@@ -3774,7 +3759,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박미숙",
+    "professor": "박은주, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "11/06(금)-11/07(토), ※혼합형(평가:S/U)"
@@ -3804,7 +3789,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박미숙",
+    "professor": "박은주, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "11/13(금)-11/14(토), ※혼합형(평가:S/U)"
@@ -3834,7 +3819,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "토 10:00~22:00 / 일 10:00~15:30",
-    "professor": "박미숙",
+    "professor": "박은주, 박미숙",
     "english": false,
     "target": "1학년",
     "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
@@ -3852,7 +3837,7 @@
     "professor": "SutherlandIan",
     "english": true,
     "target": "전학년",
-    "note": "인문대학(가능),사회과학대학(가능),커뮤니케이션대학(가능),지식융합대학(가능),지식융합미디어(가능),로욜라국제대학(가능)"
+    "note": ""
   },
   {
     "id": "COR1010-02",
@@ -4644,7 +4629,7 @@
     "name": "컴퓨터공학실험II",
     "credits": 3,
     "schedule": "월 15:00~20:50",
-    "professor": "김주호",
+    "professor": "최재승",
     "english": false,
     "target": "2,3,4학년",
     "note": "인공지능학과(불가능),인공지능학과(불가능) · 인공지능학과 제1전공, 제2전공, 제3전공자 불가능"
@@ -4674,7 +4659,7 @@
     "name": "컴퓨터공학실험II",
     "credits": 3,
     "schedule": "수 15:00~20:50",
-    "professor": "최재승",
+    "professor": "임인성",
     "english": false,
     "target": "2,3,4학년",
     "note": "인공지능학과(불가능),인공지능학과(불가능) · 인공지능학과 제1전공, 제2전공, 제3전공자 불가능"
@@ -4689,7 +4674,7 @@
     "name": "컴퓨터공학실험II",
     "credits": 3,
     "schedule": "목 15:00~20:50",
-    "professor": "임인성",
+    "professor": "김주호",
     "english": false,
     "target": "2,3,4학년",
     "note": "인공지능학과(불가능),인공지능학과(불가능) · 인공지능학과 제1전공, 제2전공, 제3전공자 불가능"
@@ -5139,7 +5124,82 @@
     "name": "SW 인턴십",
     "credits": 3,
     "schedule": "화 18:00~20:45",
-    "professor": "",
+    "professor": "이혁준",
+    "english": false,
+    "target": "",
+    "note": ""
+  },
+  {
+    "id": "CSE4191-02",
+    "year": 2026,
+    "term": "2학기",
+    "department": "컴퓨터공학과",
+    "code": "CSE4191",
+    "section": "02",
+    "name": "SW 인턴십",
+    "credits": 3,
+    "schedule": "화 18:00~20:45",
+    "professor": "박운상",
+    "english": false,
+    "target": "",
+    "note": ""
+  },
+  {
+    "id": "CSE4191-03",
+    "year": 2026,
+    "term": "2학기",
+    "department": "컴퓨터공학과",
+    "code": "CSE4191",
+    "section": "03",
+    "name": "SW 인턴십",
+    "credits": 3,
+    "schedule": "화 18:00~20:45",
+    "professor": "김영재",
+    "english": false,
+    "target": "",
+    "note": ""
+  },
+  {
+    "id": "CSE4191-04",
+    "year": 2026,
+    "term": "2학기",
+    "department": "컴퓨터공학과",
+    "code": "CSE4191",
+    "section": "04",
+    "name": "SW 인턴십",
+    "credits": 3,
+    "schedule": "화 18:00~20:45",
+    "professor": "소정민",
+    "english": false,
+    "target": "",
+    "note": ""
+  },
+  {
+    "id": "CSE4191-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "컴퓨터공학과",
+    "code": "CSE4191",
+    "section": "05",
+    "name": "SW 인턴십",
+    "credits": 3,
+    "schedule": "화 18:00~20:45",
+    "professor": "최준석",
+    "english": false,
+    "target": "",
+    "note": ""
+  },
+  {
+    "id": "CSE4191-06",
+    "year": 2026,
+    "term": "2학기",
+    "department": "컴퓨터공학과",
+    "code": "CSE4191",
+    "section": "06",
+    "name": "SW 인턴십",
+    "credits": 3,
+    "schedule": "화 18:00~20:45",
+    "professor": "최재승",
     "english": false,
     "target": "",
     "note": ""
@@ -5232,22 +5292,7 @@
     "professor": "소정민",
     "english": false,
     "target": "3,4학년",
-    "note": "인공지능학과(불가능),인공지능학과(불가능) · 학석사연계과목 / 인공지능학과 제1전공, 제2전공, 제3전공자 불가능"
-  },
-  {
-    "id": "CSEG601-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "컴퓨터공학과",
-    "code": "CSEG601",
-    "section": "01",
-    "name": "공간데이터베이스시스템",
-    "credits": 3,
-    "schedule": "월,수 12:00~13:15",
-    "professor": "정성원",
-    "english": false,
-    "target": "3,4학년",
-    "note": "학석사연계과목"
+    "note": "인공지능학과(불가능),인공지능학과(불가능) · 학석사연계과목 / 인공지능학가 제1전공, 제2전공, 제3전공자 수강 불가능"
   },
   {
     "id": "CSEQ982-01",
@@ -5979,6 +6024,21 @@
     "name": "국내교류",
     "credits": 0,
     "schedule": "",
+    "professor": "",
+    "english": false,
+    "target": "",
+    "note": ""
+  },
+  {
+    "id": "DUM1010-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "DUM1010",
+    "section": "01",
+    "name": "한국어의무수업",
+    "credits": 9,
+    "schedule": "월,화,수,목,금 13:30~17:30",
     "professor": "",
     "english": false,
     "target": "",
@@ -7253,7 +7313,7 @@
     "section": "01",
     "name": "반도체엘리트프로젝트",
     "credits": 3,
-    "schedule": "토 15:00~17:45",
+    "schedule": "토 18:00~20:45",
     "professor": "김광수",
     "english": false,
     "target": "전학년",
@@ -7287,7 +7347,7 @@
     "professor": "Kim, Youngwook",
     "english": false,
     "target": "3학년",
-    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 월 19:00~20:30, SCE3182-01과 합반수업"
+    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 수 19:00~20:30, SCE3182-01과 합반수업"
   },
   {
     "id": "EEE3182-02",
@@ -7302,7 +7362,7 @@
     "professor": "정진호",
     "english": false,
     "target": "3학년",
-    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 월 19:00~20:30, SCE3182-02와 합반수업"
+    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 수 19:00~20:30, SCE3182-02와 합반수업"
   },
   {
     "id": "EEE3182-03",
@@ -7317,7 +7377,7 @@
     "professor": "Kim, Youngwook",
     "english": false,
     "target": "3학년",
-    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 월 19:00~20:30, SCE3182-03과 합반수업"
+    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 수 19:00~20:30, SCE3182-03과 합반수업"
   },
   {
     "id": "EEE3182-04",
@@ -7332,7 +7392,7 @@
     "professor": "김장생",
     "english": false,
     "target": "3학년",
-    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 월 19:00~20:30, SCE3182-04과 합반수업"
+    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 수 19:00~20:30, SCE3182-04과 합반수업"
   },
   {
     "id": "EEE3182-05",
@@ -7347,7 +7407,7 @@
     "professor": "김시현",
     "english": false,
     "target": "3학년",
-    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 월 19:00~20:30, SCE3182-05과 합반수업"
+    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가, 실험강의: 수 19:00~20:30, SCE3182-05과 합반수업"
   },
   {
     "id": "EEE4125-01",
@@ -7478,7 +7538,7 @@
     "section": "01",
     "name": "디자인프로젝트(캡스톤디자인)",
     "credits": 3,
-    "schedule": "일 09:00~11:45",
+    "schedule": "일 18:00~20:45",
     "professor": "김영록",
     "english": false,
     "target": "4학년",
@@ -7599,7 +7659,7 @@
     "name": "영문학작문",
     "credits": 3,
     "schedule": "수,금 09:00~10:15",
-    "professor": "",
+    "professor": "Rafique,Ummay Ramisha Aiman Ra",
     "english": true,
     "target": "전학년",
     "note": ""
@@ -7704,8 +7764,8 @@
     "name": "영문학특강",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
-    "english": true,
+    "professor": "송은혜",
+    "english": false,
     "target": "2,3,4학년",
     "note": ""
   },
@@ -7734,7 +7794,7 @@
     "name": "영국소수민족문학",
     "credits": 3,
     "schedule": "월,수 12:00~13:15",
-    "professor": "",
+    "professor": "Rafique,Ummay Ramisha Aiman Ra",
     "english": true,
     "target": "2,3,4학년",
     "note": ""
@@ -8079,7 +8139,7 @@
     "name": "환경윤리",
     "credits": 3,
     "schedule": "화,목 09:00~10:15",
-    "professor": "",
+    "professor": "김신영",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -8154,7 +8214,7 @@
     "name": "독일문학의명작감상",
     "credits": 3,
     "schedule": "월,수 12:00~13:15",
-    "professor": "",
+    "professor": "유혜영",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -8379,7 +8439,7 @@
     "name": "유럽연합론",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "김신규",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -8398,6 +8458,21 @@
     "english": false,
     "target": "전학년",
     "note": "프랑스어 강의, 국제학생 수강 가능"
+  },
+  {
+    "id": "EUR4399-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "유럽문화학과",
+    "code": "EUR4399",
+    "section": "01",
+    "name": "프랑스문화개별연구논문",
+    "credits": 3,
+    "schedule": "",
+    "professor": "김지현",
+    "english": false,
+    "target": "4학년",
+    "note": ""
   },
   {
     "id": "EURG202-01",
@@ -9834,7 +9909,7 @@
     "name": "한국어이해교육론",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "신필여",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -10230,21 +10305,6 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
-    "id": "GME4013-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GME4013",
-    "section": "01",
-    "name": "소셜미디어 그래픽 디자인",
-    "credits": 3,
-    "schedule": "수,금 13:30~14:45",
-    "professor": "",
-    "english": false,
-    "target": "1,2,3학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
     "id": "GME4014-01",
     "year": 2026,
     "term": "2학기",
@@ -10315,21 +10375,6 @@
     "credits": 3,
     "schedule": "화,목 10:30~11:45",
     "professor": "김민경",
-    "english": false,
-    "target": "1,2,3학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
-    "id": "GMT4002-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GMT4002",
-    "section": "01",
-    "name": "경영정보",
-    "credits": 3,
-    "schedule": "월,수 12:00~13:15",
-    "professor": "",
     "english": false,
     "target": "1,2,3학년",
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
@@ -10449,7 +10494,7 @@
     "name": "철학적인간학",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "황정희",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -10734,7 +10779,7 @@
     "name": "치유의행복학",
     "credits": 3,
     "schedule": "화,목 10:30~11:45",
-    "professor": "",
+    "professor": "황정희",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -12309,7 +12354,7 @@
     "name": "미디어스토리텔링연구",
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "Shavit,Nimrod",
     "english": true,
     "target": "전학년",
     "note": "커뮤니케이션대학(가능),스포츠미디어 연계전공(가능),신문방송학과(가능),미디어&엔터테인먼트학과(가능),지식융합미디어학부(가능) · 스포츠미디어 연계전공 수강 가능"
@@ -12594,7 +12639,7 @@
     "name": "한국어 발음 특강",
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "박소영",
     "english": false,
     "target": "전학년",
     "note": "초급"
@@ -12744,7 +12789,7 @@
     "name": "학문 목적 한국어 말하기 II",
     "credits": 3,
     "schedule": "화,목 13:30~14:45",
-    "professor": "",
+    "professor": "박소영",
     "english": false,
     "target": "전학년",
     "note": "글로벌 상호멘토링Ⅰ 대체"
@@ -13389,10 +13434,10 @@
     "name": "합창 : 소리와 소통",
     "credits": 2,
     "schedule": "월,목 16:30~18:20",
-    "professor": "",
+    "professor": "홍민정",
     "english": false,
     "target": "전학년",
-    "note": ""
+    "note": "성적평가: S/U, 강의장소: 스티브 김 아트홀(EB101)"
   },
   {
     "id": "LAU4058-01",
@@ -13464,7 +13509,7 @@
     "name": "독일언어와문화I",
     "credits": 3,
     "schedule": "월,수 16:30~17:45",
-    "professor": "",
+    "professor": "유혜영",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -14034,10 +14079,10 @@
     "name": "한국어말하기",
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "박소영",
     "english": false,
     "target": "전학년",
-    "note": "중급. KSC3003 한국사회이해를 위한 전략적 듣기 대체"
+    "note": "중급, KSC3003 한국사회이해를 위한 전략적 듣기 대체"
   },
   {
     "id": "LCU4118-01",
@@ -14187,7 +14232,7 @@
     "professor": "김태원",
     "english": false,
     "target": "전학년",
-    "note": "수강신청 시 글쓰기센터 이메일로 출판계획서 한 페이지 제출"
+    "note": "개강 첫 주에 글쓰기센터 이메일로 출판계획서 한 페이지 제출"
   },
   {
     "id": "LCU4122-01",
@@ -14379,7 +14424,7 @@
     "name": "K 콘텐츠와 미디어",
     "credits": 3,
     "schedule": "월 09:00~11:45",
-    "professor": "",
+    "professor": "유정훈",
     "english": false,
     "target": "3,4학년",
     "note": "커뮤니케이션대학(가능),신문방송학과(가능),미디어&엔터테인먼트학과(가능),지식융합미디어학부(가능)"
@@ -14679,7 +14724,7 @@
     "name": "The art of storytelling",
     "credits": 3,
     "schedule": "월 13:30~16:15",
-    "professor": "",
+    "professor": "안성호",
     "english": true,
     "target": "전학년",
     "note": "지식융합미디어(가능)"
@@ -14694,7 +14739,7 @@
     "name": "The art of storytelling",
     "credits": 3,
     "schedule": "금 10:30~13:15",
-    "professor": "",
+    "professor": "안성호",
     "english": true,
     "target": "전학년",
     "note": "지식융합미디어(가능)"
@@ -15581,7 +15626,7 @@
     "schedule": "수 16:30~22:15",
     "professor": "송지환",
     "english": false,
-    "target": "2,3,4학년",
+    "target": "2,3학년",
     "note": ""
   },
   {
@@ -15713,7 +15758,7 @@
     "section": "01",
     "name": "기계공학실험I",
     "credits": 3,
-    "schedule": "토 13:00~18:45",
+    "schedule": "금 18:00~23:45",
     "professor": "정헌재",
     "english": false,
     "target": "3,4학년",
@@ -15728,7 +15773,7 @@
     "section": "02",
     "name": "기계공학실험I",
     "credits": 3,
-    "schedule": "토 13:00~18:45",
+    "schedule": "금 18:00~23:45",
     "professor": "최은표",
     "english": false,
     "target": "3,4학년",
@@ -15743,7 +15788,7 @@
     "section": "03",
     "name": "기계공학실험I",
     "credits": 3,
-    "schedule": "토 13:00~18:45",
+    "schedule": "금 18:00~23:45",
     "professor": "이승엽",
     "english": false,
     "target": "3,4학년",
@@ -15758,7 +15803,7 @@
     "section": "04",
     "name": "기계공학실험I",
     "credits": 3,
-    "schedule": "토 13:00~18:45",
+    "schedule": "금 18:00~23:45",
     "professor": "박정열",
     "english": false,
     "target": "3,4학년",
@@ -15900,6 +15945,51 @@
     "note": "담당교수와 이메일로 상담하여 선 승인 후에 수강신청"
   },
   {
+    "id": "MEE3301-10",
+    "year": 2026,
+    "term": "2학기",
+    "department": "기계공학과",
+    "code": "MEE3301",
+    "section": "10",
+    "name": "연구프로젝트Ⅰ",
+    "credits": 3,
+    "schedule": "토 09:00~11:45",
+    "professor": "김대중",
+    "english": false,
+    "target": "3,4학년",
+    "note": "담당교수와 이메일로 상담하여 선 승인 후에 수강신청"
+  },
+  {
+    "id": "MEE3301-11",
+    "year": 2026,
+    "term": "2학기",
+    "department": "기계공학과",
+    "code": "MEE3301",
+    "section": "11",
+    "name": "연구프로젝트Ⅰ",
+    "credits": 3,
+    "schedule": "토 09:00~11:45",
+    "professor": "정헌재",
+    "english": false,
+    "target": "3,4학년",
+    "note": "담당교수와 이메일로 상담하여 선 승인 후에 수강신청"
+  },
+  {
+    "id": "MEE3301-12",
+    "year": 2026,
+    "term": "2학기",
+    "department": "기계공학과",
+    "code": "MEE3301",
+    "section": "12",
+    "name": "연구프로젝트Ⅰ",
+    "credits": 3,
+    "schedule": "토 09:00~11:45",
+    "professor": "김상엽",
+    "english": false,
+    "target": "3,4학년",
+    "note": "담당교수와 이메일로 상담하여 선 승인 후에 수강신청"
+  },
+  {
     "id": "MEE4001-01",
     "year": 2026,
     "term": "2학기",
@@ -15910,7 +16000,7 @@
     "credits": 3,
     "schedule": "화,목 12:00~13:15",
     "professor": "김남중",
-    "english": true,
+    "english": false,
     "target": "3,4학년",
     "note": "구)유한요소해석"
   },
@@ -16389,7 +16479,7 @@
     "name": "관리회계",
     "credits": 3,
     "schedule": "수,금 09:00~10:15",
-    "professor": "",
+    "professor": "송유정",
     "english": false,
     "target": "전학년",
     "note": "경영대학(가능),공공인재 연계전공(가능),스타트업연계전공(가능) · 경영대학,공공인재연계전공,스타트업연계전공(가능)"
@@ -16905,6 +16995,21 @@
     "note": "경영대학(가능) · 경영대학(가능)"
   },
   {
+    "id": "MGT4311-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "경영학부(경영학전공)",
+    "code": "MGT4311",
+    "section": "01",
+    "name": "AI시대 공감리더십",
+    "credits": 2,
+    "schedule": "수 16:30~18:20",
+    "professor": "김용진",
+    "english": false,
+    "target": "전학년",
+    "note": "경영대학(가능) · 경영대학(가능)"
+  },
+  {
     "id": "MGT4316-01",
     "year": 2026,
     "term": "2학기",
@@ -17184,7 +17289,7 @@
     "name": "산업분석연구",
     "credits": 3,
     "schedule": "수,금 13:30~14:45",
-    "professor": "",
+    "professor": "임지현",
     "english": false,
     "target": "전학년",
     "note": "경영대학(가능) · 부제: 콘텐츠와 플랫폼 비즈니스 산업의 이해, 경영대학(가능)"
@@ -17199,7 +17304,7 @@
     "name": "산업분석연구",
     "credits": 3,
     "schedule": "화,목 16:30~17:45",
-    "professor": "",
+    "professor": "이동기",
     "english": false,
     "target": "전학년",
     "note": "경영대학(가능) · 부제: 블록체인 산업의 이해, 경영대학(가능)"
@@ -17408,8 +17513,8 @@
     "section": "01",
     "name": "미학개론",
     "credits": 3,
-    "schedule": "월 13:30~16:15",
-    "professor": "강선형",
+    "schedule": "금 13:30~16:15",
+    "professor": "김종원",
     "english": false,
     "target": "2,3,4학년",
     "note": ""
@@ -18594,7 +18699,7 @@
     "name": "정치심리학",
     "credits": 3,
     "schedule": "수,금 15:00~16:15",
-    "professor": "",
+    "professor": "류승욱",
     "english": true,
     "target": "전학년",
     "note": ""
@@ -18744,7 +18849,7 @@
     "name": "상담심리학",
     "credits": 3,
     "schedule": "화,목 15:00~16:15",
-    "professor": "",
+    "professor": "안미라",
     "english": true,
     "target": "2,3,4학년",
     "note": ""
@@ -19931,7 +20036,7 @@
     "schedule": "화,목 10:30~11:45",
     "professor": "윤성근",
     "english": false,
-    "target": "2,3,4학년",
+    "target": "전학년",
     "note": ""
   },
   {
@@ -20244,7 +20349,7 @@
     "name": "환경사회학",
     "credits": 3,
     "schedule": "월 13:30~16:15",
-    "professor": "",
+    "professor": "김승진",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -20322,21 +20427,6 @@
     "professor": "오세일",
     "english": false,
     "target": "2,3,4학년",
-    "note": "학석사"
-  },
-  {
-    "id": "SOCG016-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "사회학과",
-    "code": "SOCG016",
-    "section": "01",
-    "name": "사회과학의 인과모형",
-    "credits": 3,
-    "schedule": "화,목 13:30~14:45",
-    "professor": "이철승",
-    "english": false,
-    "target": "전학년",
     "note": "학석사"
   },
   {
@@ -20618,7 +20708,7 @@
     "section": "01",
     "name": "여행과 치유 여행으로 행복해지기",
     "credits": 3,
-    "schedule": "일 09:00~11:45",
+    "schedule": "월 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -20633,7 +20723,7 @@
     "section": "01",
     "name": "댕댕이와 냥냥이를 부탁해",
     "credits": 3,
-    "schedule": "일 15:00~18:00",
+    "schedule": "화 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -20753,7 +20843,7 @@
     "section": "01",
     "name": "웰니스 신체활동 건강관리",
     "credits": 3,
-    "schedule": "토 15:00~17:45",
+    "schedule": "토 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -20828,7 +20918,7 @@
     "section": "01",
     "name": "웰니스 치유정책: 행복한 공동체 만들기",
     "credits": 3,
-    "schedule": "토 18:00~20:45",
+    "schedule": "토 15:00~17:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -20858,7 +20948,7 @@
     "section": "01",
     "name": "AI와 말의 온도: 상생과 치유의 시 읽기",
     "credits": 3,
-    "schedule": "금 19:00~20:45",
+    "schedule": "금 15:00~17:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -20978,7 +21068,7 @@
     "section": "01",
     "name": "K-치유 현장실습",
     "credits": 3,
-    "schedule": "일 12:00~14:45",
+    "schedule": "금 21:00~23:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -20993,7 +21083,7 @@
     "section": "01",
     "name": "데이터로 도시 분석하기",
     "credits": 3,
-    "schedule": "금 18:00~20:40",
+    "schedule": "금 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21068,7 +21158,7 @@
     "section": "01",
     "name": "댕댕이와 힐링하기!",
     "credits": 3,
-    "schedule": "일 15:00~17:45",
+    "schedule": "목 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21233,7 +21323,7 @@
     "section": "01",
     "name": "AI시대의 심리상담",
     "credits": 3,
-    "schedule": "화 20:30~23:25",
+    "schedule": "화 20:30~23:15",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21308,7 +21398,7 @@
     "section": "01",
     "name": "K-치유 보듬체투어 리빙랩",
     "credits": 3,
-    "schedule": "금 12:00~14:45",
+    "schedule": "토 09:00~11:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21323,7 +21413,7 @@
     "section": "01",
     "name": "AI기반 현장문제 해결과 공동체 혁신",
     "credits": 3,
-    "schedule": "금 15:00~17:45",
+    "schedule": "금 13:00~14:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21353,7 +21443,7 @@
     "section": "01",
     "name": "사회복지법: 인권과 치유의 융합",
     "credits": 3,
-    "schedule": "금 09:00~11:45",
+    "schedule": "수 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21383,7 +21473,7 @@
     "section": "01",
     "name": "AI와 함께하는 건강가정지원 리빙랩",
     "credits": 3,
-    "schedule": "금 18:00~20:45",
+    "schedule": "수 18:00~20:45",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -21924,7 +22014,7 @@
     "name": "드론 산업 개론 및 실습",
     "credits": 3,
     "schedule": "월,목 12:00~13:50",
-    "professor": "",
+    "professor": "서정호",
     "english": false,
     "target": "전학년",
     "note": "강의장소: 체육관 메인코트(실습), 강의실(이론) 병행 운영 예정"
@@ -22119,7 +22209,7 @@
     "name": "AI 시대의 기업가정신: Entrepreneurship",
     "credits": 3,
     "schedule": "금 15:00~17:45",
-    "professor": "김유진, Lee, Hosuk Sean",
+    "professor": "Lee, Hosuk Sean, 김유진",
     "english": false,
     "target": "전학년",
     "note": "1학년~4학년"
@@ -22134,10 +22224,25 @@
     "name": "기업의 내외부 커뮤니케이션 : HR과 PR",
     "credits": 3,
     "schedule": "수 15:00~17:45",
-    "professor": "",
+    "professor": "조광현, 김형진",
     "english": false,
     "target": "전학년",
     "note": "1학년~4학년"
+  },
+  {
+    "id": "TES9001-01",
+    "year": 2026,
+    "term": "2학기",
+    "department": "대학",
+    "code": "TES9001",
+    "section": "01",
+    "name": "융합 프로젝트",
+    "credits": 0,
+    "schedule": "",
+    "professor": "",
+    "english": false,
+    "target": "",
+    "note": ""
   },
   {
     "id": "TIC2003-01",
@@ -22331,7 +22436,7 @@
     "schedule": "화,목 13:30~14:45",
     "professor": "이성원",
     "english": true,
-    "target": "1,2학년",
+    "target": "전학년",
     "note": ""
   },
   {
@@ -22346,7 +22451,7 @@
     "schedule": "화,목 10:30~11:45",
     "professor": "VyshnevskyiIegor",
     "english": true,
-    "target": "1,2학년",
+    "target": "전학년",
     "note": "게페르트국제학부 필수 전공입문(Geppert School of International Studies Pre-Major)"
   },
   {

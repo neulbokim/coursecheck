@@ -499,7 +499,7 @@ test("ships normalized course and linked-major data", async () => {
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
   const courses = JSON.parse(coursesText);
-  assert.equal(courses.length, 1500);
+  assert.equal(courses.length, 1507);
   assert.ok(courses.some((course) => course.code === "BDS4010"));
   assert.match(majorsText, /빅데이터사이언스 연계전공/);
   assert.match(majorsText, /sourceUrl/);
