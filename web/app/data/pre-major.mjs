@@ -18,9 +18,26 @@
  * 다전공·교직마다 다르고, 이 앱은 남은 과목을 고르는 도구이지 졸업사정 도구가 아닙니다.
  * 그래서 어떤 경로든 후보가 될 수 있는 과목을 모두 담고, 조건은 `rule`에 글로 남깁니다.
  *
+ * 다만 **누구에게 걸리는 조건인지**는 구분합니다. 요람의 전공입문표는 이수유형(심화 단일전공·
+ * 다전공·교직)마다 다른 표라서, 아트&테크놀로지 1전공이 컴퓨터공학을 2전공하면 전공입문은
+ * 「C 과목 택1」(3학점)뿐인데 심화 단일전공용 12학점까지 전부 보여주면 틀립니다. 프로필의
+ * 전공 목록에서 파생할 수 있는 것만 씁니다:
+ *
+ * - `single`     이 전공 하나만 있는 사람 (서강대에서 단일전공은 심화과정)
+ * - `multiFirst` 다전공이고 이 전공이 1전공
+ * - `multiOther` 다전공이고 이 전공이 2·3전공 (요람의 「제1전공이 타전공」)
+ *
+ * 학번 조건(「23학번 이하만」)은 `fromCohort`/`untilCohort`로 적습니다. 교직과정은 프로필로
+ * 알 수 없어 구분하지 않습니다 — 교직 전용 과목은 `appliesTo`를 비워 모두에게 보여줍니다.
+ *
+ * @typedef {"single" | "multiFirst" | "multiOther"} PreMajorTrack
+ *
  * @typedef {Object} PreMajorGroup
  * @property {string} rule 요람에 적힌 이수 조건 (화면 안내에 그대로 씁니다)
  * @property {readonly string[]} codes 과목번호
+ * @property {readonly PreMajorTrack[]} [appliesTo] 이 조건이 걸리는 이수유형 (없으면 전부)
+ * @property {number} [fromCohort] 이 학번부터 적용 (예: 2024)
+ * @property {number} [untilCohort] 이 학번까지만 적용 (예: 2023)
  *
  * @typedef {Object} PreMajorProgram
  * @property {string} major 개설과목 「학과」 열 표기 — 프로필 전공과 같은 이름
@@ -32,7 +49,7 @@ export const preMajorSource = {
   label: "서강대학교 요람 〈전공입문교과〉",
   url: "https://www.sogang.ac.kr/ko/academic-support/college-bulletin",
   bulletinYear: 2026,
-  verifiedAt: "2026-08-06",
+  verifiedAt: "2026-08-21",
 };
 
 /** 인문대학 공통: 인문세미나 필수 + 글로벌언어Ⅱ 택1 */
@@ -94,6 +111,7 @@ export const preMajorPrograms = [
       {
         rule: "화학 묶음 또는 생물 묶음 택1 (단일전공, 실험은 이론과 같은 분야로)",
         codes: ["CHM1001", "CHM1002", "CHM1051", "CHM1052", "BIO1001", "BIO1002", "BIO1101", "BIO1102", "BIO1105", "BIO1106"],
+        appliesTo: ["single"],
       },
     ],
   },
@@ -123,58 +141,73 @@ export const preMajorPrograms = [
     major: "전자공학과",
     groups: [
       {
-        rule: "미적분학Ⅱ·C언어기초·창의전자설계·고급공학수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ와 실험·선형대수학",
-        codes: ["STS2006", "EEE1002", "EEE2032", "EEE2103", "EEE2104", "PHY1001", "PHY1002", "PHY1101", "PHY1102", "MAT2110"],
+        rule: "미적분학Ⅱ·C언어기초·고급공학수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ·일반물리실험Ⅰ (모든 이수유형 공통)",
+        codes: ["STS2006", "EEE1002", "EEE2103", "EEE2104", "PHY1001", "PHY1002", "PHY1101"],
       },
-      { rule: "일반화학Ⅰ 또는 일반생물학Ⅰ 택1 (단일전공)", codes: ["CHM1001", "BIO1101"] },
-      { rule: "제1전공이 타전공이면 미적분학Ⅰ도 이수", codes: ["STS2005"] },
-      { rule: "타전공생은 C언어기초 대신 고급응용C프로그래밍으로 대체 가능", codes: ["STS2008"] },
+      { rule: "창의전자설계 (단일전공과 전자공학 1전공 다전공만)", codes: ["EEE2032"], appliesTo: ["single", "multiFirst"] },
+      { rule: "일반물리실험Ⅱ·선형대수학 (단일전공)", codes: ["PHY1102", "MAT2110"], appliesTo: ["single"] },
+      { rule: "일반화학Ⅰ 또는 일반생물학Ⅰ 택1 (단일전공)", codes: ["CHM1001", "BIO1101"], appliesTo: ["single"] },
+      { rule: "제1전공이 타전공이면 미적분학Ⅰ도 이수", codes: ["STS2005"], appliesTo: ["multiOther"] },
+      { rule: "타전공생은 C언어기초 대신 고급응용C프로그래밍으로 대체 가능", codes: ["STS2008"], appliesTo: ["multiOther"] },
     ],
   },
   {
     major: "화공생명공학과",
     groups: [
       {
-        rule: "미적분학Ⅱ·화공수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ와 실험·화공기초화학Ⅰ·Ⅱ·일반화학실험",
-        codes: ["STS2006", "CBE2011", "CBE2012", "PHY1001", "PHY1002", "PHY1101", "PHY1102", "CBE2014", "CBE2015", "CHM1051", "CHM1052"],
+        rule: "미적분학Ⅱ·화공수학Ⅰ·Ⅱ·일반물리Ⅰ·일반물리실험Ⅰ·화공기초화학Ⅰ·Ⅱ·일반화학실험Ⅰ (모든 이수유형 공통)",
+        codes: ["STS2006", "CBE2011", "CBE2012", "PHY1001", "PHY1101", "CBE2014", "CBE2015", "CHM1051"],
       },
-      { rule: "23학번 이하는 화공기초화학Ⅰ·Ⅱ를 일반화학Ⅰ·Ⅱ로 대체 가능", codes: ["CHM1001", "CHM1002"] },
-      { rule: "화공기초생물학 등 택1", codes: ["CBE2006"] },
-      { rule: "기초 전산화학공학 또는 고급응용C프로그래밍 택1 (심화)", codes: ["CBE2016", "STS2008"] },
+      { rule: "일반화학실험Ⅱ (심화는 필수 · 다전공은 일반물리실험Ⅱ와 택1)", codes: ["CHM1052"] },
+      { rule: "일반물리실험Ⅱ 또는 일반화학실험Ⅱ 택1 (다전공)", codes: ["PHY1102"], appliesTo: ["multiFirst", "multiOther"] },
+      { rule: "일반물리Ⅱ 또는 화공기초생물학 택1", codes: ["PHY1002", "CBE2006"] },
+      { rule: "23학번 이하는 화공기초화학Ⅰ·Ⅱ를 일반화학Ⅰ·Ⅱ로 대체 가능 (24학번부터 화공기초화학 필수)", codes: ["CHM1001", "CHM1002"], untilCohort: 2023 },
+      { rule: "기초 전산화학공학 또는 고급응용C프로그래밍 택1 (심화)", codes: ["CBE2016", "STS2008"], appliesTo: ["single"] },
     ],
   },
   {
     major: "기계공학과",
     groups: [
       {
-        rule: "일반물리Ⅰ·Ⅱ와 실험, 미적분학Ⅱ, 지능형 기계설계생산 입문, 공학수학Ⅰ·Ⅱ",
-        codes: ["PHY1001", "PHY1002", "PHY1101", "PHY1102", "STS2006", "MEE1006", "MEE2006", "MEE2007"],
+        rule: "일반물리Ⅰ·Ⅱ·일반물리실험Ⅰ·미적분학Ⅱ·공학수학Ⅰ·Ⅱ (모든 이수유형 공통)",
+        codes: ["PHY1001", "PHY1002", "PHY1101", "STS2006", "MEE2006", "MEE2007"],
       },
-      { rule: "일반생물학Ⅰ 또는 일반화학Ⅰ 택1", codes: ["BIO1001", "BIO1101", "CHM1001"] },
-      { rule: "제1전공이 타전공이면 미적분학Ⅰ·Ⅱ 모두 이수", codes: ["STS2005"] },
-      { rule: "공학수학은 응용수학Ⅰ·Ⅱ로 대체 인정", codes: ["MAT2410", "MAT2420"] },
+      { rule: "일반물리실험Ⅱ (단일전공)", codes: ["PHY1102"], appliesTo: ["single"] },
+      { rule: "지능형 기계설계생산 입문 (단일전공과 기계공학 1전공 다전공만)", codes: ["MEE1006"], appliesTo: ["single", "multiFirst"] },
+      { rule: "일반화학Ⅰ (단일전공은 필수 · 다전공은 일반생물학Ⅰ과 택1)", codes: ["CHM1001"] },
+      { rule: "일반생물학Ⅰ 또는 일반화학Ⅰ 택1 (다전공)", codes: ["BIO1001"], appliesTo: ["multiFirst", "multiOther"] },
+      { rule: "제1전공이 타전공이면 미적분학Ⅰ·Ⅱ 모두 이수", codes: ["STS2005"], appliesTo: ["multiOther"] },
+      { rule: "제1전공이 타전공이면 공학수학을 응용수학Ⅰ·Ⅱ로 대체 인정", codes: ["MAT2410", "MAT2420"], appliesTo: ["multiOther"] },
     ],
   },
   {
     major: "시스템반도체공학과",
     groups: [
       {
-        rule: "미적분학Ⅱ·C언어기초·시스템반도체입문설계·고급공학수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ·일반물리실험Ⅱ·선형대수학·일반화학Ⅰ",
-        codes: ["STS2006", "SCE1002", "SCE2032", "SCE2103", "SCE2104", "PHY1001", "PHY1002", "PHY1102", "MAT2110", "CHM1001"],
+        rule: "미적분학Ⅱ·C언어기초·고급공학수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ (모든 이수유형 공통)",
+        codes: ["STS2006", "SCE1002", "SCE2103", "SCE2104", "PHY1001", "PHY1002"],
       },
-      { rule: "제1전공이 타전공이면 미적분학Ⅰ도 이수", codes: ["STS2005"] },
-      { rule: "타전공생은 C언어기초를 타 학과 C 과목으로 대체 가능", codes: ["STS2008", "CSE2035", "EEE1002", "MEE1005", "CSW2010"] },
+      { rule: "시스템반도체입문설계 (단일전공과 시스템반도체 1전공 다전공만)", codes: ["SCE2032"], appliesTo: ["single", "multiFirst"] },
+      {
+        rule: "일반물리실험Ⅱ·선형대수학·일반화학Ⅰ (단일전공·SK하이닉스 취업트랙)",
+        codes: ["PHY1102", "MAT2110", "CHM1001"],
+        appliesTo: ["single", "multiFirst"],
+      },
+      { rule: "제1전공이 타전공이면 미적분학Ⅰ도 이수", codes: ["STS2005"], appliesTo: ["multiOther"] },
+      { rule: "타전공생은 C언어기초를 타 학과 C 과목으로 대체 가능", codes: ["STS2008", "CSE2035", "EEE1002", "MEE1005", "CSW2010"], appliesTo: ["multiOther"] },
     ],
   },
   {
     major: "반도체공학과",
     groups: [
       {
-        rule: "미적분학Ⅱ·C언어기초·반도체입문설계·고급공학수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ·일반물리실험Ⅱ·선형대수학·일반화학Ⅰ",
-        codes: ["STS2006", "SCE1002", "SCE2033", "SCE2103", "SCE2104", "PHY1001", "PHY1002", "PHY1102", "MAT2110", "CHM1001"],
+        rule: "미적분학Ⅱ·C언어기초·고급공학수학Ⅰ·Ⅱ·일반물리Ⅰ·Ⅱ (모든 이수유형 공통)",
+        codes: ["STS2006", "SCE1002", "SCE2103", "SCE2104", "PHY1001", "PHY1002"],
       },
-      { rule: "제1전공이 타전공이면 미적분학Ⅰ도 이수", codes: ["STS2005"] },
-      { rule: "타전공생은 C언어기초를 타 학과 C 과목으로 대체 가능", codes: ["STS2008", "CSE2035", "EEE1002", "MEE1005", "CSW2010"] },
+      { rule: "반도체입문설계 (단일전공과 반도체공학 1전공 다전공만)", codes: ["SCE2033"], appliesTo: ["single", "multiFirst"] },
+      { rule: "일반물리실험Ⅱ·선형대수학·일반화학Ⅰ (단일전공)", codes: ["PHY1102", "MAT2110", "CHM1001"], appliesTo: ["single"] },
+      { rule: "제1전공이 타전공이면 미적분학Ⅰ도 이수", codes: ["STS2005"], appliesTo: ["multiOther"] },
+      { rule: "타전공생은 C언어기초를 타 학과 C 과목으로 대체 가능", codes: ["STS2008", "CSE2035", "EEE1002", "MEE1005", "CSW2010"], appliesTo: ["multiOther"] },
     ],
   },
 
@@ -231,7 +264,7 @@ export const preMajorPrograms = [
     major: "게페르트국제학부",
     groups: [
       { rule: "국제관계개론·국제통상입문·아시아학개론 (9학점)", codes: ["TIS1001", "TIS1002", "AAS1001"] },
-      { rule: "국제통상전공 단일전공은 국제통상수리기초도 이수", codes: ["TIS1005"] },
+      { rule: "국제통상전공 단일전공은 국제통상수리기초도 이수", codes: ["TIS1005"], appliesTo: ["single"] },
     ],
   },
   {
@@ -267,17 +300,48 @@ export function preMajorProgramFor(major) {
 }
 
 /**
+ * 이 사람이 index번째 전공을 어떤 이수유형으로 하는지 — 전공 목록만으로 파생합니다.
+ * @param {readonly string[]} majors 1·2·3전공 순서
+ * @param {number} index
+ * @returns {PreMajorTrack}
+ */
+export function preMajorTrackOf(majors, index) {
+  if (majors.length <= 1) return "single";
+  return index === 0 ? "multiFirst" : "multiOther";
+}
+
+/**
+ * 이 묶음이 이 사람에게 걸리는 조건인지.
+ * 학번을 모르면(cohortYear 없음) 학번 조건은 통과시킵니다 — 잘못 숨기는 것보다 낫습니다.
+ * @param {PreMajorGroup} group
+ * @param {PreMajorTrack} track
+ * @param {number} [cohortYear]
+ */
+function groupApplies(group, track, cohortYear) {
+  if (group.appliesTo && !group.appliesTo.includes(track)) return false;
+  if (cohortYear) {
+    if (group.fromCohort && cohortYear < group.fromCohort) return false;
+    if (group.untilCohort && cohortYear > group.untilCohort) return false;
+  }
+  return true;
+}
+
+/**
  * 내 전공들의 전공입문 과목번호 표를 만듭니다.
  * 앞선 전공(1전공)이 이깁니다 — 같은 과목이 여러 전공의 전공입문일 수 있습니다.
+ * 이수유형(단일·다전공)과 학번에 맞는 묶음만 담습니다.
  * @param {readonly string[]} majors 1·2·3전공 순서
+ * @param {number} [cohortYear] 입학연도 (모르면 학번 조건 무시)
  * @returns {Map<string, { rank: number, major: string, rule: string }>}
  */
-export function preMajorCodeMap(majors) {
+export function preMajorCodeMap(majors, cohortYear) {
   const map = new Map();
   majors.forEach((major, index) => {
     const program = preMajorProgramFor(major);
     if (!program) return;
+    const track = preMajorTrackOf(majors, index);
     for (const group of program.groups) {
+      if (!groupApplies(group, track, cohortYear)) continue;
       for (const code of group.codes) {
         if (!map.has(code)) map.set(code, { rank: index + 1, major: program.major, rule: group.rule });
       }

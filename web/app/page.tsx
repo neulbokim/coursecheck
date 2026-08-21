@@ -132,7 +132,7 @@ function isEnglish(course: Course) {
 }
 
 /** 전공 순번(1·2·3전공)별로 과목 코드와 학과를 찾을 표를 만든다 */
-function majorRankIndex(majors: string[]) {
+function majorRankIndex(majors: string[], cohortYear?: number) {
   const byCode = new Map<string, number>();
   const byDepartment = new Map<string, number>();
   majors.forEach((major, index) => {
@@ -147,7 +147,8 @@ function majorRankIndex(majors: string[]) {
   });
   // 전공입문교과는 남의 학과가 여는 경우가 많아(미적분학Ⅱ는 전인교육원, 화학전공의 일반물리는
   // 물리학과) 학과 이름으로는 잡히지 않는다. 과목코드로 따로 찾고, 위 두 표가 못 잡은 것만 채운다.
-  const byPreMajorCode = preMajorCodeMap(majors) as Map<string, { rank: number; major: string; rule: string }>;
+  // 이수유형(단일·다전공)과 학번에 맞는 묶음만 담긴다.
+  const byPreMajorCode = preMajorCodeMap(majors, cohortYear) as Map<string, { rank: number; major: string; rule: string }>;
   return { byCode, byDepartment, byPreMajorCode };
 }
 
@@ -346,9 +347,15 @@ export default function Home() {
   /** 이수학기 수로 센 다음 학기의 학년 — 「수강대상」 판정이 본다 */
   const studentGrade = gradeOfSemesters(profile?.completedSemesters);
 
+  /** 전공 판정표 — 전공입문은 이수유형(단일·다전공)과 학번에 맞는 묶음만 담긴다 */
+  const majorRanks = useMemo(
+    () => majorRankIndex(profileMajors, profile?.cohortYear),
+    [profileMajors, profile?.cohortYear],
+  );
+
   /** 학년(수강대상) 필터만 빼고 나머지 조건을 모두 통과한 과목 — 교양 모드와 검색까지 반영된 상태 */
   const matchedCourses = useMemo(() => {
-    const ranks = majorRankIndex(profileMajors);
+    const ranks = majorRanks;
     const normalizedQuery = query.trim().toLowerCase();
 
     return courses.filter((course) => {
@@ -379,7 +386,7 @@ export default function Home() {
 
       return !normalizedQuery || `${course.name} ${course.code} ${course.professor}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [courses, profileMajors, query, takenNames, equivalentNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
+  }, [courses, majorRanks, query, takenNames, equivalentNames, trackByCode, completedTrackKeys, excludedMajorRanks, geMode, affiliations]);
 
   // 「수강대상」 학년이 아닌 과목은 기본으로 뺀다 — 권장학년과 달리 실제 신청 제한이다.
   // 전체 보기를 켜면 남겨서, 수강신청은 못 해도 교수님 승인을 받아볼 과목을 살필 수 있다.
@@ -404,19 +411,17 @@ export default function Home() {
     byDay: Record<string, Array<{ course: Course; meeting: Meeting }>>;
   }>, [filteredCourses]);
   const hiddenTakenCount = useMemo(() => {
-    const ranks = majorRankIndex(profileMajors);
     return courses.filter((course) => {
       const name = normalizeCourseName(course.name);
       if (takenNames.has(name)) return true;
-      return equivalentNames.has(name) && !majorMatch(course, ranks).preMajor;
+      return equivalentNames.has(name) && !majorMatch(course, majorRanks).preMajor;
     }).length;
-  }, [courses, profileMajors, takenNames, equivalentNames]);
+  }, [courses, majorRanks, takenNames, equivalentNames]);
   // 범례에는 실제로 결과에 있는 구분만 보여준다
   const shownCategories = useMemo(() => {
-    const ranks = majorRankIndex(profileMajors);
     const keys = new Set<string>();
     for (const course of filteredCourses) {
-      const { rank, preMajor } = majorMatch(course, ranks);
+      const { rank, preMajor } = majorMatch(course, majorRanks);
       if (rank) {
         keys.add(`major${rank}`);
         if (preMajor) keys.add("preMajor");
@@ -424,7 +429,7 @@ export default function Home() {
       else if (GENERAL_EDUCATION_DEPARTMENTS.includes(course.department)) keys.add("freeGE");
     }
     return keys;
-  }, [filteredCourses, profileMajors, trackByCode]);
+  }, [filteredCourses, majorRanks, trackByCode]);
 
   /** 결과에 영어강의가 몇 개인지 — 강조를 켜기 전에도 켤 만한지 보이게 스위치에 함께 적는다 */
   const englishCount = useMemo(() => filteredCourses.filter(isEnglish).length, [filteredCourses]);
@@ -458,7 +463,6 @@ export default function Home() {
     [pickedCourses],
   );
 
-  const majorRanks = useMemo(() => majorRankIndex(profileMajors), [profileMajors]);
   /** 전공입문교과가 요람에 실린 내 전공 (안내 문구에 쓴다) */
   const preMajorMajors = useMemo(() => majorsWithPreMajor(profileMajors) as string[], [profileMajors]);
   /** 전공 순번별로 이번 학기 개설 과목이 몇 개인지 (제외 체크박스에 표시) */
@@ -687,7 +691,8 @@ export default function Home() {
                   <p className="equivalent-note">
                     <strong>전공입문교과 반영</strong>
                     {preMajorMajors.join(" · ")}의 전공입문(전공예비) 과목은 다른 학과가 열더라도
-                    그 전공 색에 빗금을 넣어 함께 보여드려요. {preMajorSource.bulletinYear}학년도 요람 기준입니다.
+                    그 전공 색에 빗금을 넣어 함께 보여드려요. 단일전공·다전공 등 이수유형에 맞는
+                    과목만 골라 담았어요. {preMajorSource.bulletinYear}학년도 요람 기준입니다.
                   </p>
                 )}
               </div>

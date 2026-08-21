@@ -356,6 +356,28 @@ test("keeps every pre-major (전공입문) course of the student's major visible
   assert.equal(chemistry.get("CSE2003"), undefined);
 });
 
+test("filters pre-major groups by track (단일·다전공) and cohort", async () => {
+  const { preMajorCodeMap } = await import("../app/data/pre-major.mjs");
+
+  // 화공생명공학: 일반화학Ⅰ·Ⅱ 대체는 23학번까지만 — 25학번에게는 안 보인다
+  const cbe25 = preMajorCodeMap(["화공생명공학과"], 2025);
+  assert.equal(cbe25.get("CHM1001"), undefined, "24학번부터는 화공기초화학이 필수라 일반화학Ⅰ은 안 보인다");
+  assert.ok(cbe25.get("CBE2014"));
+  const cbe23 = preMajorCodeMap(["화공생명공학과"], 2023);
+  assert.ok(cbe23.get("CHM1001"), "23학번 이하는 일반화학Ⅰ 대체가 보인다");
+  const cbeUnknown = preMajorCodeMap(["화공생명공학과"]);
+  assert.ok(cbeUnknown.get("CHM1001"), "학번을 모르면 학번 조건은 통과시킨다");
+
+  // 전자공학 다전공(제1전공이 타전공): 일반화학Ⅰ·창의전자설계·선형대수학은 단일전공 전용
+  const eeSecond = preMajorCodeMap(["아트&테크놀로지학과", "전자공학과"]);
+  assert.equal(eeSecond.get("CHM1001"), undefined);
+  assert.equal(eeSecond.get("EEE2032"), undefined);
+  assert.equal(eeSecond.get("MAT2110"), undefined);
+  assert.ok(eeSecond.get("EEE1002"), "공통 필수는 남는다");
+  // 미적분학Ⅰ은 아텍(1전공) 전공입문이기도 해 앞선 전공이 이긴다 — 어느 쪽이든 보이기만 하면 된다
+  assert.ok(eeSecond.get("STS2005"), "타전공 다전공은 미적분학Ⅰ도 이수");
+});
+
 test("keeps the timetable within the viewport and lists courses by time slot", async () => {
   const [page, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
