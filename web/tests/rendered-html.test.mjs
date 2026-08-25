@@ -499,7 +499,12 @@ test("ships normalized course and linked-major data", async () => {
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
   const courses = JSON.parse(coursesText);
-  assert.equal(courses.length, 1507);
+  // 자동 갱신이 과목 수를 바꾸므로 고정값 대신 meta와 맞는지, 전체 학기 규모인지를 본다
+  const meta = JSON.parse(
+    await readFile(new URL("../app/data/courses.generated.meta.json", import.meta.url), "utf8"),
+  );
+  assert.equal(courses.length, meta.courseCount, "meta.json의 courseCount와 실제 과목 수가 같다");
+  assert.ok(courses.length >= 1000, `전체 학기 파일이라기엔 과목이 너무 적습니다(${courses.length})`);
   assert.ok(courses.some((course) => course.code === "BDS4010"));
   assert.match(majorsText, /빅데이터사이언스 연계전공/);
   assert.match(majorsText, /sourceUrl/);

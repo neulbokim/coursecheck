@@ -1,0 +1,62 @@
+# 매일 13시·18시(KST)에 SIS 개설교과목을 내려받아 과목 데이터가 실제로 바뀐 경우에만
+# 커밋한다. main 푸시가 곧 Vercel 프로덕션 배포이므로 별도 배포 단계는 없다.
+# GitHub cron은 UTC 기준이고 정시(:00)에는 실행이 몰려 수십 분 밀릴 수 있어 5분 어긋나게 잡았다.
+name: Update course data
+
+on:
+  schedule:
+    - cron: "5 4 * * *" # 13:05 KST
+    - cron: "5 9 * * *" # 18:05 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-courses
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Fetch and import SIS data
+        working-directory: web
+        run: npm run data:refresh
+
+      - name: Validate dataset
+        working-directory: web
+        run: node --test tests/rendered-html.test.mjs
+
+      - name: Commit if courses changed
+        run: |
+          # meta.json의 generatedAt은 매번 바뀌므로 과목 데이터(courses.generated.json) 기준으로만 판단한다
+          if git diff --quiet -- web/app/data/courses.generated.json; then
+            echo "과목 데이터 변화 없음 — 커밋하지 않는다"
+            exit 0
+          fi
+          old=$(git show HEAD:web/app/data/courses.generated.meta.json | jq -r .courseCount)
+          new=$(jq -r .courseCount web/app/data/courses.generated.meta.json)
+          semester=$(jq -r .semester web/app/data/courses.generated.meta.json)
+          stamp=$(TZ=Asia/Seoul date "+%y%m%d %H시")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data web/app/data/courses.generated.json web/app/data/courses.generated.meta.json
+          git commit -m "[auto] ${semester} 개설과목 갱신 (${stamp} 기준) ${old}→${new}과목"
+          git push

@@ -15,7 +15,8 @@
     "deploy": "npm run deploy:check && vercel --prod",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "data:import": "node scripts/import-sis.mjs"
+    "data:import": "node scripts/import-sis.mjs",
+    "data:refresh": "node scripts/fetch-sis.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -34,6 +35,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "^16.3.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3"
   },
