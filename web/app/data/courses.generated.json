@@ -8655,21 +8655,6 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
-    "id": "GIS0001-07",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GIS0001",
-    "section": "07",
-    "name": "글로벌융합기초한국어: 읽기1",
-    "credits": 2,
-    "schedule": "월,수 13:30~14:45",
-    "professor": "서효원",
-    "english": false,
-    "target": "1,2학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
     "id": "GIS0002-01",
     "year": 2026,
     "term": "2학기",
@@ -8755,21 +8740,6 @@
     "credits": 2,
     "schedule": "월,수 15:00~16:15",
     "professor": "왕서령",
-    "english": false,
-    "target": "1,2학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
-    "id": "GIS0002-07",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GIS0002",
-    "section": "07",
-    "name": "글로벌융합기초한국어: 읽기2",
-    "credits": 2,
-    "schedule": "월,수 15:00~16:15",
-    "professor": "서효원",
     "english": false,
     "target": "1,2학년",
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
@@ -8865,21 +8835,6 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
-    "id": "GIS0003-07",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GIS0003",
-    "section": "07",
-    "name": "글로벌융합기초한국어: 듣기1",
-    "credits": 2,
-    "schedule": "월,수 16:30~17:45",
-    "professor": "서효원",
-    "english": false,
-    "target": "1,2학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
     "id": "GIS0004-01",
     "year": 2026,
     "term": "2학기",
@@ -8965,21 +8920,6 @@
     "credits": 2,
     "schedule": "화,목 13:30~14:45",
     "professor": "장민정",
-    "english": false,
-    "target": "1,2학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
-    "id": "GIS0004-07",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GIS0004",
-    "section": "07",
-    "name": "글로벌융합기초한국어: 쓰기1",
-    "credits": 2,
-    "schedule": "화,목 13:30~14:45",
-    "professor": "나은선",
     "english": false,
     "target": "1,2학년",
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
@@ -9075,21 +9015,6 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
-    "id": "GIS0005-07",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GIS0005",
-    "section": "07",
-    "name": "글로벌융합기초한국어: 쓰기2",
-    "credits": 2,
-    "schedule": "화,목 15:00~16:15",
-    "professor": "나은선",
-    "english": false,
-    "target": "1,2학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
     "id": "GIS0006-01",
     "year": 2026,
     "term": "2학기",
@@ -9180,21 +9105,6 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
-    "id": "GIS0006-07",
-    "year": 2026,
-    "term": "2학기",
-    "department": "글로벌융합학부",
-    "code": "GIS0006",
-    "section": "07",
-    "name": "글로벌융합기초한국어: 말하기1",
-    "credits": 2,
-    "schedule": "화,목 16:30~17:45",
-    "professor": "나은선",
-    "english": false,
-    "target": "1,2학년",
-    "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
-  },
-  {
     "id": "GIS0007-01",
     "year": 2026,
     "term": "2학기",
@@ -9253,6 +9163,21 @@
     "english": false,
     "target": "1,2학년",
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
+  },
+  {
+    "id": "GIS0007-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "글로벌융합학부",
+    "code": "GIS0007",
+    "section": "05",
+    "name": "글로벌융합기초한국어: 읽기3",
+    "credits": 2,
+    "schedule": "월,수 13:30~14:45",
+    "professor": "서효원",
+    "english": false,
+    "target": "",
+    "note": "글로벌융합학부(가능)"
   },
   {
     "id": "GIS0008-01",
@@ -9315,6 +9240,21 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
+    "id": "GIS0008-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "글로벌융합학부",
+    "code": "GIS0008",
+    "section": "05",
+    "name": "글로벌융합기초한국어: 읽기4",
+    "credits": 2,
+    "schedule": "월,수 15:00~16:15",
+    "professor": "서효원",
+    "english": false,
+    "target": "",
+    "note": "글로벌융합학부(가능)"
+  },
+  {
     "id": "GIS0009-01",
     "year": 2026,
     "term": "2학기",
@@ -9373,6 +9313,21 @@
     "english": false,
     "target": "1,2학년",
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
+  },
+  {
+    "id": "GIS0009-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "글로벌융합학부",
+    "code": "GIS0009",
+    "section": "05",
+    "name": "글로벌융합기초한국어: 듣기2",
+    "credits": 2,
+    "schedule": "월,수 16:30~17:45",
+    "professor": "서효원",
+    "english": false,
+    "target": "",
+    "note": "글로벌융합학부(가능)"
   },
   {
     "id": "GIS0010-01",
@@ -9435,6 +9390,21 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
+    "id": "GIS0010-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "글로벌융합학부",
+    "code": "GIS0010",
+    "section": "05",
+    "name": "글로벌융합기초한국어: 쓰기3",
+    "credits": 2,
+    "schedule": "화,목 13:30~14:45",
+    "professor": "나은선",
+    "english": false,
+    "target": "",
+    "note": "글로벌융합학부(가능)"
+  },
+  {
     "id": "GIS0011-01",
     "year": 2026,
     "term": "2학기",
@@ -9495,6 +9465,21 @@
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
   },
   {
+    "id": "GIS0011-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "글로벌융합학부",
+    "code": "GIS0011",
+    "section": "05",
+    "name": "글로벌융합기초한국어: 쓰기4",
+    "credits": 2,
+    "schedule": "화,목 15:00~16:15",
+    "professor": "나은선",
+    "english": false,
+    "target": "",
+    "note": "글로벌융합학부(가능)"
+  },
+  {
     "id": "GIS0012-01",
     "year": 2026,
     "term": "2학기",
@@ -9553,6 +9538,21 @@
     "english": false,
     "target": "1,2학년",
     "note": "글로벌융합학부(가능) · 글로벌융합학부(가능)"
+  },
+  {
+    "id": "GIS0012-05",
+    "year": 2026,
+    "term": "2학기",
+    "department": "글로벌융합학부",
+    "code": "GIS0012",
+    "section": "05",
+    "name": "글로벌융합기초한국어: 말하기2",
+    "credits": 2,
+    "schedule": "화,목 16:30~17:45",
+    "professor": "나은선",
+    "english": false,
+    "target": "",
+    "note": "글로벌융합학부(가능)"
   },
   {
     "id": "GIS1001-01",
