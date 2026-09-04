@@ -270,21 +270,6 @@
     "note": ""
   },
   {
-    "id": "AAT4006-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "아트&테크놀로지학과",
-    "code": "AAT4006",
-    "section": "01",
-    "name": "3D Animation",
-    "credits": 3,
-    "schedule": "금 10:30~13:15 [X427]",
-    "professor": "이형기",
-    "english": true,
-    "target": "2,3,4학년",
-    "note": ""
-  },
-  {
     "id": "AAT4011-01",
     "year": 2026,
     "term": "2학기",
@@ -473,7 +458,7 @@
     "section": "02",
     "name": "알고리즘설계와분석",
     "credits": 3,
-    "schedule": "화,목 13:30~14:45 [AS301]",
+    "schedule": "화,목 13:30~14:45 [RA408]",
     "professor": "김세준",
     "english": true,
     "target": "2,3,4학년",
@@ -758,7 +743,7 @@
     "section": "01",
     "name": "자동장치이론",
     "credits": 3,
-    "schedule": "화,목 16:30~17:45 [AS303]",
+    "schedule": "화,목 16:30~17:45 [AS414]",
     "professor": "김세준",
     "english": true,
     "target": "3,4학년",
@@ -1543,21 +1528,6 @@
     "english": false,
     "target": "4학년",
     "note": "\"*전공과목으로 전공학점에 포함 *특수연구와 동일학기 수강불가 *7학기 이상 수강가능\""
-  },
-  {
-    "id": "BIOG001-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "생명과학과",
-    "code": "BIOG001",
-    "section": "01",
-    "name": "바이오텍의기술사업화(캡스톤디자인)",
-    "credits": 3,
-    "schedule": "화,목 13:30~14:45 [K206]",
-    "professor": "Lee, Hosuk Sean",
-    "english": true,
-    "target": "3,4학년",
-    "note": ""
   },
   {
     "id": "BIOG251-01",
@@ -3420,21 +3390,6 @@
     "note": ""
   },
   {
-    "id": "CHU4022-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "CHU4022",
-    "section": "01",
-    "name": "이슬람과 서양: 문명교류의 역사",
-    "credits": 3,
-    "schedule": "목 10:00~12:50 [D201]",
-    "professor": "성일광",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
-  },
-  {
     "id": "CHU4024-01",
     "year": 2026,
     "term": "2학기",
@@ -4763,7 +4718,7 @@
     "section": "02",
     "name": "알고리즘설계와분석",
     "credits": 3,
-    "schedule": "화,목 13:30~14:45 [AS301]",
+    "schedule": "화,목 13:30~14:45 [RA408]",
     "professor": "김세준",
     "english": true,
     "target": "2,3,4학년",
@@ -4868,7 +4823,7 @@
     "section": "01",
     "name": "자동장치이론",
     "credits": 3,
-    "schedule": "화,목 16:30~17:45 [AS303]",
+    "schedule": "화,목 16:30~17:45 [AS414]",
     "professor": "김세준",
     "english": true,
     "target": "3,4학년",
@@ -5115,81 +5070,6 @@
     "note": ""
   },
   {
-    "id": "CSE4191-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "컴퓨터공학과",
-    "code": "CSE4191",
-    "section": "01",
-    "name": "SW 인턴십",
-    "credits": 3,
-    "schedule": "화 18:00~20:45",
-    "professor": "이혁준",
-    "english": false,
-    "target": "",
-    "note": ""
-  },
-  {
-    "id": "CSE4191-02",
-    "year": 2026,
-    "term": "2학기",
-    "department": "컴퓨터공학과",
-    "code": "CSE4191",
-    "section": "02",
-    "name": "SW 인턴십",
-    "credits": 3,
-    "schedule": "화 18:00~20:45",
-    "professor": "박운상",
-    "english": false,
-    "target": "",
-    "note": ""
-  },
-  {
-    "id": "CSE4191-03",
-    "year": 2026,
-    "term": "2학기",
-    "department": "컴퓨터공학과",
-    "code": "CSE4191",
-    "section": "03",
-    "name": "SW 인턴십",
-    "credits": 3,
-    "schedule": "화 18:00~20:45",
-    "professor": "김영재",
-    "english": false,
-    "target": "",
-    "note": ""
-  },
-  {
-    "id": "CSE4191-04",
-    "year": 2026,
-    "term": "2학기",
-    "department": "컴퓨터공학과",
-    "code": "CSE4191",
-    "section": "04",
-    "name": "SW 인턴십",
-    "credits": 3,
-    "schedule": "화 18:00~20:45",
-    "professor": "소정민",
-    "english": false,
-    "target": "",
-    "note": ""
-  },
-  {
-    "id": "CSE4191-05",
-    "year": 2026,
-    "term": "2학기",
-    "department": "컴퓨터공학과",
-    "code": "CSE4191",
-    "section": "05",
-    "name": "SW 인턴십",
-    "credits": 3,
-    "schedule": "화 18:00~20:45",
-    "professor": "최준석",
-    "english": false,
-    "target": "",
-    "note": ""
-  },
-  {
     "id": "CSE4191-06",
     "year": 2026,
     "term": "2학기",
@@ -5365,21 +5245,6 @@
     "credits": 3,
     "schedule": "화,목 15:00~16:15 [K405]",
     "professor": "홍정하",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
-    "id": "CSW2060-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "융합소프트웨어연계전공",
-    "code": "CSW2060",
-    "section": "01",
-    "name": "인문콘텐츠학",
-    "credits": 3,
-    "schedule": "금 10:30~13:15 [D412]",
-    "professor": "신홍주",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -5565,21 +5430,6 @@
     "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
   },
   {
-    "id": "CUCKU011-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "CUCKU011",
-    "section": "01",
-    "name": "심리학으로 만나는 정신건강",
-    "credits": 2,
-    "schedule": "화 10:00~11:50",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
-  },
-  {
     "id": "CUDGC009-01",
     "year": 2026,
     "term": "2학기",
@@ -5610,36 +5460,6 @@
     "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
   },
   {
-    "id": "CUDGC017-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "CUDGC017",
-    "section": "01",
-    "name": "영화로만나는재외동포의삶과문화",
-    "credits": 3,
-    "schedule": "목 09:00~11:50",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
-  },
-  {
-    "id": "CUDGC024-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "CUDGC024",
-    "section": "01",
-    "name": "인간과사회관계론",
-    "credits": 2,
-    "schedule": "목 15:00~16:50",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
-  },
-  {
     "id": "CUDGC025-01",
     "year": 2026,
     "term": "2학기",
@@ -5664,21 +5484,6 @@
     "name": "씨네인문학",
     "credits": 2,
     "schedule": "화 15:00~16:50",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
-  },
-  {
-    "id": "CUDGC027-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "CUDGC027",
-    "section": "01",
-    "name": "뉴스로 읽는 중국",
-    "credits": 2,
-    "schedule": "목 13:00~14:50",
     "professor": "",
     "english": false,
     "target": "2,3,4학년",
@@ -5858,7 +5663,7 @@
     "section": "01",
     "name": "데이터과학의 이해",
     "credits": 3,
-    "schedule": "수,금 16:30~17:45 [AS412]",
+    "schedule": "수,금 16:30~17:45 [J114]",
     "professor": "김태영",
     "english": false,
     "target": "2,3,4학년",
@@ -5874,21 +5679,6 @@
     "name": "텍스트마이닝",
     "credits": 3,
     "schedule": "화,목 10:30~11:45 [J114]",
-    "professor": "홍정하",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
-    "id": "DIH3009-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "디지털인문학연계전공",
-    "code": "DIH3009",
-    "section": "01",
-    "name": "데이터 시각화",
-    "credits": 3,
-    "schedule": "화,목 12:00~13:15 [J114]",
     "professor": "홍정하",
     "english": false,
     "target": "전학년",
@@ -7287,7 +7077,7 @@
     "professor": "성원진",
     "english": true,
     "target": "전학년",
-    "note": "시스템반도체공학과(불가능),반도체공학과(불가능) · 시스템반도체공학과, 반도체공학과 수강 불가"
+    "note": ""
   },
   {
     "id": "EEE3150-01",
@@ -7875,21 +7665,6 @@
     "note": ""
   },
   {
-    "id": "ENG3420-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "영미어문전공",
-    "code": "ENG3420",
-    "section": "01",
-    "name": "언어학과 인문콘텐츠(캡스톤디자인)",
-    "credits": 3,
-    "schedule": "금 10:30~13:15 [J114]",
-    "professor": "정인기, 정희련",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": ""
-  },
-  {
     "id": "ENG3510-01",
     "year": 2026,
     "term": "2학기",
@@ -8040,21 +7815,6 @@
     "note": ""
   },
   {
-    "id": "ETS2003-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "ETS2003",
-    "section": "01",
-    "name": "철학산책",
-    "credits": 3,
-    "schedule": "화 09:00~11:50 [D201]",
-    "professor": "구익희",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
-  },
-  {
     "id": "ETS2004-01",
     "year": 2026,
     "term": "2학기",
@@ -8130,21 +7890,6 @@
     "note": ""
   },
   {
-    "id": "ETU4010-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "ETU4010",
-    "section": "01",
-    "name": "한국문화와종교",
-    "credits": 3,
-    "schedule": "월,수 10:30~11:45 [K507]",
-    "professor": "현재우",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
     "id": "ETU4016-01",
     "year": 2026,
     "term": "2학기",
@@ -8158,21 +7903,6 @@
     "english": false,
     "target": "전학년",
     "note": ""
-  },
-  {
-    "id": "ETU4018-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "ETU4018",
-    "section": "01",
-    "name": "행복의추구",
-    "credits": 3,
-    "schedule": "월 14:00~16:50 [D412]",
-    "professor": "하유진",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "CU12 공유대학, 2~4학년 수강가능, 성적평가방식(절대평가/상대평가)은 CU공유대학의 운영방침에 따라 운영됨."
   },
   {
     "id": "EUR2206-01",
@@ -10995,21 +10725,6 @@
     "note": ""
   },
   {
-    "id": "HIS3201-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "사학과",
-    "code": "HIS3201",
-    "section": "01",
-    "name": "디지털 시대의 역사콘텐츠: 비평과 제작 실습",
-    "credits": 3,
-    "schedule": "수,금 13:30~14:45 [X229]",
-    "professor": "주채영",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
     "id": "HIS4001-01",
     "year": 2026,
     "term": "2학기",
@@ -11520,21 +11235,6 @@
     "note": "성찰과성장 이수자/졸업직전학기 학생 사전협의/1학기 사전선발/절대평가 3학점"
   },
   {
-    "id": "HSS3027-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "HSS3027",
-    "section": "01",
-    "name": "공존의시대와세계시민교육",
-    "credits": 3,
-    "schedule": "화,목 15:00~16:15 [J211]",
-    "professor": "임유진",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
     "id": "HSS3031-01",
     "year": 2026,
     "term": "2학기",
@@ -11635,21 +11335,6 @@
     "credits": 3,
     "schedule": "화,목 16:30~17:45 [J204]",
     "professor": "김효경",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
-    "id": "HSS4008-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "HSS4008",
-    "section": "01",
-    "name": "지역사회와 연계한 창의적 문제해결(탐구공동체)",
-    "credits": 3,
-    "schedule": "월 13:30~16:15 [J211]",
-    "professor": "김승철",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -11833,21 +11518,6 @@
     "english": false,
     "target": "2,3,4학년",
     "note": "HUSS 공유대학, 포용사회"
-  },
-  {
-    "id": "IIS3211-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "포용사회연계전공",
-    "code": "IIS3211",
-    "section": "01",
-    "name": "포용사회와 문화탐방 2",
-    "credits": 1,
-    "schedule": "화 18:00~20:00",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "HUSS 공유대학, 포용사회, 하이브리드(온라인+오프라인)강의"
   },
   {
     "id": "IIS3303-01",
@@ -12135,51 +11805,6 @@
     "note": "HUSS 공유대학, 포용사회"
   },
   {
-    "id": "IIS4304-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "포용사회연계전공",
-    "code": "IIS4304",
-    "section": "01",
-    "name": "공공역사와 디지털 콘텐츠 2",
-    "credits": 1,
-    "schedule": "목 18:00~20:00",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "HUSS 공유대학, 포용사회, 하이브리드(온라인+오프라인)강의"
-  },
-  {
-    "id": "IIS4309-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "포용사회연계전공",
-    "code": "IIS4309",
-    "section": "01",
-    "name": "스포츠 건강 캡스톤 디자인",
-    "credits": 3,
-    "schedule": "수 13:00~14:15",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "HUSS 공유대학, 포용사회, 하이브리드(온라인+오프라인)강의"
-  },
-  {
-    "id": "IIS4408-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "포용사회연계전공",
-    "code": "IIS4408",
-    "section": "01",
-    "name": "글로벌비즈니스캡스톤디자인2",
-    "credits": 3,
-    "schedule": "수 10:30~11:45 / 목 09:00~10:15",
-    "professor": "",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "HUSS 공유대학, 포용사회, 하이브리드(온라인+오프라인)강의"
-  },
-  {
     "id": "IIS4501-01",
     "year": 2026,
     "term": "2학기",
@@ -12208,21 +11833,6 @@
     "english": false,
     "target": "2,3,4학년",
     "note": "스포츠미디어 연계전공 수강 가능"
-  },
-  {
-    "id": "JAS3011-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "신문방송학과",
-    "code": "JAS3011",
-    "section": "01",
-    "name": "PR글쓰기와실무",
-    "credits": 3,
-    "schedule": "월,수 12:00~13:15 [GA505]",
-    "professor": "김혜영",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": "스타트업 연계전공 수강 가능"
   },
   {
     "id": "JAS3014-01",
@@ -12505,21 +12115,6 @@
     "credits": 3,
     "schedule": "월,수 10:30~11:45 [J211]",
     "professor": "이점순",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
-    "id": "KIC2002-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "한국발전과국제개발협력연계전공",
-    "code": "KIC2002",
-    "section": "01",
-    "name": "공적개발원조",
-    "credits": 3,
-    "schedule": "화,목 10:30~11:45 [D406]",
-    "professor": "한재광",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -14205,21 +13800,6 @@
     "note": "참가자로 선발된 학생 대상, S/U 평가과목"
   },
   {
-    "id": "LED3019-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "전인교육원",
-    "code": "LED3019",
-    "section": "01",
-    "name": "스피치 커뮤니케이션: 장벽을 허무는 말하기",
-    "credits": 3,
-    "schedule": "화,목 16:30~17:45 [J323]",
-    "professor": "박상준",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
     "id": "LLA1001-01",
     "year": 2026,
     "term": "2학기",
@@ -15135,21 +14715,6 @@
     "note": ""
   },
   {
-    "id": "MAT2230-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "수학과",
-    "code": "MAT2230",
-    "section": "01",
-    "name": "미분방정식",
-    "credits": 3,
-    "schedule": "월,수 10:30~11:45 [RA406A]",
-    "professor": "안소영",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": ""
-  },
-  {
     "id": "MAT2230-02",
     "year": 2026,
     "term": "2학기",
@@ -15343,21 +14908,6 @@
     "english": false,
     "target": "2,3,4학년",
     "note": ""
-  },
-  {
-    "id": "MAT4510-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "수학과",
-    "code": "MAT4510",
-    "section": "01",
-    "name": "학부개별연구",
-    "credits": 3,
-    "schedule": "",
-    "professor": "김현석",
-    "english": false,
-    "target": "3,4학년",
-    "note": "\"* 특수연구, 전공학점으로 인정되지 않음. * 시간 미정\""
   },
   {
     "id": "MATG110-01",
@@ -17460,21 +17010,6 @@
     "note": ""
   },
   {
-    "id": "PHI3037-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "철학과",
-    "code": "PHI3037",
-    "section": "01",
-    "name": "도가철학",
-    "credits": 3,
-    "schedule": "월,수 10:30~11:45 [J114]",
-    "professor": "이임찬",
-    "english": false,
-    "target": "2,3,4학년",
-    "note": ""
-  },
-  {
     "id": "PHI3039-01",
     "year": 2026,
     "term": "2학기",
@@ -18520,21 +18055,6 @@
     "credits": 3,
     "schedule": "수,금 13:30~14:45 [D502]",
     "professor": "정민석",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
-    "id": "POL3110-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "정치외교학과",
-    "code": "POL3110",
-    "section": "01",
-    "name": "정치사상특강",
-    "credits": 3,
-    "schedule": "화,목 09:00~10:15 [D412]",
-    "professor": "한유동",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -19620,21 +19140,6 @@
     "note": "시스템반도체공학과(가능),반도체공학과(가능) · 시스템반도체공학과 및 반도체공학과 전용분반, EEE4169-01과 합반수업"
   },
   {
-    "id": "SCE4174-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "반도체공학과",
-    "code": "SCE4174",
-    "section": "01",
-    "name": "마이크로파회로설계",
-    "credits": 3,
-    "schedule": "월,수 10:30~11:45 [K406]",
-    "professor": "정진호",
-    "english": false,
-    "target": "전학년",
-    "note": "시스템반도체공학과(가능),반도체공학과(가능) · 시스템반도체공학과 및 반도체공학과 전용분반, EEE4174-01과 합반수업"
-  },
-  {
     "id": "SCE4175-01",
     "year": 2026,
     "term": "2학기",
@@ -20400,21 +19905,6 @@
     "note": ""
   },
   {
-    "id": "SPM3005-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "스포츠미디어 연계전공",
-    "code": "SPM3005",
-    "section": "01",
-    "name": "레크리에이션의이론과실제",
-    "credits": 2,
-    "schedule": "화 10:00~11:50 [MA203]",
-    "professor": "이문진",
-    "english": false,
-    "target": "전학년",
-    "note": ""
-  },
-  {
     "id": "SPM3008-01",
     "year": 2026,
     "term": "2학기",
@@ -20514,21 +20004,6 @@
     "name": "파워요가",
     "credits": 1,
     "schedule": "월 15:00~16:50",
-    "professor": "장영진",
-    "english": false,
-    "target": "전학년",
-    "note": "실기수업(체육관 방음실 이용)"
-  },
-  {
-    "id": "SPM3120-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "스포츠미디어 연계전공",
-    "code": "SPM3120",
-    "section": "01",
-    "name": "댄스피트니스",
-    "credits": 1,
-    "schedule": "월 12:00~13:50",
     "professor": "장영진",
     "english": false,
     "target": "전학년",
@@ -21750,21 +21225,6 @@
     "note": ""
   },
   {
-    "id": "STS2008-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "융합교육원",
-    "code": "STS2008",
-    "section": "01",
-    "name": "고급응용C프로그래밍",
-    "credits": 3,
-    "schedule": "월,수 10:30~11:45 [D105]",
-    "professor": "나미향",
-    "english": false,
-    "target": "전학년",
-    "note": "컴퓨터공학과(1전공 불가능),컴퓨터공학과(1전공 불가능)"
-  },
-  {
     "id": "STS2008-02",
     "year": 2026,
     "term": "2학기",
@@ -21923,7 +21383,7 @@
     "section": "01",
     "name": "AI시대의 혁신과 기술경영",
     "credits": 3,
-    "schedule": "수,금 13:30~14:45 [BW500]",
+    "schedule": "수,금 13:30~14:45 [BW600]",
     "professor": "박진혁, 김주람",
     "english": false,
     "target": "전학년",
@@ -21954,10 +21414,10 @@
     "name": "AX 융합 세미나",
     "credits": 3,
     "schedule": "금 13:30~16:15",
-    "professor": "임응준",
+    "professor": "신상헌, 임응준, 임도현, 안현주, 최정현, 김태진, 김종갑, 이장규, 최정일",
     "english": false,
     "target": "전학년",
-    "note": "성적평가:S/U, 강의장소: 판교캠퍼스"
+    "note": "성적평가: S/U, 강의장소: 판교캠퍼스(셔틀버스 운영)"
   },
   {
     "id": "STS3001-01",
