@@ -11064,7 +11064,7 @@
     "name": "사회참여와성찰",
     "credits": 3,
     "schedule": "수 13:30~16:15 [K307]",
-    "professor": "김치헌, 박혜윤, 서영아, 이경용",
+    "professor": "김치헌, 박혜윤, 서영아",
     "english": false,
     "target": "전학년",
     "note": "성적평가: S/U"
@@ -14577,7 +14577,7 @@
     "professor": "김준태",
     "english": true,
     "target": "2,3,4학년",
-    "note": ""
+    "note": "원격 강의(온라인실시간50%+녹화강의50%)"
   },
   {
     "id": "MAT3410-01",
@@ -17693,7 +17693,7 @@
     "section": "01",
     "name": "특수연구",
     "credits": 3,
-    "schedule": "화 16:30~18:00 [R404]",
+    "schedule": "[R404]",
     "professor": "Scopel Stefano",
     "english": true,
     "target": "3,4학년",
@@ -17723,7 +17723,7 @@
     "section": "01",
     "name": "졸업프로젝트",
     "credits": 3,
-    "schedule": "화 16:30~18:00 [R404]",
+    "schedule": "[R404]",
     "professor": "Scopel Stefano",
     "english": true,
     "target": "3,4학년",
@@ -20768,7 +20768,7 @@
     "section": "01",
     "name": "미적분학I",
     "credits": 3,
-    "schedule": "월,수 16:30~17:45 [RA410]",
+    "schedule": "월,수 16:30~17:45 [RA310]",
     "professor": "유지현",
     "english": false,
     "target": "전학년",
