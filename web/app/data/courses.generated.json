@@ -2048,7 +2048,7 @@
     "section": "01",
     "name": "화공재료",
     "credits": 3,
-    "schedule": "월 13:30~16:15 [AS510]",
+    "schedule": "월 13:30~16:15 [K405]",
     "professor": "구기갑",
     "english": false,
     "target": "3,4학년",
@@ -3609,7 +3609,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박미숙, 박은주",
+    "professor": "박은주, 최윤희, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "10/30(금)-10/31(토), ※혼합형(평가:S/U)"
@@ -3624,7 +3624,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박미숙, 박은주",
+    "professor": "최윤희, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "11/06(금)-11/07(토), ※혼합형(평가:S/U)"
@@ -3639,7 +3639,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박은주, 박미숙",
+    "professor": "박은주, 최윤희, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "11/06(금)-11/07(토), ※혼합형(평가:S/U)"
@@ -3654,7 +3654,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박미숙, 박은주",
+    "professor": "최윤희, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "11/13(금)-11/14(토), ※혼합형(평가:S/U)"
@@ -3669,7 +3669,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "금 19:30~21:30 / 토 10:00~17:40",
-    "professor": "박은주, 박미숙",
+    "professor": "박은주, 최윤희, 박미숙",
     "english": false,
     "target": "전학년",
     "note": "11/13(금)-11/14(토), ※혼합형(평가:S/U)"
@@ -3684,7 +3684,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "토 10:00~22:00 / 일 10:00~15:30",
-    "professor": "박미숙, 박은주",
+    "professor": "최윤희, 박미숙",
     "english": false,
     "target": "1학년",
     "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
@@ -3699,7 +3699,7 @@
     "name": "성찰과성장",
     "credits": 1,
     "schedule": "토 10:00~22:00 / 일 10:00~15:30",
-    "professor": "박은주, 박미숙",
+    "professor": "박은주, 최윤희, 박미숙",
     "english": false,
     "target": "1학년",
     "note": "11/21(토)-11/22(일), ※대면 1박2일 합숙형(평가:S/U), 26학년도 신입생만 신청"
