@@ -645,21 +645,6 @@
     "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
   },
   {
-    "id": "AIE4053-01",
-    "year": 2026,
-    "term": "2학기",
-    "department": "인공지능학과",
-    "code": "AIE4053",
-    "section": "01",
-    "name": "운영체제",
-    "credits": 3,
-    "schedule": "화,목 09:00~10:15 [K303]",
-    "professor": "김영재",
-    "english": false,
-    "target": "3,4학년",
-    "note": "컴퓨터공학과(불가능),컴퓨터공학과(불가능) · 컴퓨터공학과 제1전공, 제2전공, 제3전공자 불가능"
-  },
-  {
     "id": "AIE4056-01",
     "year": 2026,
     "term": "2학기",
@@ -3114,7 +3099,7 @@
     "name": "현대한국의형성",
     "credits": 3,
     "schedule": "월,수 12:00~13:15 [K202]",
-    "professor": "백동인",
+    "professor": "백동인, 백동인",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -7509,7 +7494,7 @@
     "name": "심리언어학",
     "credits": 3,
     "schedule": "월,수 12:00~13:15 [J215]",
-    "professor": "정희련",
+    "professor": "정희련, 정희련",
     "english": false,
     "target": "2,3,4학년",
     "note": ""
@@ -7794,7 +7779,7 @@
     "name": "독문법1",
     "credits": 3,
     "schedule": "월,수 10:30~11:45 [J207]",
-    "professor": "이민수",
+    "professor": "이민수, 이민수",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -7884,7 +7869,7 @@
     "name": "제4차 산업혁명시대의 언어학(캡스톤디자인)",
     "credits": 3,
     "schedule": "수,금 09:00~10:15 [J108]",
-    "professor": "김형민, 정희련, 김지영",
+    "professor": "김형민, 김지영, 정희련",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -10404,7 +10389,7 @@
     "name": "조선시대사",
     "credits": 3,
     "schedule": "월,수 12:00~13:15 [J114]",
-    "professor": "김가람",
+    "professor": "김가람, 김가람",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -12489,7 +12474,7 @@
     "name": "소설과영화",
     "credits": 3,
     "schedule": "수,금 15:00~16:15 [J219]",
-    "professor": "김예람",
+    "professor": "김예람, 김예람",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -12534,7 +12519,7 @@
     "name": "문학과문화콘텐츠",
     "credits": 3,
     "schedule": "금 10:30~13:15 [J219]",
-    "professor": "김예람",
+    "professor": "김예람, 김예람",
     "english": false,
     "target": "전학년",
     "note": ""
@@ -12759,7 +12744,7 @@
     "name": "독일언어와문화I",
     "credits": 3,
     "schedule": "월,수 12:00~13:15 [J309]",
-    "professor": "이민수",
+    "professor": "이민수, 이민수",
     "english": false,
     "target": "전학년",
     "note": ""
