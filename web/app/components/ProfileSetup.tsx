@@ -53,6 +53,8 @@ function MajorCombobox({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // 한글 조합을 확정하는 Enter는 검색 결과 선택이 아니다 (일부 브라우저는 229로 표시).
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setOpen(true);
