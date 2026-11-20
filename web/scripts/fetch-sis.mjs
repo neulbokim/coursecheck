@@ -3,10 +3,11 @@
 //   node scripts/fetch-sis.mjs --no-import → 다운로드만
 // WebDynpro는 세션 상태에 묶인 POST로만 파일을 주므로 curl 대신 헤드리스 브라우저로 화면 흐름을 재현한다.
 import { spawnSync } from "node:child_process";
-import { stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { dirname, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { parseSisCourses } from "../app/lib/sis-parse.mjs";
 
 const SIS_URL = "https://sis109.sogang.ac.kr/sap/bc/webdynpro/sap/zcmw9016?sap-language=KO";
 const here = dirname(fileURLToPath(import.meta.url));
@@ -68,7 +69,11 @@ try {
   await download.saveAs(outPath);
 
   const { size } = await stat(outPath);
-  if (size < 100_000) throw new Error(`받은 파일이 너무 작아요(${size}B) — 조회가 비었을 수 있어요: ${outPath}`);
+  // 계절학기는 정규학기보다 훨씬 작을 수 있으므로 용량 대신 표와 과목을 검증한다.
+  const { courses } = parseSisCourses(await readFile(outPath, "utf8"));
+  if (courses.some((course) => course.year !== Number(year) || termToken(course.term) !== termToken(termLabel))) {
+    throw new Error(`조회한 학기(${yearLabel} ${termLabel})와 다운로드한 과목의 학기가 달라요`);
+  }
   console.log(`Downloaded ${fileName} (${Math.round(size / 1024)}KB, ${yearLabel} ${termLabel})`);
 
   if (!process.argv.includes("--no-import")) {

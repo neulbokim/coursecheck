@@ -4,6 +4,12 @@ import test from "node:test";
 import { extractEverytimeUrl } from "../app/lib/everytime-link.mjs";
 import { groupTimetableEntries } from "../app/lib/timetable-layout.mjs";
 
+// 정규학기 개설과목을 쓰는 규칙 검사는 실제 기본 학기가 바뀌어도 같은 사례로 검증한다.
+async function regularTermCourses() {
+  const { parseSisCourses } = await import("../app/lib/sis-parse.mjs");
+  return parseSisCourses(await readFile(new URL("../../data/2026-2-sis.xls", import.meta.url), "utf8")).courses;
+}
+
 test("discovers every public semester identifier in an Everytime response", async () => {
   const { extractSemesterReferences } = await import("../app/lib/everytime-timetable.mjs");
   const xml = `<?xml version="1.0"?><response><primaryTables>
@@ -218,9 +224,7 @@ test("hides courses whose 수강대상 excludes the student's grade", async () =
   assert.match(page, /useState\(false\);\n\s*\/\*\* 수강대상 학년이 아닌 과목까지 볼지|const \[showAllGrades, setShowAllGrades\] = useState\(false\)/);
   assert.match(page, /showAllGrades\s*\n?\s*\? matchedCourses/);
   assert.match(page, /grade-switch/);
-  const courses = JSON.parse(
-    await readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
-  );
+  const courses = await regularTermCourses();
   assert.equal(courses.find((course) => course.code === "AAT2004").target, "2,3,4학년");
   assert.ok(courses.filter((course) => course.target === "전학년").length > 500);
 });
@@ -326,9 +330,9 @@ test("excludes every course the bulletin groups as choose-one", async () => {
 test("keeps every pre-major (전공입문) course of the student's major visible", async () => {
   const [{ preMajorPrograms, preMajorProgramFor, preMajorCodeMap }, coursesText] = await Promise.all([
     import("../app/data/pre-major.mjs"),
-    readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+    regularTermCourses(),
   ]);
-  const courses = JSON.parse(coursesText);
+  const courses = coursesText;
   const departments = new Set(courses.map((course) => course.department));
 
   // 전공 이름이 개설과목의 「학과」 열과 맞아야 프로필에서 고른 전공에 붙는다
@@ -504,8 +508,8 @@ test("ships normalized course and linked-major data", async () => {
     await readFile(new URL("../app/data/courses.generated.meta.json", import.meta.url), "utf8"),
   );
   assert.equal(courses.length, meta.courseCount, "meta.json의 courseCount와 실제 과목 수가 같다");
-  assert.ok(courses.length >= 1000, `전체 학기 파일이라기엔 과목이 너무 적습니다(${courses.length})`);
-  assert.ok(courses.some((course) => course.code === "BDS4010"));
+  assert.ok(courses.length >= 50, `전체 학기 파일이라기엔 과목이 너무 적습니다(${courses.length})`);
+  assert.ok(courses.every((course) => course.code && course.name));
   assert.match(majorsText, /빅데이터사이언스 연계전공/);
   assert.match(majorsText, /sourceUrl/);
   assert.doesNotMatch(packageText, /react-loading-skeleton/);
@@ -519,7 +523,7 @@ test("offers student-designed majors as 2·3전공 alongside linked majors", asy
     readFile(new URL("../app/data/majors.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/data/major-options.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+    regularTermCourses(),
   ]);
   const raw = JSON.parse(rawText);
 
@@ -551,7 +555,7 @@ test("offers student-designed majors as 2·3전공 alongside linked majors", asy
   );
 
   // 과목이수표에서 읽은 코드가 실제 개설과목과 맞물린다
-  const offered = new Set(JSON.parse(coursesText).map((course) => course.code));
+  const offered = new Set(coursesText.map((course) => course.code));
   assert.ok(
     withCodes.every((major) => major.codes.some((code) => offered.has(code))),
     "설계전공마다 이번 학기에 짚을 과목이 최소 하나는 있다",
@@ -577,7 +581,7 @@ test("keeps major-credit courses visible after their GE area is done", async () 
   const [pageText, rawText, coursesText] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/data/designed-majors.generated.json", import.meta.url), "utf8"),
-    readFile(new URL("../app/data/courses.generated.json", import.meta.url), "utf8"),
+    regularTermCourses(),
   ]);
   const { coreTracksFor, coreTrackCodeMap } = await import("../app/data/core-curriculum.mjs");
 
@@ -591,7 +595,7 @@ test("keeps major-credit courses visible after their GE area is done", async () 
 
   // 이 동작이 실제로 걸리는 조합이 있다 — 없으면 위 가드는 죽은 코드다
   const trackCodes = coreTrackCodeMap(coreTracksFor(2026));
-  const offered = new Set(JSON.parse(coursesText).map((course) => course.code));
+  const offered = new Set(coursesText.map((course) => course.code));
   const overlapping = JSON.parse(rawText).majors.filter((major) =>
     major.codes.some((code) => trackCodes.has(code) && offered.has(code)),
   );
