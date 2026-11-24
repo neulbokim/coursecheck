@@ -180,6 +180,21 @@
     "note": ""
   },
   {
+    "id": "COR1010-02",
+    "year": 2026,
+    "term": "동계학기",
+    "department": "전인교육원",
+    "code": "COR1010",
+    "section": "02",
+    "name": "기초인공지능프로그래밍",
+    "credits": 3,
+    "schedule": "월,화,수,목,금 09:00~11:45",
+    "professor": "권미수",
+    "english": false,
+    "target": "전학년",
+    "note": ""
+  },
+  {
     "id": "COR1012-01",
     "year": 2026,
     "term": "동계학기",
