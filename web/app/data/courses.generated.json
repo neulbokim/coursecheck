@@ -120,6 +120,21 @@
     "note": "수강승인: 학과에 문의"
   },
   {
+    "id": "CHM4057-01",
+    "year": 2026,
+    "term": "동계학기",
+    "department": "화학과",
+    "code": "CHM4057",
+    "section": "01",
+    "name": "화학현장실습2",
+    "credits": 3,
+    "schedule": "",
+    "professor": "오한빈",
+    "english": false,
+    "target": "전학년",
+    "note": ""
+  },
+  {
     "id": "CHS2003-01",
     "year": 2026,
     "term": "동계학기",
@@ -883,6 +898,21 @@
     "english": false,
     "target": "전학년",
     "note": ""
+  },
+  {
+    "id": "PHY3510-01",
+    "year": 2026,
+    "term": "동계학기",
+    "department": "물리학과",
+    "code": "PHY3510",
+    "section": "01",
+    "name": "물리현장실습",
+    "credits": 3,
+    "schedule": "",
+    "professor": "Scopel Stefano",
+    "english": false,
+    "target": "전학년",
+    "note": "자연과학대학행정팀(F406)에서 수강신청"
   },
   {
     "id": "POL2002-01",
